@@ -10,13 +10,25 @@ public class Main {
     public static void main(String[] args) throws EngineException {
         EngineRace engineRace = new EngineRace();
         engineRace.open("/tmp/kiritoDB");
-        String content = "";
+        String content1 = "";
         for(int i=0;i<4 * 1024;i++){
-            content += "1";
+            content1 += "1";
         }
-        engineRace.write("hello113".getBytes(), content.getBytes());
-        engineRace.write("hello114".getBytes(), content.getBytes());
-        byte[] read = engineRace.read("hello112".getBytes());
+        String content2 = "";
+        for(int i=0;i<4 * 1024;i++){
+            content2 += "2";
+        }
+        String content3 = "";
+        for(int i=0;i<4 * 1024;i++){
+            content3 += "3";
+        }
+        String content4 = "";
+        for(int i=0;i<4 * 1024;i++){
+            content4 += "4";
+        }
+        engineRace.write("hello113".getBytes(), content1.getBytes());
+        engineRace.write("hello114".getBytes(), content2.getBytes());
+        byte[] read = engineRace.read("hello113".getBytes());
         if(read!=null){
             System.out.println(new String(read));
         }else System.out.println("null");

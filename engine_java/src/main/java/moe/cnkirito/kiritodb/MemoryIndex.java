@@ -42,19 +42,21 @@ public class MemoryIndex {
         }
         do {
             byte[] key = new byte[8];
+            byte[] position = new byte[8];
             mappedByteBuffer.get(key);
+            mappedByteBuffer.get(position);
             boolean flag = true;
             for (int i = 0; i < 8; i++) {
-                if (key[i] != (byte) 0) {
+                if (key[i] != (byte) 0 || position[i] != (byte) 0) {
                     flag = false;
                     break;
                 }
             }
             if (flag) {
-                mappedByteBuffer.position(mappedByteBuffer.position() - 8);
+                mappedByteBuffer.position(mappedByteBuffer.position() - 16);
                 break;
             }
-            this.indexes.put(new ComparableByteArray(key), mappedByteBuffer.getLong());
+            this.indexes.put(new ComparableByteArray(key), byteArrayToLong(position));
         } while (true);
 
 
@@ -77,4 +79,14 @@ public class MemoryIndex {
     public void close() {
         mappedByteBuffer.force();
     }
+
+    public static long byteArrayToLong(byte[] b) {
+        long values = 0;
+        for (int i = 0; i < 8; i++) {
+            values <<= 8;
+            values |= (b[i] & 0xff);
+        }
+        return values;
+    }
+
 }

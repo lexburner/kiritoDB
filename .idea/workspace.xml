@@ -2,25 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="df03fbde-fd6a-44b4-a1b5-a5cf79cc720f" name="Default" comment="">
-      <change beforePath="" afterPath="$PROJECT_DIR$/.idea/compiler.xml" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/.idea/encodings.xml" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/Maven__junit_junit_4_12.xml" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/Maven__log4j_log4j_1_2_8.xml" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/Maven__org_hamcrest_hamcrest_core_1_3.xml" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/Maven__org_rocksdb_rocksdbjni_5_13_4.xml" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/Maven__org_slf4j_slf4j_api_1_7_25.xml" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/.idea/libraries/Maven__org_slf4j_slf4j_log4j12_1_7_25.xml" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/.idea/uiDesigner.xml" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/.idea/vcs.xml" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/engine_java/engine_java.iml" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/Main.java" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/CommitLog.java" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/ComparableByteArray.java" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/KiritoDB.java" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/MemoryIndex.java" />
-      <change beforePath="" afterPath="$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/TestMmap.java" />
-      <change beforePath="$PROJECT_DIR$/engine_java/pom.xml" afterPath="$PROJECT_DIR$/engine_java/pom.xml" />
-      <change beforePath="$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/EngineRace.java" afterPath="$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/EngineRace.java" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change beforePath="$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/Main.java" afterPath="$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/Main.java" />
+      <change beforePath="$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/ComparableByteArray.java" afterPath="$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/ComparableByteArray.java" />
+      <change beforePath="$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/MemoryIndex.java" afterPath="$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/MemoryIndex.java" />
     </list>
     <ignored path="$PROJECT_DIR$/engine_java/target/" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -39,11 +24,81 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file leaf-file-name="Main.java" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/Main.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="281">
+              <caret line="30" column="61" lean-forward="true" selection-start-line="30" selection-start-column="61" selection-end-line="30" selection-end-column="61" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="EngineException.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/exceptions/EngineException.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="90">
+              <caret line="6" column="13" lean-forward="false" selection-start-line="6" selection-start-column="13" selection-end-line="6" selection-end-column="13" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="data_store.cc" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/engine_example/data_store.cc">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-1565">
+              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="engine_example.cc" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/engine_example/engine_example.cc">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="-785">
+              <caret line="24" column="18" lean-forward="false" selection-start-line="24" selection-start-column="13" selection-end-line="24" selection-end-column="18" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="RetCodeEnum.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/exceptions/RetCodeEnum.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="75">
+              <caret line="5" column="12" lean-forward="false" selection-start-line="5" selection-start-column="12" selection-end-line="5" selection-end-column="12" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="AbstractEngine.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/AbstractEngine.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="15">
+              <caret line="10" column="22" lean-forward="false" selection-start-line="10" selection-start-column="22" selection-end-line="10" selection-end-column="22" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="AbstractVisitor.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/AbstractVisitor.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="45">
+              <caret line="3" column="27" lean-forward="false" selection-start-line="3" selection-start-column="27" selection-end-line="3" selection-end-column="27" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
       <file leaf-file-name="EngineRace.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/EngineRace.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="136">
-              <caret line="21" column="33" lean-forward="true" selection-start-line="21" selection-start-column="33" selection-end-line="21" selection-end-column="33" />
+            <state relative-caret-position="210">
+              <caret line="24" column="0" lean-forward="true" selection-start-line="24" selection-start-column="0" selection-end-line="24" selection-end-column="0" />
               <folding>
                 <element signature="e#804#805#0" expanded="true" />
                 <element signature="e#836#837#0" expanded="true" />
@@ -52,78 +107,20 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Main.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/Main.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="198">
-              <caret line="16" column="34" lean-forward="true" selection-start-line="16" selection-start-column="34" selection-end-line="16" selection-end-column="34" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="String.java" pinned="false" current-in-tab="false">
-        <entry file="jar:///Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/src.zip!/java/lang/String.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="128">
-              <caret line="564" column="11" lean-forward="false" selection-start-line="564" selection-start-column="11" selection-end-line="564" selection-end-column="11" />
-              <folding>
-                <element signature="e#20727#20728#0" expanded="true" />
-                <element signature="e#20771#20772#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="KiritoDB.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/KiritoDB.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="360">
-              <caret line="24" column="28" lean-forward="false" selection-start-line="24" selection-start-column="28" selection-end-line="24" selection-end-column="28" />
-              <folding>
-                <element signature="imports" expanded="true" />
-                <element signature="e#305#306#0" expanded="true" />
-                <element signature="e#352#353#0" expanded="true" />
-                <element signature="e#402#403#0" expanded="true" />
-                <element signature="e#445#446#0" expanded="true" />
-                <element signature="e#482#483#0" expanded="true" />
-                <element signature="e#524#525#0" expanded="true" />
-                <element signature="e#551#552#0" expanded="true" />
-                <element signature="e#584#585#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="CommitLog.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/CommitLog.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="889">
-              <caret line="64" column="0" lean-forward="false" selection-start-line="64" selection-start-column="0" selection-end-line="64" selection-end-column="0" />
-              <folding>
-                <element signature="imports" expanded="true" />
-                <element signature="e#2212#2213#0" expanded="true" />
-                <element signature="e#2247#2248#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="ComparableByteArray.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/ComparableByteArray.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="213">
-              <caret line="55" column="38" lean-forward="false" selection-start-line="55" selection-start-column="38" selection-end-line="55" selection-end-column="38" />
+            <state relative-caret-position="-417">
+              <caret line="7" column="3" lean-forward="true" selection-start-line="7" selection-start-column="3" selection-end-line="7" selection-end-column="3" />
               <folding>
-                <element signature="imports" expanded="true" />
-                <element signature="e#289#290#0" expanded="true" />
-                <element signature="e#327#328#0" expanded="true" />
-                <element signature="e#361#362#0" expanded="true" />
-                <element signature="e#391#392#0" expanded="true" />
-                <element signature="e#437#438#0" expanded="true" />
-                <element signature="e#475#476#0" expanded="true" />
-                <element signature="e#1288#1289#0" expanded="true" />
-                <element signature="e#1335#1336#0" expanded="true" />
+                <element signature="e#273#274#0" expanded="true" />
+                <element signature="e#311#312#0" expanded="true" />
+                <element signature="e#345#346#0" expanded="true" />
+                <element signature="e#375#376#0" expanded="true" />
+                <element signature="e#421#422#0" expanded="true" />
+                <element signature="e#459#460#0" expanded="true" />
+                <element signature="e#735#736#0" expanded="true" />
+                <element signature="e#782#783#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -132,47 +129,15 @@
       <file leaf-file-name="MemoryIndex.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/MemoryIndex.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-113">
-              <caret line="36" column="53" lean-forward="true" selection-start-line="36" selection-start-column="53" selection-end-line="36" selection-end-column="53" />
+            <state relative-caret-position="-168">
+              <caret line="31" column="9" lean-forward="true" selection-start-line="31" selection-start-column="9" selection-end-line="31" selection-end-column="9" />
               <folding>
                 <element signature="imports" expanded="true" />
-                <element signature="e#2448#2449#0" expanded="true" />
-                <element signature="e#2517#2518#0" expanded="true" />
-                <element signature="e#2544#2545#0" expanded="true" />
-                <element signature="e#2584#2585#0" expanded="true" />
+                <element signature="e#2562#2563#0" expanded="true" />
+                <element signature="e#2631#2632#0" expanded="true" />
+                <element signature="e#2658#2659#0" expanded="true" />
+                <element signature="e#2698#2699#0" expanded="true" />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="jvm_parameters" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/engine_java/jvm_parameters">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="0">
-              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="TestMmap.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/TestMmap.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="194">
-              <caret line="35" column="38" lean-forward="true" selection-start-line="35" selection-start-column="38" selection-end-line="35" selection-end-column="38" />
-              <folding>
-                <element signature="imports" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="MappedByteBuffer.java" pinned="false" current-in-tab="false">
-        <entry file="jar:///Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/src.zip!/java/nio/MappedByteBuffer.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="63">
-              <caret line="65" column="22" lean-forward="false" selection-start-line="65" selection-start-column="22" selection-end-line="65" selection-end-column="22" />
-              <folding />
             </state>
           </provider>
         </entry>
@@ -212,14 +177,15 @@
         <option value="$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/TestMain.java" />
         <option value="$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/TestEngine.java" />
         <option value="$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/MemoryDB.java" />
-        <option value="$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/ComparableByteArray.java" />
         <option value="$PROJECT_DIR$/engine_java/pom.xml" />
         <option value="$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/EngineRace.java" />
         <option value="$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/KiritoDB.java" />
         <option value="$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/TestMmap.java" />
         <option value="$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/CommitLog.java" />
-        <option value="$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/Main.java" />
+        <option value="$PROJECT_DIR$/engine_java/jvm_parameters" />
+        <option value="$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/ComparableByteArray.java" />
         <option value="$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/MemoryIndex.java" />
+        <option value="$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/Main.java" />
       </list>
     </option>
   </component>
@@ -241,10 +207,10 @@
       </MavenImportingSettings>
     </option>
   </component>
-  <component name="ProjectFrameBounds" extendedState="6">
+  <component name="ProjectFrameBounds">
     <option name="y" value="23" />
     <option name="width" value="1440" />
-    <option name="height" value="803" />
+    <option name="height" value="805" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -495,50 +461,6 @@
               <item name="engine" type="462c0819:PsiDirectoryNode" />
               <item name="common" type="462c0819:PsiDirectoryNode" />
             </path>
-            <path>
-              <item name="engine" type="b2602c69:ProjectViewProjectNode" />
-              <item name="engine" type="462c0819:PsiDirectoryNode" />
-              <item name="engine_java" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="462c0819:PsiDirectoryNode" />
-              <item name="java" type="462c0819:PsiDirectoryNode" />
-              <item name="com" type="462c0819:PsiDirectoryNode" />
-              <item name="alibabacloud" type="462c0819:PsiDirectoryNode" />
-              <item name="polar_race" type="462c0819:PsiDirectoryNode" />
-              <item name="engine" type="462c0819:PsiDirectoryNode" />
-              <item name="common" type="462c0819:PsiDirectoryNode" />
-              <item name="exceptions" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="engine" type="b2602c69:ProjectViewProjectNode" />
-              <item name="engine" type="462c0819:PsiDirectoryNode" />
-              <item name="engine_java" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="462c0819:PsiDirectoryNode" />
-              <item name="java" type="462c0819:PsiDirectoryNode" />
-              <item name="moe" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="engine" type="b2602c69:ProjectViewProjectNode" />
-              <item name="engine" type="462c0819:PsiDirectoryNode" />
-              <item name="engine_java" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="462c0819:PsiDirectoryNode" />
-              <item name="java" type="462c0819:PsiDirectoryNode" />
-              <item name="moe" type="462c0819:PsiDirectoryNode" />
-              <item name="cnkirito" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="engine" type="b2602c69:ProjectViewProjectNode" />
-              <item name="engine" type="462c0819:PsiDirectoryNode" />
-              <item name="engine_java" type="462c0819:PsiDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="462c0819:PsiDirectoryNode" />
-              <item name="java" type="462c0819:PsiDirectoryNode" />
-              <item name="moe" type="462c0819:PsiDirectoryNode" />
-              <item name="cnkirito" type="462c0819:PsiDirectoryNode" />
-              <item name="kiritodb" type="462c0819:PsiDirectoryNode" />
-            </path>
           </expand>
           <select />
         </subPane>
@@ -574,7 +496,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="JUnit.TestMmap.test2">
+  <component name="RunManager" selected="Application.Main">
     <configuration default="true" type="Applet" factoryName="Applet">
       <option name="WIDTH" value="400" />
       <option name="HEIGHT" value="300" />
@@ -771,8 +693,8 @@
     </list>
     <recent_temporary>
       <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="JUnit.TestMmap.test2" />
-        <item index="1" class="java.lang.String" itemvalue="Application.Main" />
+        <item index="0" class="java.lang.String" itemvalue="Application.Main" />
+        <item index="1" class="java.lang.String" itemvalue="JUnit.TestMmap.test2" />
         <item index="2" class="java.lang.String" itemvalue="JUnit.TestMmap.test1" />
         <item index="3" class="java.lang.String" itemvalue="Application.TestEngine" />
         <item index="4" class="java.lang.String" itemvalue="Application.TestMain" />
@@ -795,7 +717,7 @@
       <workItem from="1540608668080" duration="431000" />
       <workItem from="1540609108259" duration="235000" />
       <workItem from="1540609351823" duration="684000" />
-      <workItem from="1540716778118" duration="16854000" />
+      <workItem from="1540716778118" duration="20211000" />
     </task>
     <task id="LOCAL-00001" summary="Revert &quot;engine&quot;&#10;&#10;This reverts commit e7bfd48">
       <created>1540723381434</created>
@@ -840,10 +762,10 @@
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="18204000" />
+    <option name="totallyTimeSpent" value="21561000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="23" width="1440" height="805" extended-state="6" />
+    <frame x="0" y="23" width="1440" height="805" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -857,7 +779,7 @@
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.329927" sideWeight="0.49713877" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="CheckStyle" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32896653" sideWeight="0.49713877" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32896653" sideWeight="0.49713877" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Capture Tool" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.26037195" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
@@ -867,7 +789,7 @@
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="UI Designer" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Theme Preview" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3988355" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3988355" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -971,22 +893,6 @@
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/AbstractEngine.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="255">
-          <caret line="17" column="4" lean-forward="false" selection-start-line="17" selection-start-column="4" selection-end-line="17" selection-end-column="4" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/AbstractVisitor.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="30">
-          <caret line="2" column="22" lean-forward="false" selection-start-line="2" selection-start-column="22" selection-end-line="2" selection-end-column="22" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/EngineRace.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="60">
@@ -1051,34 +957,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/engine_example/data_store.cc">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/engine_example/data_store.h">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/exceptions/RetCodeEnum.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="75">
-          <caret line="5" column="12" lean-forward="false" selection-start-line="5" selection-start-column="12" selection-end-line="5" selection-end-column="12" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/exceptions/EngineException.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="90">
-          <caret line="6" column="13" lean-forward="false" selection-start-line="6" selection-start-column="13" selection-end-line="6" selection-end-column="13" />
           <folding />
         </state>
       </provider>
@@ -1274,14 +1156,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/AbstractVisitor.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="45">
-          <caret line="3" column="27" lean-forward="false" selection-start-line="3" selection-start-column="27" selection-end-line="3" selection-end-column="27" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="90">
@@ -1306,14 +1180,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/AbstractEngine.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-319">
-          <caret line="10" column="22" lean-forward="false" selection-start-line="10" selection-start-column="22" selection-end-line="10" selection-end-column="22" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/engine_java/pom.xml">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="273">
@@ -1330,17 +1196,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="jar:///Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/src.zip!/java/lang/String.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="128">
-          <caret line="564" column="11" lean-forward="false" selection-start-line="564" selection-start-column="11" selection-end-line="564" selection-end-column="11" />
-          <folding>
-            <element signature="e#20727#20728#0" expanded="true" />
-            <element signature="e#20771#20772#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/TestMmap.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="194">
@@ -1351,29 +1206,26 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/Main.java">
+    <entry file="file://$PROJECT_DIR$/engine_java/jvm_parameters">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="198">
-          <caret line="16" column="34" lean-forward="true" selection-start-line="16" selection-start-column="34" selection-end-line="16" selection-end-column="34" />
+        <state relative-caret-position="0">
+          <caret line="0" column="26" lean-forward="false" selection-start-line="0" selection-start-column="26" selection-end-line="0" selection-end-column="26" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/EngineRace.java">
+    <entry file="jar:///Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/src.zip!/java/util/Comparator.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="136">
-          <caret line="21" column="33" lean-forward="true" selection-start-line="21" selection-start-column="33" selection-end-line="21" selection-end-column="33" />
-          <folding>
-            <element signature="e#804#805#0" expanded="true" />
-            <element signature="e#836#837#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="144">
+          <caret line="149" column="8" lean-forward="false" selection-start-line="149" selection-start-column="8" selection-end-line="149" selection-end-column="8" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/CommitLog.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="889">
-          <caret line="64" column="0" lean-forward="false" selection-start-line="64" selection-start-column="0" selection-end-line="64" selection-end-column="0" />
+        <state relative-caret-position="536">
+          <caret line="41" column="32" lean-forward="true" selection-start-line="41" selection-start-column="32" selection-end-line="41" selection-end-column="32" />
           <folding>
             <element signature="imports" expanded="true" />
             <element signature="e#2212#2213#0" expanded="true" />
@@ -1382,27 +1234,9 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/ComparableByteArray.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="213">
-          <caret line="55" column="38" lean-forward="false" selection-start-line="55" selection-start-column="38" selection-end-line="55" selection-end-column="38" />
-          <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#289#290#0" expanded="true" />
-            <element signature="e#327#328#0" expanded="true" />
-            <element signature="e#361#362#0" expanded="true" />
-            <element signature="e#391#392#0" expanded="true" />
-            <element signature="e#437#438#0" expanded="true" />
-            <element signature="e#475#476#0" expanded="true" />
-            <element signature="e#1288#1289#0" expanded="true" />
-            <element signature="e#1335#1336#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/KiritoDB.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="360">
+        <state relative-caret-position="281">
           <caret line="24" column="28" lean-forward="false" selection-start-line="24" selection-start-column="28" selection-end-line="24" selection-end-column="28" />
           <folding>
             <element signature="imports" expanded="true" />
@@ -1418,24 +1252,113 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/MemoryIndex.java">
+    <entry file="jar:///Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/src.zip!/java/lang/String.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-113">
-          <caret line="36" column="53" lean-forward="true" selection-start-line="36" selection-start-column="53" selection-end-line="36" selection-end-column="53" />
+        <state relative-caret-position="121">
+          <caret line="956" column="18" lean-forward="false" selection-start-line="956" selection-start-column="18" selection-end-line="956" selection-end-column="18" />
           <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#2448#2449#0" expanded="true" />
-            <element signature="e#2517#2518#0" expanded="true" />
-            <element signature="e#2544#2545#0" expanded="true" />
-            <element signature="e#2584#2585#0" expanded="true" />
+            <element signature="e#20727#20728#0" expanded="true" />
+            <element signature="e#20771#20772#0" expanded="true" />
+            <element signature="e#36393#36394#0" expanded="true" />
+            <element signature="e#36459#36460#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/engine_java/jvm_parameters">
+    <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/ComparableByteArray.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
+        <state relative-caret-position="-417">
+          <caret line="7" column="3" lean-forward="true" selection-start-line="7" selection-start-column="3" selection-end-line="7" selection-end-column="3" />
+          <folding>
+            <element signature="e#273#274#0" expanded="true" />
+            <element signature="e#311#312#0" expanded="true" />
+            <element signature="e#345#346#0" expanded="true" />
+            <element signature="e#375#376#0" expanded="true" />
+            <element signature="e#421#422#0" expanded="true" />
+            <element signature="e#459#460#0" expanded="true" />
+            <element signature="e#735#736#0" expanded="true" />
+            <element signature="e#782#783#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/MemoryIndex.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-168">
+          <caret line="31" column="9" lean-forward="true" selection-start-line="31" selection-start-column="9" selection-end-line="31" selection-end-column="9" />
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="e#2562#2563#0" expanded="true" />
+            <element signature="e#2631#2632#0" expanded="true" />
+            <element signature="e#2658#2659#0" expanded="true" />
+            <element signature="e#2698#2699#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/exceptions/RetCodeEnum.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="75">
+          <caret line="5" column="12" lean-forward="false" selection-start-line="5" selection-start-column="12" selection-end-line="5" selection-end-column="12" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/AbstractEngine.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="15">
+          <caret line="10" column="22" lean-forward="false" selection-start-line="10" selection-start-column="22" selection-end-line="10" selection-end-column="22" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/AbstractVisitor.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="45">
+          <caret line="3" column="27" lean-forward="false" selection-start-line="3" selection-start-column="27" selection-end-line="3" selection-end-column="27" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/EngineRace.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="210">
+          <caret line="24" column="0" lean-forward="true" selection-start-line="24" selection-start-column="0" selection-end-line="24" selection-end-column="0" />
+          <folding>
+            <element signature="e#804#805#0" expanded="true" />
+            <element signature="e#836#837#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/exceptions/EngineException.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="90">
+          <caret line="6" column="13" lean-forward="false" selection-start-line="6" selection-start-column="13" selection-end-line="6" selection-end-column="13" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/engine_example/data_store.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1565">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/engine_example/engine_example.cc">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-785">
+          <caret line="24" column="18" lean-forward="false" selection-start-line="24" selection-start-column="13" selection-end-line="24" selection-end-column="18" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/Main.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="281">
+          <caret line="30" column="61" lean-forward="true" selection-start-line="30" selection-start-column="61" selection-end-line="30" selection-end-column="61" />
           <folding />
         </state>
       </provider>
