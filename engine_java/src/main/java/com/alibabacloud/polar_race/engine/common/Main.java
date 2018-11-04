@@ -26,9 +26,9 @@ public class Main {
         for(int i=0;i<4 * 1024;i++){
             content4 += "4";
         }
-        engineRace.write("hello113".getBytes(), content1.getBytes());
-        engineRace.write("hello114".getBytes(), content2.getBytes());
-        byte[] read = engineRace.read("hello113".getBytes());
+//        engineRace.write("hello113".getBytes(), content1.getBytes());
+//        engineRace.write("hello114".getBytes(), content2.getBytes());
+        byte[] read = engineRace.read("hello114".getBytes());
         if(read!=null){
             System.out.println(new String(read));
         }else System.out.println("null");

@@ -16,7 +16,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class MemoryIndex {
 
-    private Map<ComparableByteArray, Long> indexes;
+    private Map<String, Long> indexes;
     private MappedByteBuffer mappedByteBuffer;
     static ThreadLocal<ByteBuffer> bufferThreadLocal = ThreadLocal.withInitial(() -> ByteBuffer.allocate(16));
 
@@ -56,14 +56,14 @@ public class MemoryIndex {
                 mappedByteBuffer.position(mappedByteBuffer.position() - 16);
                 break;
             }
-            this.indexes.put(new ComparableByteArray(key), byteArrayToLong(position));
+            this.indexes.put(new String(key), byteArrayToLong(position));
         } while (true);
 
 
     }
 
     public void recordPosition(byte[] key, Long position) {
-        this.indexes.put(new ComparableByteArray(key), position);
+        this.indexes.put(new String(key), position);
         ByteBuffer buffer = bufferThreadLocal.get();
         buffer.clear();
         buffer.put(key);
@@ -73,7 +73,7 @@ public class MemoryIndex {
     }
 
     public Long getPosition(byte[] key) {
-        return this.indexes.get(new ComparableByteArray(key));
+        return this.indexes.get(new String(key));
     }
 
     public void close() {
