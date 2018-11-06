@@ -23,7 +23,7 @@ public class MemoryIndex {
     private AtomicLong wrotePosition;
 
     public MemoryIndex(String path) {
-        this.indexes = new LongLongHashMap();
+        this.indexes = new LongLongHashMap(64000010);
         File file = new File(path);
         if (!file.exists()) {
             try {
