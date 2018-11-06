@@ -1,5 +1,7 @@
 package moe.cnkirito.kiritodb;
 
+import com.carrotsearch.hppc.LongLongHashMap;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -16,12 +18,13 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class MemoryIndex {
 
-    private Map<String, Long> indexes;
+    private Object indexPutLock = new Object();
+    private LongLongHashMap indexes;
     private MappedByteBuffer mappedByteBuffer;
     static ThreadLocal<ByteBuffer> bufferThreadLocal = ThreadLocal.withInitial(() -> ByteBuffer.allocate(16));
 
     public MemoryIndex(String path) {
-        this.indexes = new ConcurrentHashMap<>();
+        this.indexes = new LongLongHashMap();
         File file = new File(path);
         if (!file.exists()) {
             try {
@@ -56,13 +59,17 @@ public class MemoryIndex {
                 mappedByteBuffer.position(mappedByteBuffer.position() - 16);
                 break;
             }
-            this.indexes.put(new String(key), byteArrayToLong(position));
+            synchronized (indexPutLock) {
+                this.indexes.put(byteArrayToLong(key), byteArrayToLong(position));
+            }
         } while (true);
 
     }
 
     public void recordPosition(byte[] key, Long position) {
-        this.indexes.put(new String(key), position);
+        synchronized (indexPutLock) {
+            this.indexes.put(byteArrayToLong(key), position);
+        }
         ByteBuffer buffer = bufferThreadLocal.get();
         buffer.clear();
         buffer.put(key);
@@ -74,7 +81,7 @@ public class MemoryIndex {
     }
 
     public Long getPosition(byte[] key) {
-        return this.indexes.get(new String(key));
+        return this.indexes.get(byteArrayToLong(key));
     }
 
     public void close() {

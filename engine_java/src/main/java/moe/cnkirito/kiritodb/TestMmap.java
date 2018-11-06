@@ -1,5 +1,6 @@
 package moe.cnkirito.kiritodb;
 
+
 import org.junit.Test;
 
 import java.io.File;
@@ -27,7 +28,7 @@ public class TestMmap {
         System.out.println(new String(content));
     }
 
-    @Test
+
     public void test2() throws Exception {
         File file = new File("/tmp/kiritoDB_index");
         RandomAccessFile randomAccessFile = new RandomAccessFile(file,"rw");
