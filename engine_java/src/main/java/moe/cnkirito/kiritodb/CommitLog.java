@@ -37,7 +37,7 @@ public class CommitLog {
         try {
             RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
             this.fileChannel = randomAccessFile.getChannel();
-            this.wrotePosition = new AtomicLong(fileChannel.position());
+            this.wrotePosition = new AtomicLong(fileChannel.size());
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -70,7 +70,10 @@ public class CommitLog {
             e.printStackTrace();
             return null;
         }
-        return readBuffer.array();
+        byte[] bytes = new byte[4 * 1024];
+        readBuffer.flip();
+        readBuffer.get(bytes);
+        return bytes;
     }
 
 

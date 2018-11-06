@@ -1,6 +1,7 @@
 package moe.cnkirito.kiritodb;
 
 
+import com.carrotsearch.hppc.LongLongHashMap;
 import org.junit.Test;
 
 import java.io.File;
@@ -43,6 +44,16 @@ public class TestMmap {
         System.out.println(new String(content));
         System.out.println(aLong);
 
+    }
+
+    @Test
+    public void testLongLongHashMap(){
+        LongLongHashMap longHashMap = new LongLongHashMap();
+        longHashMap.put(1L,1L);
+        longHashMap.put(2L,2L);
+        System.out.println(longHashMap.get(1L));
+        System.out.println(longHashMap.get(2L));
+        System.out.println(longHashMap.get(3L));
     }
 
 }

@@ -26,12 +26,16 @@ public class Main {
         for(int i=0;i<4 * 1024;i++){
             content4 += "4";
         }
-        engineRace.write("hello113".getBytes(), content1.getBytes());
-        engineRace.write("hello114".getBytes(), content2.getBytes());
-        byte[] read = engineRace.read("hello114".getBytes());
-        if(read!=null){
-            System.out.println(new String(read));
-        }else System.out.println("null");
+//        engineRace.write("hello113".getBytes(), content3.getBytes());
+//        engineRace.write("hello114".getBytes(), content4.getBytes());
+        byte[] read1 = engineRace.read("hello111".getBytes());
+        byte[] read2 = engineRace.read("hello112".getBytes());
+        byte[] read3 = engineRace.read("hello113".getBytes());
+        byte[] read4 = engineRace.read("hello114".getBytes());
+        System.out.println(new String(read1));
+        System.out.println(new String(read2));
+        System.out.println(new String(read3));
+        System.out.println(new String(read4));
 
     }
 }

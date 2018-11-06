@@ -7,10 +7,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
-import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * @author kirito.moe@foxmail.com
@@ -20,8 +18,9 @@ public class MemoryIndex {
 
     private Object indexPutLock = new Object();
     private LongLongHashMap indexes;
-    private MappedByteBuffer mappedByteBuffer;
+    private FileChannel indexFileChannel;
     static ThreadLocal<ByteBuffer> bufferThreadLocal = ThreadLocal.withInitial(() -> ByteBuffer.allocate(16));
+    private AtomicLong wrotePosition;
 
     public MemoryIndex(String path) {
         this.indexes = new LongLongHashMap();
@@ -33,40 +32,36 @@ public class MemoryIndex {
                 e.printStackTrace();
             }
         }
+        long endPosition = 0L;
         try {
             RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
-            MappedByteBuffer mappedByteBuffer = randomAccessFile.getChannel().map(FileChannel.MapMode.READ_WRITE, 0, 1024L * 1024L * 1024L * 3 / 2);
-//            MappedByteBuffer mappedByteBuffer = randomAccessFile.getChannel().map(FileChannel.MapMode.READ_WRITE, 0, 1024L * 1024L );
-            this.mappedByteBuffer = mappedByteBuffer;
+            this.indexFileChannel = randomAccessFile.getChannel();
+            endPosition = indexFileChannel.size();
+            wrotePosition = new AtomicLong(indexFileChannel.size());
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
-        do {
-            byte[] key = new byte[8];
-            byte[] position = new byte[8];
-            mappedByteBuffer.get(key);
-            mappedByteBuffer.get(position);
-            boolean flag = true;
-            for (int i = 0; i < 8; i++) {
-                if (key[i] != (byte) 0 || position[i] != (byte) 0) {
-                    flag = false;
-                    break;
+        long num = endPosition / 16L;
+        for (long i = 0; i < num; i++) {
+            ByteBuffer byteBuffer = bufferThreadLocal.get();
+            byteBuffer.clear();
+            try {
+                indexFileChannel.read(byteBuffer);
+                //todo
+                byteBuffer.flip();//7522537965570044211  7522537965570044212
+                synchronized (indexPutLock) {
+                    this.indexes.put(byteBuffer.getLong(), byteBuffer.getLong(8));
                 }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            if (flag) {
-                mappedByteBuffer.position(mappedByteBuffer.position() - 16);
-                break;
-            }
-            synchronized (indexPutLock) {
-                this.indexes.put(byteArrayToLong(key), byteArrayToLong(position));
-            }
-        } while (true);
-
+        }
     }
 
     public void recordPosition(byte[] key, Long position) {
+        position++;
         synchronized (indexPutLock) {
             this.indexes.put(byteArrayToLong(key), position);
         }
@@ -74,18 +69,24 @@ public class MemoryIndex {
         buffer.clear();
         buffer.put(key);
         buffer.putLong(position);
+        //todo
         buffer.flip();
-        synchronized (this){
-            mappedByteBuffer.put(buffer);
+        try {
+            indexFileChannel.write(buffer, wrotePosition.getAndAdd(16));
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
     public Long getPosition(byte[] key) {
-        return this.indexes.get(byteArrayToLong(key));
+        long l = this.indexes.get(byteArrayToLong(key)) - 1;
+        if (l == -1L)
+            return null;
+        else
+            return l;
     }
 
     public void close() {
-        mappedByteBuffer.force();
     }
 
     public static long byteArrayToLong(byte[] b) {

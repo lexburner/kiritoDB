@@ -2,10 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="df03fbde-fd6a-44b4-a1b5-a5cf79cc720f" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/libraries/Maven__com_carrotsearch_hppc_0_8_1.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine_java/engine_java.iml" beforeDir="false" afterPath="$PROJECT_DIR$/engine_java/engine_java.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/engine_java/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/engine_java/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/CommitLog.java" beforeDir="false" afterPath="$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/CommitLog.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/KiritoDB.java" beforeDir="false" afterPath="$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/KiritoDB.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/MemoryIndex.java" beforeDir="false" afterPath="$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/MemoryIndex.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/TestMmap.java" beforeDir="false" afterPath="$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/TestMmap.java" afterDir="false" />
     </list>
@@ -26,14 +26,65 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="CommitLog.java" pinned="false" current-in-tab="false">
+      <file leaf-file-name="CommitLog.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/CommitLog.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="244">
-              <caret line="57" column="33" selection-start-line="57" selection-start-column="33" selection-end-line="57" selection-end-column="33" />
+            <state relative-caret-position="269">
+              <caret line="74" column="21" lean-forward="true" selection-start-line="74" selection-start-column="21" selection-end-line="74" selection-end-column="21" />
               <folding>
                 <element signature="imports" expanded="true" />
+                <element signature="e#2212#2213#0" expanded="true" />
+                <element signature="e#2247#2248#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="KiritoDB.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/KiritoDB.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="172">
+              <caret line="19" selection-start-line="19" selection-end-line="19" />
+              <folding>
+                <element signature="e#305#306#0" expanded="true" />
+                <element signature="e#352#353#0" expanded="true" />
+                <element signature="e#402#403#0" expanded="true" />
+                <element signature="e#445#446#0" expanded="true" />
+                <element signature="e#524#525#0" expanded="true" />
+                <element signature="e#551#552#0" expanded="true" />
+                <element signature="e#584#585#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="ComparableByteArray.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/ComparableByteArray.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="195">
+              <caret line="15" column="30" lean-forward="true" selection-start-line="15" selection-start-column="30" selection-end-line="15" selection-end-column="30" />
+              <folding>
+                <element signature="e#345#346#0" expanded="true" />
+                <element signature="e#375#376#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="jvm_parameters" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/engine_java/jvm_parameters">
+          <provider selected="true" editor-type-id="text-editor">
+            <state>
+              <caret column="23" lean-forward="true" selection-start-column="23" selection-end-column="23" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="EngineRace.java" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/EngineRace.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="122">
+              <caret line="21" column="18" selection-start-line="21" selection-start-column="18" selection-end-line="21" selection-end-column="18" />
             </state>
           </provider>
         </entry>
@@ -41,15 +92,20 @@
       <file leaf-file-name="MemoryIndex.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/MemoryIndex.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-672">
-              <caret line="21" column="36" selection-start-line="21" selection-start-column="36" selection-end-line="21" selection-end-column="36" />
+            <state relative-caret-position="5">
+              <caret line="24" column="11" selection-start-line="24" selection-start-column="11" selection-end-line="24" selection-end-column="11" />
               <folding>
                 <element signature="imports" expanded="true" />
-                <element signature="e#2776#2777#0" expanded="true" />
-                <element signature="e#2837#2838#0" expanded="true" />
-                <element signature="e#2864#2865#0" expanded="true" />
-                <element signature="e#2904#2905#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="ByteBuffer.java" pinned="false" current-in-tab="false">
+        <entry file="jar:///Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home/src.zip!/java/nio/ByteBuffer.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="253">
+              <caret line="1834" column="32" selection-start-line="1834" selection-start-column="25" selection-end-line="1834" selection-end-column="32" />
             </state>
           </provider>
         </entry>
@@ -57,8 +113,8 @@
       <file leaf-file-name="TestMmap.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/TestMmap.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-45">
-              <caret line="18" column="21" selection-start-line="18" selection-start-column="21" selection-end-line="18" selection-end-column="21" />
+            <state relative-caret-position="266">
+              <caret line="53" column="48" lean-forward="true" selection-start-line="53" selection-start-column="48" selection-end-line="53" selection-end-column="48" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -66,42 +122,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="LongLongHashMap.class" pinned="false" current-in-tab="false">
-        <entry file="jar://$MAVEN_REPOSITORY$/com/carrotsearch/hppc/0.8.1/hppc-0.8.1.jar!/com/carrotsearch/hppc/LongLongHashMap.class">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="255">
-              <caret line="27" column="11" selection-start-line="27" selection-start-column="11" selection-end-line="27" selection-end-column="11" />
-              <folding>
-                <element signature="e#906#907#0" expanded="true" />
-                <element signature="e#929#930#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="LongLongMap.class" pinned="false" current-in-tab="false">
-        <entry file="jar://$MAVEN_REPOSITORY$/com/carrotsearch/hppc/0.8.1/hppc-0.8.1.jar!/com/carrotsearch/hppc/LongLongMap.class">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="90">
-              <caret line="9" column="55" selection-start-line="9" selection-start-column="55" selection-end-line="9" selection-end-column="55" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="LongLongAssociativeContainer.class" pinned="false" current-in-tab="false">
-        <entry file="jar://$MAVEN_REPOSITORY$/com/carrotsearch/hppc/0.8.1/hppc-0.8.1.jar!/com/carrotsearch/hppc/LongLongAssociativeContainer.class">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="90">
-              <caret line="13" column="17" selection-start-line="13" selection-start-column="17" selection-end-line="13" selection-end-column="17" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="Main.java" pinned="false" current-in-tab="true">
+      <file leaf-file-name="Main.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/Main.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="188">
-              <caret line="31" column="23" selection-start-line="31" selection-start-column="23" selection-end-line="31" selection-end-column="23" />
+            <state relative-caret-position="196">
+              <caret line="31" column="20" lean-forward="true" selection-start-line="31" selection-start-column="20" selection-end-line="31" selection-end-column="20" />
             </state>
           </provider>
         </entry>
@@ -115,30 +140,14 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="ComparableByteArray.java" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/ComparableByteArray.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="15">
-              <caret line="4" column="3" selection-start-line="4" selection-start-column="3" selection-end-line="4" selection-end-column="3" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="ByteBuffer.java" pinned="false" current-in-tab="false">
-        <entry file="jar:///Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home/src.zip!/java/nio/ByteBuffer.java">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="138">
-              <caret line="761" column="22" selection-start-line="761" selection-start-column="22" selection-end-line="761" selection-end-column="22" />
-            </state>
-          </provider>
-        </entry>
-      </file>
     </leaf>
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
       <find>get</find>
       <find>indexes</find>
+      <find>getLong</find>
+      <find>bufferThreadLocal</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -151,15 +160,15 @@
         <option value="$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/TestMain.java" />
         <option value="$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/TestEngine.java" />
         <option value="$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/MemoryDB.java" />
-        <option value="$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/KiritoDB.java" />
-        <option value="$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/CommitLog.java" />
         <option value="$PROJECT_DIR$/engine_java/jvm_parameters" />
         <option value="$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/ComparableByteArray.java" />
         <option value="$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/EngineRace.java" />
-        <option value="$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/Main.java" />
-        <option value="$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/MemoryIndex.java" />
         <option value="$PROJECT_DIR$/engine_java/pom.xml" />
+        <option value="$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/KiritoDB.java" />
         <option value="$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/TestMmap.java" />
+        <option value="$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/MemoryIndex.java" />
+        <option value="$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/Main.java" />
+        <option value="$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/CommitLog.java" />
       </list>
     </option>
   </component>
@@ -182,7 +191,7 @@
   <component name="ProjectFrameBounds">
     <option name="y" value="23" />
     <option name="width" value="1440" />
-    <option name="height" value="816" />
+    <option name="height" value="814" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -465,17 +474,6 @@
         </pattern>
       </extension>
     </configuration>
-    <configuration name="TestMain" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="com.alibabacloud.TestMain" />
-      <module name="engine_java" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <extension name="coverage">
-        <pattern>
-          <option name="PATTERN" value="com.alibabacloud.*" />
-          <option name="ENABLED" value="true" />
-        </pattern>
-      </extension>
-    </configuration>
     <configuration default="true" type="Application" factoryName="Application">
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
     </configuration>
@@ -525,6 +523,29 @@
       </option>
       <patterns />
     </configuration>
+    <configuration name="TestMmap.testLongLongHashMap" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="engine_java" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="moe.cnkirito.kiritodb.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
+      <option name="PACKAGE_NAME" value="moe.cnkirito.kiritodb" />
+      <option name="MAIN_CLASS_NAME" value="moe.cnkirito.kiritodb.TestMmap" />
+      <option name="METHOD_NAME" value="testLongLongHashMap" />
+      <option name="TEST_OBJECT" value="method" />
+      <option name="VM_PARAMETERS" value="-ea" />
+      <option name="PARAMETERS" />
+      <option name="WORKING_DIRECTORY" value="%MODULE_WORKING_DIR%" />
+      <option name="PASS_PARENT_ENVS" value="true" />
+      <option name="TEST_SEARCH_SCOPE">
+        <value defaultName="singleModule" />
+      </option>
+      <patterns />
+    </configuration>
     <configuration default="true" type="JUnit" factoryName="JUnit">
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
       <option name="ALTERNATIVE_JRE_PATH" />
@@ -564,19 +585,19 @@
       <listeners />
     </configuration>
     <list>
-      <item itemvalue="Application.TestMain" />
       <item itemvalue="Application.TestEngine" />
       <item itemvalue="Application.Main" />
       <item itemvalue="JUnit.TestMmap.test1" />
       <item itemvalue="JUnit.TestMmap.test2" />
+      <item itemvalue="JUnit.TestMmap.testLongLongHashMap" />
     </list>
     <recent_temporary>
       <list>
         <item itemvalue="Application.Main" />
+        <item itemvalue="JUnit.TestMmap.testLongLongHashMap" />
         <item itemvalue="JUnit.TestMmap.test2" />
         <item itemvalue="JUnit.TestMmap.test1" />
         <item itemvalue="Application.TestEngine" />
-        <item itemvalue="Application.TestMain" />
       </list>
     </recent_temporary>
   </component>
@@ -591,26 +612,11 @@
       <option name="presentableId" value="Default" />
       <updated>1539580234058</updated>
       <workItem from="1539580235849" duration="1545000" />
-      <workItem from="1541479347559" duration="2940000" />
+      <workItem from="1541479347559" duration="9454000" />
     </task>
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="TestMmap_test1 - 2018.10.28 at 21h 50m 34s.xml">
-      <configuration name="TestMmap.test1" configurationId="JUnit" />
-    </history-entry>
-    <history-entry file="TestMmap_test1 - 2018.10.28 at 21h 51m 20s.xml">
-      <configuration name="TestMmap.test1" configurationId="JUnit" />
-    </history-entry>
-    <history-entry file="TestMmap_test1 - 2018.10.28 at 21h 51m 41s.xml">
-      <configuration name="TestMmap.test1" configurationId="JUnit" />
-    </history-entry>
-    <history-entry file="TestMmap_test1 - 2018.10.28 at 21h 55m 33s.xml">
-      <configuration name="TestMmap.test1" configurationId="JUnit" />
-    </history-entry>
-    <history-entry file="TestMmap_test2 - 2018.10.28 at 22h 08m 45s.xml">
-      <configuration name="TestMmap.test2" configurationId="JUnit" />
-    </history-entry>
     <history-entry file="TestMmap_test2 - 2018.10.28 at 22h 10m 16s.xml">
       <configuration name="TestMmap.test2" configurationId="JUnit" />
     </history-entry>
@@ -626,12 +632,27 @@
     <history-entry file="TestMmap_test2 - 2018.10.28 at 22h 20m 51s.xml">
       <configuration name="TestMmap.test2" configurationId="JUnit" />
     </history-entry>
+    <history-entry file="TestMmap_testLongLongHashMap - 2018.11.06 at 15h 44m 01s.xml">
+      <configuration name="TestMmap.testLongLongHashMap" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="TestMmap_testLongLongHashMap - 2018.11.06 at 15h 44m 51s.xml">
+      <configuration name="TestMmap.testLongLongHashMap" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="TestMmap_testLongLongHashMap - 2018.11.06 at 15h 45m 00s.xml">
+      <configuration name="TestMmap.testLongLongHashMap" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="TestMmap_testLongLongHashMap - 2018.11.06 at 15h 46m 06s.xml">
+      <configuration name="TestMmap.testLongLongHashMap" configurationId="JUnit" />
+    </history-entry>
+    <history-entry file="TestMmap_testLongLongHashMap - 2018.11.06 at 15h 53m 31s.xml">
+      <configuration name="TestMmap.testLongLongHashMap" configurationId="JUnit" />
+    </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="25122000" />
+    <option name="totallyTimeSpent" value="31636000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="23" width="1440" height="816" extended-state="6" />
+    <frame x="0" y="23" width="1440" height="814" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info anchor="bottom" id="TODO" order="6" />
@@ -642,14 +663,14 @@
       <window_info anchor="bottom" id="Database Changes" order="7" show_stripe_button="false" />
       <window_info anchor="bottom" id="Version Control" order="7" />
       <window_info anchor="bottom" id="Run" order="2" />
-      <window_info anchor="bottom" id="Terminal" order="7" weight="0.33189654" />
+      <window_info anchor="bottom" id="Terminal" order="7" weight="0.33285302" />
       <window_info id="Designer" order="2" />
       <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.24606581" />
       <window_info anchor="right" id="Database" order="3" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
-      <window_info active="true" anchor="bottom" id="Debug" order="3" visible="true" weight="0.3994253" />
+      <window_info active="true" anchor="bottom" id="Debug" order="3" visible="true" weight="0.39913544" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
@@ -664,65 +685,61 @@
   <component name="VcsContentAnnotationSettings">
     <option name="myLimit" value="2678400000" />
   </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <option name="time" value="13" />
+    </breakpoint-manager>
+  </component>
   <component name="debuggerHistoryManager">
     <expressions id="evaluateExpression">
       <expression>
-        <expression-string>buffer.array()</expression-string>
+        <expression-string>new String(read1)</expression-string>
         <language-id>JAVA</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>memoryIndex</expression-string>
+        <expression-string>new String(value)</expression-string>
         <language-id>JAVA</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>readBuffer</expression-string>
+        <expression-string>new String(readBuffer.array())</expression-string>
         <language-id>JAVA</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>content</expression-string>
+        <expression-string>readBuffer.array()</expression-string>
         <language-id>JAVA</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>&quot;helloworld123456&quot;.getBytes()</expression-string>
+        <expression-string>randomAccessFile.channel.position()</expression-string>
         <language-id>JAVA</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>((DirectByteBuffer) mappedByteBuffer).position</expression-string>
-        <language-id>JAVA</language-id>
-        <custom-info>java.nio.DirectByteBuffer</custom-info>
-        <evaluation-mode>EXPRESSION</evaluation-mode>
-      </expression>
-      <expression>
-        <expression-string>engineRace.read(&quot;hello111&quot;.getBytes())</expression-string>
+        <expression-string>randomAccessFile.getChannel().position()</expression-string>
         <language-id>JAVA</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>mappedByteBuffer.position()</expression-string>
+        <expression-string>indexes.get(3L)</expression-string>
         <language-id>JAVA</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
       <expression>
-        <expression-string>memoryIndex.indexes</expression-string>
+        <expression-string>indexes.get(1L)</expression-string>
         <language-id>JAVA</language-id>
-        <custom-info>java.util.concurrent.ConcurrentHashMap,java.util.concurrent.ConcurrentHashMap.MapEntry,moe.cnkirito.kiritodb.CommitLog,moe.cnkirito.kiritodb.MemoryIndex</custom-info>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>indexes.get(7522537965570044212L)</expression-string>
+        <language-id>JAVA</language-id>
         <evaluation-mode>EXPRESSION</evaluation-mode>
       </expression>
     </expressions>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/AbstractVisitor.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="75">
-          <caret line="5" lean-forward="true" selection-start-line="5" selection-end-line="5" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/engine_example/data_store.h">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
@@ -751,13 +768,6 @@
     <entry file="jar:///Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/src.zip!/java/util/Map.java" />
     <entry file="jar:///Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/src.zip!/java/util/concurrent/ConcurrentHashMap.java" />
     <entry file="jar:///Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/src.zip!/java/nio/MappedByteBuffer.java" />
-    <entry file="file://$PROJECT_DIR$/engine_java/jvm_parameters">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret column="26" selection-start-column="26" selection-end-column="26" />
-        </state>
-      </provider>
-    </entry>
     <entry file="jar:///Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/src.zip!/java/util/Comparator.java" />
     <entry file="jar:///Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home/src.zip!/java/lang/String.java" />
     <entry file="file://$PROJECT_DIR$/engine_example/data_store.cc">
@@ -807,31 +817,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/EngineRace.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="105">
-          <caret line="17" column="19" selection-start-line="17" selection-start-column="19" selection-end-line="17" selection-end-column="19" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/KiritoDB.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="284">
-          <caret line="20" column="21" selection-start-line="20" selection-start-column="21" selection-end-line="20" selection-end-column="21" />
-          <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#305#306#0" expanded="true" />
-            <element signature="e#352#353#0" expanded="true" />
-            <element signature="e#402#403#0" expanded="true" />
-            <element signature="e#445#446#0" expanded="true" />
-            <element signature="e#482#483#0" expanded="true" />
-            <element signature="e#524#525#0" expanded="true" />
-            <element signature="e#551#552#0" expanded="true" />
-            <element signature="e#584#585#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/test/test.cc">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="810">
@@ -843,30 +828,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="145">
           <caret line="214" column="14" selection-start-line="214" selection-start-column="14" selection-end-line="214" selection-end-column="14" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="jar:///Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home/src.zip!/java/nio/ByteBuffer.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="138">
-          <caret line="761" column="22" selection-start-line="761" selection-start-column="22" selection-end-line="761" selection-end-column="22" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/ComparableByteArray.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="15">
-          <caret line="4" column="3" selection-start-line="4" selection-start-column="3" selection-end-line="4" selection-end-column="3" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/CommitLog.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="244">
-          <caret line="57" column="33" selection-start-line="57" selection-start-column="33" selection-end-line="57" selection-end-column="33" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -895,20 +856,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/MemoryIndex.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-672">
-          <caret line="21" column="36" selection-start-line="21" selection-start-column="36" selection-end-line="21" selection-end-column="36" />
-          <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#2776#2777#0" expanded="true" />
-            <element signature="e#2837#2838#0" expanded="true" />
-            <element signature="e#2864#2865#0" expanded="true" />
-            <element signature="e#2904#2905#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/engine_java/pom.xml">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="146">
@@ -916,20 +863,97 @@
         </state>
       </provider>
     </entry>
+    <entry file="jar:///Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home/src.zip!/java/nio/MappedByteBuffer.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="145">
+          <caret line="65" column="22" selection-start-line="65" selection-start-column="22" selection-end-line="65" selection-end-column="22" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/engine_java/jvm_parameters">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret column="23" lean-forward="true" selection-start-column="23" selection-end-column="23" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="jar:///Library/Java/JavaVirtualMachines/jdk1.8.0_181.jdk/Contents/Home/src.zip!/java/nio/ByteBuffer.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="253">
+          <caret line="1834" column="32" selection-start-line="1834" selection-start-column="25" selection-end-line="1834" selection-end-column="32" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/TestMmap.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-45">
-          <caret line="18" column="21" selection-start-line="18" selection-start-column="21" selection-end-line="18" selection-end-column="21" />
+        <state relative-caret-position="266">
+          <caret line="53" column="48" lean-forward="true" selection-start-line="53" selection-start-column="48" selection-end-line="53" selection-end-column="48" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/MemoryIndex.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="5">
+          <caret line="24" column="11" selection-start-line="24" selection-start-column="11" selection-end-line="24" selection-end-column="11" />
+          <folding>
+            <element signature="imports" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/ComparableByteArray.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="195">
+          <caret line="15" column="30" lean-forward="true" selection-start-line="15" selection-start-column="30" selection-end-line="15" selection-end-column="30" />
+          <folding>
+            <element signature="e#345#346#0" expanded="true" />
+            <element signature="e#375#376#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/EngineRace.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="122">
+          <caret line="21" column="18" selection-start-line="21" selection-start-column="18" selection-end-line="21" selection-end-column="18" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/com/alibabacloud/polar_race/engine/common/Main.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="188">
-          <caret line="31" column="23" selection-start-line="31" selection-start-column="23" selection-end-line="31" selection-end-column="23" />
+        <state relative-caret-position="196">
+          <caret line="31" column="20" lean-forward="true" selection-start-line="31" selection-start-column="20" selection-end-line="31" selection-end-column="20" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/KiritoDB.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="172">
+          <caret line="19" selection-start-line="19" selection-end-line="19" />
+          <folding>
+            <element signature="e#305#306#0" expanded="true" />
+            <element signature="e#352#353#0" expanded="true" />
+            <element signature="e#402#403#0" expanded="true" />
+            <element signature="e#445#446#0" expanded="true" />
+            <element signature="e#524#525#0" expanded="true" />
+            <element signature="e#551#552#0" expanded="true" />
+            <element signature="e#584#585#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/engine_java/src/main/java/moe/cnkirito/kiritodb/CommitLog.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="269">
+          <caret line="74" column="21" lean-forward="true" selection-start-line="74" selection-start-column="21" selection-end-line="74" selection-end-column="21" />
+          <folding>
+            <element signature="imports" expanded="true" />
+            <element signature="e#2212#2213#0" expanded="true" />
+            <element signature="e#2247#2248#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
