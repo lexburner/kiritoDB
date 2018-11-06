@@ -59,7 +59,6 @@ public class MemoryIndex {
             this.indexes.put(new String(key), byteArrayToLong(position));
         } while (true);
 
-
     }
 
     public void recordPosition(byte[] key, Long position) {
@@ -69,7 +68,9 @@ public class MemoryIndex {
         buffer.put(key);
         buffer.putLong(position);
         buffer.flip();
-        mappedByteBuffer.put(buffer);
+        synchronized (this){
+            mappedByteBuffer.put(buffer);
+        }
     }
 
     public Long getPosition(byte[] key) {
