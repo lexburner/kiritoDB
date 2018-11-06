@@ -50,7 +50,7 @@ public class MemoryIndex {
             try {
                 indexFileChannel.read(byteBuffer);
                 //todo
-                byteBuffer.flip();//7522537965570044211  7522537965570044212
+                byteBuffer.flip();
                 synchronized (indexPutLock) {
                     this.indexes.put(byteBuffer.getLong(), byteBuffer.getLong(8));
                 }
@@ -69,7 +69,6 @@ public class MemoryIndex {
         buffer.clear();
         buffer.put(key);
         buffer.putLong(position);
-        //todo
         buffer.flip();
         try {
             indexFileChannel.write(buffer, wrotePosition.getAndAdd(16));
@@ -79,7 +78,10 @@ public class MemoryIndex {
     }
 
     public Long getPosition(byte[] key) {
-        long l = this.indexes.get(byteArrayToLong(key)) - 1;
+        long l;
+        synchronized (indexPutLock) {
+            l = this.indexes.get(byteArrayToLong(key)) - 1;
+        }
         if (l == -1L)
             return null;
         else
