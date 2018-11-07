@@ -1,19 +1,20 @@
 package moe.cnkirito.kiritodb;
 
 import com.alibabacloud.polar_race.engine.common.Util;
-import com.carrotsearch.hppc.LongLongHashMap;
+import com.carrotsearch.hppc.LongIntHashMap;
 import org.apache.commons.pool2.ObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.concurrent.atomic.AtomicLong;
+
+import static moe.cnkirito.kiritodb.Constant.INDEX_SIZE;
 
 /**
  * @author kirito.moe@foxmail.com
@@ -23,15 +24,18 @@ public class MemoryIndex {
 
     Logger logger = LoggerFactory.getLogger(MemoryIndex.class);
 
-    private Object indexPutLock = new Object();
     private RandomAccessFile randomAccessFile;
-    private LongLongHashMap indexes;
+    private LongIntHashMap[] indexMapArray;
     private FileChannel indexFileChannel;
-    private ObjectPool<byte[]> bytesPool = new GenericObjectPool<byte[]>(new BytesPoolableFactory(16));
     private AtomicLong wrotePosition;
 
+    static ThreadLocal<ByteBuffer> bufferThreadLocal = ThreadLocal.withInitial(()-> ByteBuffer.allocate(Constant.INDEX_SIZE));
+
     public MemoryIndex(String path) {
-        this.indexes = new LongLongHashMap();
+        this.indexMapArray = new LongIntHashMap[Constant.INDEX_MAP_NUM];
+        for (int i = 0; i < Constant.INDEX_MAP_NUM; i++) {
+            indexMapArray[i] = new LongIntHashMap();
+        }
         File file = new File(path);
         if (!file.exists()) {
             try {
@@ -50,17 +54,18 @@ public class MemoryIndex {
         } catch (IOException e) {
             logger.error("file not found", e);
         }
-        long num = endPosition / 16;
-        ByteBuffer byteBuffer = ByteBuffer.allocate(16);
+        long num = endPosition / INDEX_SIZE;
+        ByteBuffer byteBuffer = ByteBuffer.allocate(INDEX_SIZE);
         for (long i = 0; i < num; i++) {
             byteBuffer.clear();
             try {
                 indexFileChannel.read(byteBuffer);
                 byteBuffer.flip();
-                synchronized (indexPutLock) {
-                    long key = byteBuffer.getLong();
-                    long offset = byteBuffer.getLong();
-                    this.indexes.put(key, offset);
+                long key = byteBuffer.getLong();
+                int offset = byteBuffer.getInt();
+                LongIntHashMap indexes = indexMapArray[(int) (Math.abs(key) % Constant.INDEX_MAP_NUM)];
+                synchronized (indexes) {
+                    indexes.put(key, offset);
                 }
             } catch (IOException e) {
                 logger.error("io exception", e);
@@ -71,36 +76,36 @@ public class MemoryIndex {
 
     public void recordPosition(byte[] key, long position) {
         // 先存文件
-        position++;
-        byte[] buffer = null;
+        int offsetInt = (int) (position / Constant.DATA_SIZE) + 1;
+        ByteBuffer buffer = bufferThreadLocal.get();
+        buffer.clear();
+        buffer.put(key);
+        buffer.putInt(offsetInt);
+        buffer.flip();
         try {
-            buffer = bytesPool.borrowObject();
-        } catch (Exception e) {
-            logger.error("borrowObject failed", e);
-        }
-        System.arraycopy(key, 0, buffer, 0, 8);
-        System.arraycopy(Util.long2bytes(position), 0, buffer, 8, 8);
-        ByteBuffer byteBuffer = ByteBuffer.wrap(buffer);
-        try {
-            long offset = wrotePosition.getAndAdd(16);
-            while (byteBuffer.hasRemaining()) {
-                indexFileChannel.write(byteBuffer, offset + (16 - byteBuffer.remaining()));
+            long offset = wrotePosition.getAndAdd(Constant.INDEX_SIZE);
+            while (buffer.hasRemaining()) {
+                indexFileChannel.write(buffer, offset + (Constant.INDEX_SIZE - buffer.remaining()));
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
         // 后放内存
-        synchronized (indexPutLock) {
-            this.indexes.put(byteArrayToLong(key), position);
+        long keyL = Util.bytes2Long(key);
+        LongIntHashMap indexes = indexMapArray[(int) (Math.abs(keyL) % Constant.INDEX_MAP_NUM)];
+        synchronized (indexes) {
+            indexes.put(keyL, offsetInt);
         }
     }
 
     public Long getPosition(byte[] key) {
-        long offset = this.indexes.get(byteArrayToLong(key));
-        if (offset == 0L)
+        long keyL = Util.bytes2Long(key);
+        LongIntHashMap indexes = indexMapArray[(int) (Math.abs(keyL) % Constant.INDEX_MAP_NUM)];
+        int offsetInt = indexes.get(keyL);
+        if (offsetInt == 0)
             return null;
         else
-            return offset - 1;
+            return ((long) offsetInt - 1) * Constant.DATA_SIZE;
     }
 
     public void close() {
@@ -119,18 +124,6 @@ public class MemoryIndex {
             }
         }
         logger.info("memoryIndex closed.");
-    }
-
-    public static long byteArrayToLong(byte[] buffer) {
-        long values = 0;
-        int len = 8;
-        // 8 与 buffer.length 较小者
-        len = len > buffer.length ? buffer.length : len;
-        for (int i = 0; i < len; ++i) {
-            values <<= 8;
-            values |= (buffer[i] & 0xff);
-        }
-        return values;
     }
 
 }

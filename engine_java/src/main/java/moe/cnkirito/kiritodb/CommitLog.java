@@ -25,7 +25,7 @@ public class CommitLog {
     private RandomAccessFile randomAccessFile;
     private AtomicLong wrotePosition;
 
-    static ThreadLocal<ByteBuffer> bufferThreadLocal = ThreadLocal.withInitial(()-> ByteBuffer.allocate(4*1024));
+    static ThreadLocal<ByteBuffer> bufferThreadLocal = ThreadLocal.withInitial(()-> ByteBuffer.allocate(Constant.DATA_SIZE));
 
     public CommitLog(String path) {
         this.path = path;
@@ -66,7 +66,7 @@ public class CommitLog {
     }
 
     public long write(byte[] value){
-        long position = wrotePosition.getAndAdd(4*1024);
+        long position = wrotePosition.getAndAdd(Constant.DATA_SIZE);
         try {
             ByteBuffer buffer = ByteBuffer.wrap(value);
             while (buffer.hasRemaining()) {
@@ -88,7 +88,7 @@ public class CommitLog {
             return null;
         }
         readBuffer.flip();
-        byte[] bytes = new byte[4 * 1024];
+        byte[] bytes = new byte[Constant.DATA_SIZE];
         readBuffer.get(bytes);
         return bytes;
     }
