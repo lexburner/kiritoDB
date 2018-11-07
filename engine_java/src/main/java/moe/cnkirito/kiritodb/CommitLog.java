@@ -37,7 +37,7 @@ public class CommitLog {
         try {
             RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
             this.fileChannel = randomAccessFile.getChannel();
-            this.wrotePosition = new AtomicLong(fileChannel.size());
+            this.wrotePosition = new AtomicLong(randomAccessFile.length());
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -50,7 +50,10 @@ public class CommitLog {
     public void write(byte[] key,byte[] value){
         long position = wrotePosition.getAndAdd(value.length);
         try {
-            this.fileChannel.write(ByteBuffer.wrap(value), position);
+            ByteBuffer buffer = ByteBuffer.wrap(value);
+            while (buffer.hasRemaining()) {
+                this.fileChannel.write(buffer, position + (value.length - buffer.remaining()));
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

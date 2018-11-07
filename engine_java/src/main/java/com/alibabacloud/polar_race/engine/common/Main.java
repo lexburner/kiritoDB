@@ -26,10 +26,10 @@ public class Main {
         for(int i=0;i<4 * 1024;i++){
             content4 += "4";
         }
-//        engineRace.write("hello111".getBytes(), content1.getBytes());
-//        engineRace.write("hello112".getBytes(), content2.getBytes());
-//        engineRace.write("hello113".getBytes(), content3.getBytes());
-//        engineRace.write("hello114".getBytes(), content4.getBytes());
+        engineRace.write("hello111".getBytes(), content1.getBytes());
+        engineRace.write("hello112".getBytes(), content2.getBytes());
+        engineRace.write("hello113".getBytes(), content3.getBytes());
+        engineRace.write("hello114".getBytes(), content4.getBytes());
         byte[] read1 = engineRace.read("hello111".getBytes());
         byte[] read2 = engineRace.read("hello112".getBytes());
         byte[] read3 = engineRace.read("hello113".getBytes());

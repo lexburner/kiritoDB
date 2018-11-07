@@ -36,8 +36,8 @@ public class MemoryIndex {
         try {
             RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
             this.indexFileChannel = randomAccessFile.getChannel();
-            endPosition = indexFileChannel.size();
-            wrotePosition = new AtomicLong(indexFileChannel.size());
+            endPosition = randomAccessFile.length();
+            wrotePosition = new AtomicLong(randomAccessFile.length());
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -51,7 +51,9 @@ public class MemoryIndex {
                 indexFileChannel.read(byteBuffer);
                 byteBuffer.flip();
                 synchronized (indexPutLock) {
-                    this.indexes.put(byteBuffer.getLong(), byteBuffer.getLong(8));
+                    long key = byteBuffer.getLong();
+                    long offset = byteBuffer.getLong();
+                    this.indexes.put(key, offset);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -59,7 +61,7 @@ public class MemoryIndex {
         }
     }
 
-    public void recordPosition(byte[] key, Long position) {
+    public void recordPosition(byte[] key, long position) {
         position++;
         synchronized (indexPutLock) {
             this.indexes.put(byteArrayToLong(key), position);
@@ -70,7 +72,10 @@ public class MemoryIndex {
         buffer.putLong(position);
         buffer.flip();
         try {
-            indexFileChannel.write(buffer, wrotePosition.getAndAdd(16));
+            long offset = wrotePosition.getAndAdd(16);
+            while (buffer.hasRemaining()) {
+                indexFileChannel.write(buffer, offset + (16 - buffer.remaining()));
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -90,11 +95,14 @@ public class MemoryIndex {
     public void close() {
     }
 
-    public static long byteArrayToLong(byte[] b) {
+    public static long byteArrayToLong(byte[] buffer) {
         long values = 0;
-        for (int i = 0; i < 8; i++) {
+        int len = 8;
+        // 8 与 buffer.length 较小者
+        len = len > buffer.length ? buffer.length : len;
+        for (int i = 0; i < len; ++i) {
             values <<= 8;
-            values |= (b[i] & 0xff);
+            values |= (buffer[i] & 0xff);
         }
         return values;
     }
