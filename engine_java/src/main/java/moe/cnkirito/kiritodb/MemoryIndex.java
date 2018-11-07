@@ -1,9 +1,6 @@
 package moe.cnkirito.kiritodb;
 
-import com.alibabacloud.polar_race.engine.common.Util;
 import com.carrotsearch.hppc.LongIntHashMap;
-import org.apache.commons.pool2.ObjectPool;
-import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,9 +9,10 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
-
-import static moe.cnkirito.kiritodb.Constant.INDEX_SIZE;
 
 /**
  * @author kirito.moe@foxmail.com
@@ -22,112 +20,182 @@ import static moe.cnkirito.kiritodb.Constant.INDEX_SIZE;
  */
 public class MemoryIndex {
 
-    Logger logger = LoggerFactory.getLogger(MemoryIndex.class);
+    private final static Logger logger = LoggerFactory.getLogger(MemoryIndex.class);
 
-    private RandomAccessFile randomAccessFile;
-    private LongIntHashMap[] indexMapArray;
-    private FileChannel indexFileChannel;
-    private AtomicLong wrotePosition;
+    // 利用了hppc的longlonghashmap
+    private LongIntHashMap[] indexCacheArray = null;
+    // 分片
+    private final int cacheNum = 1000;
+    // channel
+    private FileChannel[] indexFileChannels = null;
+    // index 分片
+    private final int fileNum = 38;
+    // 当前索引写入的区域
+    private AtomicLong[] indexPositions = null;
+    // buffer
+    private ThreadLocal<ByteBuffer> bufferThreadLocal = ThreadLocal.withInitial(() -> ByteBuffer.allocate(Constant.IndexLength));
 
-    public MemoryIndex(String path) {
-        this.indexMapArray = new LongIntHashMap[Constant.INDEX_MAP_NUM];
-        for (int i = 0; i < Constant.INDEX_MAP_NUM; i++) {
-            indexMapArray[i] = new LongIntHashMap();
-        }
-        File file = new File(path);
-        if (!file.exists()) {
-            logger.info("create index file.");
-            try {
-                file.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
+    public void init(String path) throws IOException {
+        // 先创建文件夹
+        File dirFile = new File(path);
+        boolean hasSave = true;
+        if (!dirFile.exists()) {
+            if (dirFile.mkdirs()) {
+                logger.info("创建文件夹成功,dir=" + path);
+            } else {
+                logger.error("创建文件夹失败,dir=" + path);
             }
-        }else{
-            logger.info("index file already exsit.");
+            hasSave = false;
         }
-        long endPosition = 0L;
+        // 创建多个索引文件
+        List<File> files = new ArrayList<>(fileNum);
+        for (int i = 0; i < fileNum; ++i) {
+            File file = new File(path + Constant.IndexName + i + Constant.IndexSuffix);
+            if (!file.exists()) {
+                if (!file.createNewFile()) {
+                    logger.error("创建文件失败,file=" + file.getPath());
+                }
+                hasSave = false;
+            }
+            files.add(file);
+        }
+        // 文件channel
+        this.indexFileChannels = new FileChannel[fileNum];
+        // 文件position
+        this.indexPositions = new AtomicLong[fileNum];
+        for (int i = 0; i < fileNum; ++i) {
+            File file = files.get(i);
+            FileChannel fileChannel = new RandomAccessFile(file, "rw").getChannel();
+            this.indexFileChannels[i] = fileChannel;
+            AtomicLong atomicLong = new AtomicLong(file.length());
+            this.indexPositions[i] = atomicLong;
+        }
+        // 创建内存索引
+        this.indexCacheArray = new LongIntHashMap[cacheNum];
+        for (int i = 0; i < cacheNum; ++i) {
+            this.indexCacheArray[i] = new LongIntHashMap();
+        }
+        if (!hasSave) {
+            logger.info("第一次进入索引文件，里面没内容，所以不用初始化到内存中");
+            return;
+        }
+        CountDownLatch countDownLatch = new CountDownLatch(fileNum);
+        long tmp = System.currentTimeMillis();
+        // 说明索引文件中已经有内容，则读取索引文件内容到内存中
+        for (int i = 0; i < fileNum; ++i) {
+            final int index = i;
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    logger.info("start load index:" + index);
+                    // 全局buffer
+                    ByteBuffer buffer = ByteBuffer.allocate(Constant.IndexLength);
+                    // 源数据
+                    FileChannel indexFileChannel = indexFileChannels[index];
+                    long len = indexPositions[index].get();
+                    // 加载index中数据到内存中
+                    for (long i = 0; i < len; i += Constant.IndexLength) {
+                        buffer.clear();
+                        int size = 0;
+                        try {
+                            size = indexFileChannel.read(buffer);
+                        } catch (IOException e) {
+                            logger.error("读取文件error，index=" + index, e);
+                        }
+                        if (size == -1) {
+                            logger.error("文件size=" + index + "提前截止");
+                            break;
+                        }
+                        buffer.flip();
+                        long key = buffer.getLong();
+                        int offset = buffer.getInt();
+                        // 脏数据，不进行处理
+                        if (offset <= 0) {
+                            continue;
+                        }
+                        // 插入内存
+                        insertIndexCache(key, offset);
+                    }
+                    // 计数器减1
+                    countDownLatch.countDown();
+                }
+            }).start();
+        }
         try {
-            RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
-            this.randomAccessFile = randomAccessFile;
-            this.indexFileChannel = randomAccessFile.getChannel();
-            endPosition = randomAccessFile.length();
-            logger.info("current index file size: {}", randomAccessFile.length());
-            wrotePosition = new AtomicLong(randomAccessFile.length());
-        } catch (IOException e) {
-            logger.error("file not found", e);
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            logger.error("多线程读取index文件失败", e);
         }
-        ByteBuffer byteBuffer = ByteBuffer.allocate(INDEX_SIZE);
-        for (long i = 0; i < endPosition; i += Constant.INDEX_SIZE) {
-            byteBuffer.clear();
-            try {
-                int size = this.indexFileChannel.read(byteBuffer);
-                if (size == -1) {
-                    break;
-                }
-                byteBuffer.flip();
-                long key = byteBuffer.getLong();
-                int offset = byteBuffer.getInt();
-                // 插入内存
-                LongIntHashMap indexes = indexMapArray[(int) (Math.abs(key) % Constant.INDEX_MAP_NUM)];
-                synchronized (indexes) {
-                    indexes.put(key, offset);
-                }
-            } catch (IOException e) {
-                logger.error("io exception", e);
-            }
-        }
-        logger.info("load index from file to memory, num: {}", endPosition / Constant.INDEX_SIZE);
+        logger.info("end load index" + (System.currentTimeMillis() - tmp) + "ms");
+
     }
 
-    public void recordPosition(byte[] key, long position) {
-        // 先存文件
-        int offsetInt = (int) (position / Constant.DATA_SIZE) + 1;
-        ByteBuffer buffer = ByteBuffer.allocate(Constant.INDEX_SIZE);
-        buffer.put(key);
-        buffer.putInt(offsetInt);
-        buffer.flip();
-        try {
-            long offset = wrotePosition.getAndAdd(Constant.INDEX_SIZE);
-            while (buffer.hasRemaining()) {
-                indexFileChannel.write(buffer, offset + (Constant.INDEX_SIZE - buffer.remaining()));
+    public void destroy() throws IOException {
+        if (this.indexFileChannels != null) {
+            for (FileChannel fileChannel : this.indexFileChannels) {
+                fileChannel.force(true);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
-        // 后放内存
-        long keyL = Util.bytes2Long(key);
-        LongIntHashMap indexes = indexMapArray[(int) (Math.abs(keyL) % Constant.INDEX_MAP_NUM)];
-        synchronized (indexes) {
-            indexes.put(keyL, offsetInt);
-        }
+        this.indexFileChannels = null;
+        this.indexPositions = null;
+        this.indexCacheArray = null;
     }
 
-    public Long getPosition(byte[] key) {
-        long keyL = Util.bytes2Long(key);
-        LongIntHashMap indexes = indexMapArray[(int) (Math.abs(keyL) % Constant.INDEX_MAP_NUM)];
-        int offsetInt = indexes.get(keyL);
-        if (offsetInt == 0)
+    public Long read(long key) {
+        // 分片的位置
+        int index = (int) (key % cacheNum);
+        if (index < 0) {
+            index = -index;
+        }
+        LongIntHashMap map = indexCacheArray[index];
+        int ans = map.get(key);
+        // 不存在offset
+        if (ans == 0) {
             return null;
-        else
-            return ((long) offsetInt - 1) * Constant.DATA_SIZE;
+        }
+        // offset-1。因为之前加过1
+        return ((long) ans - 1) * Constant.ValueLength;
     }
 
-    public void close() {
-        if (this.indexFileChannel != null) {
-            try {
-                this.indexFileChannel.force(true);
-            } catch (IOException e) {
-                logger.error("force error", e);
-            }
+    public void write(long key, long offset) throws IOException {
+        // 为了让offset大于0
+        int offsetInt = (int) (offset / Constant.ValueLength) + 1;
+        try {
+            // 写入到索引文件
+            writeIndexFile(key, offsetInt);
+        } catch (Exception e) {
+            logger.error("写入文件错误, error", e);
         }
-        if (randomAccessFile != null) {
-            try {
-                randomAccessFile.close();
-            } catch (IOException e) {
-                logger.error("randomAccessFile close error", e);
-            }
+        // 写入到内存
+        insertIndexCache(key, offsetInt);
+    }
+
+    private void insertIndexCache(Long key, Integer value) {
+        // cache分片
+        int index = (int) (Math.abs(key) % cacheNum);
+        // 写入内存。因为LongLongHashMap不支持并发，所以加锁
+        LongIntHashMap map = indexCacheArray[index];
+        synchronized (map) {
+            map.put(key, value);
         }
-        logger.info("memoryIndex closed.");
+    }
+
+    private void writeIndexFile(long key, Integer value) throws Exception {
+        // 文件分片
+        int index = (int) (Math.abs(key) % fileNum);
+        // buffer
+        ByteBuffer buffer = this.bufferThreadLocal.get();
+        buffer.clear();
+        buffer.putLong(key);
+        buffer.putInt(value);
+        buffer.flip();
+        // 加载元数据
+        long idx = this.indexPositions[index].getAndAdd(Constant.IndexLength);
+        FileChannel fileChannel = this.indexFileChannels[index];
+        // 写入数据
+        while (buffer.hasRemaining()) {
+            fileChannel.write(buffer, idx + (Constant.IndexLength - buffer.remaining()));
+        }
     }
 
 }

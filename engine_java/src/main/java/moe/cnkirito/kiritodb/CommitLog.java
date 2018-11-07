@@ -1,5 +1,7 @@
 package moe.cnkirito.kiritodb;
 
+import com.alibabacloud.polar_race.engine.common.exceptions.EngineException;
+import com.alibabacloud.polar_race.engine.common.exceptions.RetCodeEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -10,6 +12,8 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -18,77 +22,87 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class CommitLog {
 
-    Logger logger = LoggerFactory.getLogger(CommitLog.class);
+    private static Logger logger = LoggerFactory.getLogger(CommitLog.class);
 
-    final String path;
-    private FileChannel fileChannel;
-    private RandomAccessFile randomAccessFile;
-    private AtomicLong wrotePosition;
+    private FileChannel[] fileChannels = null;
+    // 自增索引
+    private AtomicLong[] atomicLongs = null;
+    private final int fileNum = 38;
 
-    public CommitLog(String path) {
-        this.path = path;
-        File file = new File(path);
-        if (!file.exists()) {
-            try {
-                file.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
+    // buffer
+    private ThreadLocal<ByteBuffer> bufferThreadLocal = ThreadLocal.withInitial(() -> ByteBuffer.allocate(Constant.ValueLength));
+
+    public void init(String path) throws IOException {
+        File dirFile = new File(path);
+        if (!dirFile.exists()) {
+            if (dirFile.mkdirs()) {
+                logger.info("创建文件夹成功,dir=" + path);
+            } else {
+                logger.error("创建文件夹失败,dir=" + path);
             }
         }
-        try {
-            RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
-            this.randomAccessFile = randomAccessFile;
-            this.fileChannel = randomAccessFile.getChannel();
-            this.wrotePosition = new AtomicLong(randomAccessFile.length());
-            logger.info("current data file size: {}", randomAccessFile.length());
-        } catch (IOException e) {
-            logger.error("io exception", e);
+        File[] files = new File[fileNum];
+        for (int i = 0; i < fileNum; ++i) {
+            File file = new File(path + Constant.DataName + i + Constant.DataSuffix);
+            if (!file.exists()) {
+                if (!file.createNewFile()) {
+                    logger.error("创建文件失败,file=" + file.getPath());
+                }
+            }
+            files[i] = file;
+        }
+        this.fileChannels = new FileChannel[fileNum];
+        this.atomicLongs = new AtomicLong[fileNum];
+        for (int i = 0; i < fileNum; ++i) {
+            FileChannel fileChannel = new RandomAccessFile(files[i], "rw").getChannel();
+            this.fileChannels[i] = fileChannel;
+            this.atomicLongs[i] = new AtomicLong(files[i].length());
         }
     }
 
-    public void close() {
-        if (this.fileChannel != null) {
-            try {
-                this.fileChannel.force(true);
-            } catch (IOException e) {
-                logger.error("force error", e);
+    public void destroy() throws IOException {
+        if (this.fileChannels != null) {
+            for (FileChannel channel : fileChannels) {
+                if (channel != null)
+                    channel.force(true);
             }
         }
-        if (randomAccessFile != null) {
-            try {
-                randomAccessFile.close();
-            } catch (IOException e) {
-                logger.error("randomAccessFile close error", e);
-            }
-        }
-        logger.info("commitLog closed.");
+        this.fileChannels = null;
+        this.atomicLongs = null;
     }
 
-    public long write(byte[] value) {
-        long position = wrotePosition.getAndAdd(Constant.DATA_SIZE);
-        try {
-            ByteBuffer buffer = ByteBuffer.wrap(value);
-            while (buffer.hasRemaining()) {
-                this.fileChannel.write(buffer, position + (value.length - buffer.remaining()));
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
+    public byte[] read(long key, long offset, int size) throws IOException, EngineException {
+        int index = (int) (Math.abs(key) % fileNum);
+        ByteBuffer buffer = bufferThreadLocal.get();
+        buffer.clear();
+        FileChannel fileChannel = this.fileChannels[index];
+        int read = fileChannel.read(buffer, offset);
+        if (read != size) {
+            logger.error(String.format("read=%d,size=%d", read, size));
+            throw new EngineException(RetCodeEnum.IO_ERROR, "read != size");
         }
-        return position;
+        buffer.flip();
+        return buffer.array();
     }
 
-    public byte[] read(long position) {
-        ByteBuffer readBuffer = ByteBuffer.allocate(Constant.DATA_SIZE);
-        try {
-            fileChannel.read(readBuffer, position);
-        } catch (IOException e) {
-            logger.error("read error", e);
-            return null;
+    public long write(long key, byte[] data) throws IOException {
+        int index = (int) (Math.abs(key) % fileNum);
+        AtomicLong atomicLong = atomicLongs[index];
+        // 先获取自增的offset
+        long curOffset = atomicLong.addAndGet(Constant.ValueLength);
+        // 在offset位置写data
+        write(key, curOffset, data);
+        return curOffset;
+    }
+
+    public void write(long key, long offset, byte[] data) throws IOException {
+        int index = (int) (Math.abs(key) % fileNum);
+        FileChannel fileChannel = this.fileChannels[index];
+        ByteBuffer buffer = ByteBuffer.wrap(data);
+        int size = data.length;
+        while (buffer.hasRemaining()) {
+            fileChannel.write(buffer, offset + (size - buffer.remaining()));
         }
-        readBuffer.flip();
-        byte[] bytes = new byte[Constant.DATA_SIZE];
-        readBuffer.get(bytes);
-        return bytes;
     }
 
 }

@@ -1,6 +1,7 @@
 package com.alibabacloud.polar_race.engine.common;
 
 import com.alibabacloud.polar_race.engine.common.exceptions.EngineException;
+import moe.cnkirito.kiritodb.Util;
 
 /**
  * 读测试
@@ -26,7 +27,6 @@ public class ReadTest {
             } catch (Exception e) {
                 System.out.println(i);
                 e.printStackTrace();
-//                break;
             }
         }
 

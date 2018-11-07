@@ -1,7 +1,6 @@
 package com.alibabacloud.polar_race.engine.common;
 
 import com.alibabacloud.polar_race.engine.common.exceptions.EngineException;
-import com.alibabacloud.polar_race.engine.common.exceptions.RetCodeEnum;
 import moe.cnkirito.kiritodb.KiritoDB;
 
 public class EngineRace extends AbstractEngine {
@@ -20,13 +19,12 @@ public class EngineRace extends AbstractEngine {
 
     @Override
     public byte[] read(byte[] key) throws EngineException {
-        byte[] value = kiritoDB.read(key);
-        if(value == null) throw new EngineException(RetCodeEnum.NOT_FOUND,"key不存在");
-        return value;
+        return kiritoDB.read(key);
     }
 
     @Override
     public void range(byte[] lower, byte[] upper, AbstractVisitor visitor) throws EngineException {
+        kiritoDB.range(lower, upper, visitor);
     }
 
     @Override
