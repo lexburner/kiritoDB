@@ -29,8 +29,6 @@ public class MemoryIndex {
     private FileChannel indexFileChannel;
     private AtomicLong wrotePosition;
 
-    static ThreadLocal<ByteBuffer> bufferThreadLocal = ThreadLocal.withInitial(() -> ByteBuffer.allocate(Constant.INDEX_SIZE));
-
     public MemoryIndex(String path) {
         this.indexMapArray = new LongIntHashMap[Constant.INDEX_MAP_NUM];
         for (int i = 0; i < Constant.INDEX_MAP_NUM; i++) {
@@ -84,7 +82,7 @@ public class MemoryIndex {
     public void recordPosition(byte[] key, long position) {
         // 先存文件
         int offsetInt = (int) (position / Constant.DATA_SIZE) + 1;
-        ByteBuffer buffer = bufferThreadLocal.get();
+        ByteBuffer buffer = ByteBuffer.allocate(Constant.INDEX_SIZE);
         buffer.clear();
         buffer.put(key);
         buffer.putInt(offsetInt);

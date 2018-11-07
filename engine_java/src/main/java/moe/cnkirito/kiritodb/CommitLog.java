@@ -25,8 +25,6 @@ public class CommitLog {
     private RandomAccessFile randomAccessFile;
     private AtomicLong wrotePosition;
 
-    static ThreadLocal<ByteBuffer> bufferThreadLocal = ThreadLocal.withInitial(() -> ByteBuffer.allocate(Constant.DATA_SIZE));
-
     public CommitLog(String path) {
         this.path = path;
         File file = new File(path);
@@ -80,7 +78,7 @@ public class CommitLog {
     }
 
     public byte[] read(long position) {
-        ByteBuffer readBuffer = bufferThreadLocal.get();
+        ByteBuffer readBuffer = ByteBuffer.allocate(Constant.DATA_SIZE);
         readBuffer.clear();
         try {
             fileChannel.read(readBuffer, position);
