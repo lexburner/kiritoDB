@@ -1,5 +1,8 @@
 package moe.cnkirito.kiritodb;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -15,14 +18,14 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 public class CommitLog {
 
+    Logger logger = LoggerFactory.getLogger(CommitLog.class);
+
     final String path;
     private FileChannel fileChannel;
+    private RandomAccessFile randomAccessFile;
     private AtomicLong wrotePosition;
 
     static ThreadLocal<ByteBuffer> bufferThreadLocal = ThreadLocal.withInitial(()-> ByteBuffer.allocate(4*1024));
-
-    private MemoryIndex memoryIndex;
-
 
     public CommitLog(String path) {
         this.path = path;
@@ -36,19 +39,34 @@ public class CommitLog {
         }
         try {
             RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
+            this.randomAccessFile = randomAccessFile;
             this.fileChannel = randomAccessFile.getChannel();
             this.wrotePosition = new AtomicLong(randomAccessFile.length());
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("io exception",e);
         }
-
-        this.memoryIndex = new MemoryIndex(path+"_index");
     }
 
-    public void write(byte[] key,byte[] value){
-        long position = wrotePosition.getAndAdd(value.length);
+    public void close(){
+        if (this.fileChannel != null) {
+            try {
+                this.fileChannel.force(true);
+            } catch (IOException e) {
+                logger.error("force error",e);
+            }
+        }
+        if (randomAccessFile != null) {
+            try {
+                randomAccessFile.close();
+            } catch (IOException e) {
+                logger.error("randomAccessFile close error",e);
+            }
+        }
+        logger.info("commitLog closed.");
+    }
+
+    public long write(byte[] value){
+        long position = wrotePosition.getAndAdd(4*1024);
         try {
             ByteBuffer buffer = ByteBuffer.wrap(value);
             while (buffer.hasRemaining()) {
@@ -57,12 +75,10 @@ public class CommitLog {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        this.memoryIndex.recordPosition(key, position);
+        return position;
     }
 
-    public byte[] read(byte[] key){
-        Long position = this.memoryIndex.getPosition(key);
-        if(position==null) return null;
+    public byte[] read(long position){
         ByteBuffer readBuffer = bufferThreadLocal.get();
         readBuffer.clear();
         try {
@@ -71,14 +87,10 @@ public class CommitLog {
             e.printStackTrace();
             return null;
         }
-        byte[] bytes = new byte[4 * 1024];
         readBuffer.flip();
+        byte[] bytes = new byte[4 * 1024];
         readBuffer.get(bytes);
         return bytes;
     }
 
-
-    public void close() {
-        memoryIndex.close();
-    }
 }

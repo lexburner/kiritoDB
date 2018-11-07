@@ -62,6 +62,10 @@
             <artifactId>hppc</artifactId>
             <version>0.8.1</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-pool2</artifactId>
+            <version>2.6.0</version>
+        </dependency>
     </dependencies>
 </project>
