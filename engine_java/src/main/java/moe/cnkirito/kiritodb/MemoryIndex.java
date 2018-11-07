@@ -83,7 +83,6 @@ public class MemoryIndex {
         // 先存文件
         int offsetInt = (int) (position / Constant.DATA_SIZE) + 1;
         ByteBuffer buffer = ByteBuffer.allocate(Constant.INDEX_SIZE);
-        buffer.clear();
         buffer.put(key);
         buffer.putInt(offsetInt);
         buffer.flip();

@@ -79,7 +79,6 @@ public class CommitLog {
 
     public byte[] read(long position) {
         ByteBuffer readBuffer = ByteBuffer.allocate(Constant.DATA_SIZE);
-        readBuffer.clear();
         try {
             fileChannel.read(readBuffer, position);
         } catch (IOException e) {
