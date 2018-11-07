@@ -25,12 +25,12 @@ public class CommitLog {
     private RandomAccessFile randomAccessFile;
     private AtomicLong wrotePosition;
 
-    static ThreadLocal<ByteBuffer> bufferThreadLocal = ThreadLocal.withInitial(()-> ByteBuffer.allocate(Constant.DATA_SIZE));
+    static ThreadLocal<ByteBuffer> bufferThreadLocal = ThreadLocal.withInitial(() -> ByteBuffer.allocate(Constant.DATA_SIZE));
 
     public CommitLog(String path) {
         this.path = path;
         File file = new File(path);
-        if(!file.exists()){
+        if (!file.exists()) {
             try {
                 file.createNewFile();
             } catch (IOException e) {
@@ -42,30 +42,31 @@ public class CommitLog {
             this.randomAccessFile = randomAccessFile;
             this.fileChannel = randomAccessFile.getChannel();
             this.wrotePosition = new AtomicLong(randomAccessFile.length());
+            logger.info("current data file size: {}", randomAccessFile.length());
         } catch (IOException e) {
-            logger.error("io exception",e);
+            logger.error("io exception", e);
         }
     }
 
-    public void close(){
+    public void close() {
         if (this.fileChannel != null) {
             try {
                 this.fileChannel.force(true);
             } catch (IOException e) {
-                logger.error("force error",e);
+                logger.error("force error", e);
             }
         }
         if (randomAccessFile != null) {
             try {
                 randomAccessFile.close();
             } catch (IOException e) {
-                logger.error("randomAccessFile close error",e);
+                logger.error("randomAccessFile close error", e);
             }
         }
         logger.info("commitLog closed.");
     }
 
-    public long write(byte[] value){
+    public long write(byte[] value) {
         long position = wrotePosition.getAndAdd(Constant.DATA_SIZE);
         try {
             ByteBuffer buffer = ByteBuffer.wrap(value);
@@ -78,13 +79,13 @@ public class CommitLog {
         return position;
     }
 
-    public byte[] read(long position){
+    public byte[] read(long position) {
         ByteBuffer readBuffer = bufferThreadLocal.get();
         readBuffer.clear();
         try {
             fileChannel.read(readBuffer, position);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("read error", e);
             return null;
         }
         readBuffer.flip();

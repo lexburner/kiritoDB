@@ -29,7 +29,7 @@ public class MemoryIndex {
     private FileChannel indexFileChannel;
     private AtomicLong wrotePosition;
 
-    static ThreadLocal<ByteBuffer> bufferThreadLocal = ThreadLocal.withInitial(()-> ByteBuffer.allocate(Constant.INDEX_SIZE));
+    static ThreadLocal<ByteBuffer> bufferThreadLocal = ThreadLocal.withInitial(() -> ByteBuffer.allocate(Constant.INDEX_SIZE));
 
     public MemoryIndex(String path) {
         this.indexMapArray = new LongIntHashMap[Constant.INDEX_MAP_NUM];
@@ -38,11 +38,14 @@ public class MemoryIndex {
         }
         File file = new File(path);
         if (!file.exists()) {
+            logger.info("create index file.");
             try {
                 file.createNewFile();
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }else{
+            logger.info("index file already exsit.");
         }
         long endPosition = 0L;
         try {
@@ -50,19 +53,23 @@ public class MemoryIndex {
             this.randomAccessFile = randomAccessFile;
             this.indexFileChannel = randomAccessFile.getChannel();
             endPosition = randomAccessFile.length();
+            logger.info("current index file size: {}", randomAccessFile.length());
             wrotePosition = new AtomicLong(randomAccessFile.length());
         } catch (IOException e) {
             logger.error("file not found", e);
         }
-        long num = endPosition / INDEX_SIZE;
         ByteBuffer byteBuffer = ByteBuffer.allocate(INDEX_SIZE);
-        for (long i = 0; i < num; i++) {
+        for (long i = 0; i < endPosition; i += Constant.INDEX_SIZE) {
             byteBuffer.clear();
             try {
-                indexFileChannel.read(byteBuffer);
+                int size = this.indexFileChannel.read(byteBuffer);
+                if (size == -1) {
+                    break;
+                }
                 byteBuffer.flip();
                 long key = byteBuffer.getLong();
                 int offset = byteBuffer.getInt();
+                // 插入内存
                 LongIntHashMap indexes = indexMapArray[(int) (Math.abs(key) % Constant.INDEX_MAP_NUM)];
                 synchronized (indexes) {
                     indexes.put(key, offset);
@@ -71,7 +78,7 @@ public class MemoryIndex {
                 logger.error("io exception", e);
             }
         }
-        logger.info("load index from file to memory, num: {}", num);
+        logger.info("load index from file to memory, num: {}", endPosition / Constant.INDEX_SIZE);
     }
 
     public void recordPosition(byte[] key, long position) {
