@@ -23,7 +23,7 @@ public class MemoryIndex {
     private AtomicLong wrotePosition;
 
     public MemoryIndex(String path) {
-        this.indexes = new LongLongHashMap(64000010);
+        this.indexes = new LongLongHashMap();
         File file = new File(path);
         if (!file.exists()) {
             try {
@@ -43,13 +43,12 @@ public class MemoryIndex {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        long num = endPosition / 16L;
+        long num = endPosition / 16;
         for (long i = 0; i < num; i++) {
             ByteBuffer byteBuffer = bufferThreadLocal.get();
             byteBuffer.clear();
             try {
                 indexFileChannel.read(byteBuffer);
-                //todo
                 byteBuffer.flip();
                 synchronized (indexPutLock) {
                     this.indexes.put(byteBuffer.getLong(), byteBuffer.getLong(8));
