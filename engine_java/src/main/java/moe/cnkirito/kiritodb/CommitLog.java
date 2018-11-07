@@ -47,16 +47,14 @@ public class CommitLog {
         this.memoryIndex = new MemoryIndex(path+"_index");
     }
 
-    public Long write(byte[] key,byte[] value){
+    public void write(byte[] key,byte[] value){
         long position = wrotePosition.getAndAdd(value.length);
         try {
             this.fileChannel.write(ByteBuffer.wrap(value), position);
         } catch (IOException e) {
             e.printStackTrace();
-            return null;
         }
         this.memoryIndex.recordPosition(key, position);
-        return position;
     }
 
     public byte[] read(byte[] key){
