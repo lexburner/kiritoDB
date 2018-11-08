@@ -3,7 +3,6 @@ package moe.cnkirito.kiritodb;
 import com.carrotsearch.hppc.LongIntHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.nio.ch.DirectBuffer;
 
 import java.io.File;
 import java.io.IOException;
@@ -13,6 +12,8 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -30,7 +31,7 @@ public class MemoryIndex {
     // channel
     private FileChannel[] indexFileChannels = null;
     // index 分片
-    private final int fileNum = 38;
+    private final int fileNum = 1024;
     // 当前索引写入的区域
     private AtomicLong[] indexPositions = null;
     // buffer
@@ -83,27 +84,23 @@ public class MemoryIndex {
         CountDownLatch countDownLatch = new CountDownLatch(fileNum);
         long tmp = System.currentTimeMillis();
         // 说明索引文件中已经有内容，则读取索引文件内容到内存中
+        ExecutorService executorService = Executors.newFixedThreadPool(64);
         for (int i = 0; i < fileNum; ++i) {
             final int index = i;
-            new Thread(new Runnable() {
+            executorService.execute(new Runnable() {
                 @Override
                 public void run() {
-                    // 全局buffer
-                    ByteBuffer buffer = ByteBuffer.allocate(Constant.IndexLength * 2048);
                     // 源数据
                     FileChannel indexFileChannel = indexFileChannels[index];
-                    // 加载index中数据到内存中
-                    while (true) {
-                        buffer.clear();
-                        int size = 0;
+                    long len = indexPositions[index].get();
+                    if (len > 0) {
+                        // 全局buffer
+                        ByteBuffer buffer = ByteBuffer.allocate((int) len);
+                        // 加载index中数据到内存中
                         try {
-                            size = indexFileChannel.read(buffer);
+                            indexFileChannel.read(buffer);
                         } catch (IOException e) {
                             logger.error("读取文件error，index=" + index, e);
-                        }
-                        if (size == -1) {
-                            logger.info("size == -1");
-                            break;
                         }
                         buffer.flip();
                         while (buffer.hasRemaining()) {
@@ -111,6 +108,7 @@ public class MemoryIndex {
                             int offset = buffer.getInt();
                             // 脏数据，不进行处理
                             if (offset <= 0) {
+                                logger.error("offset < 0");
                                 continue;
                             }
                             // 插入内存
@@ -120,8 +118,9 @@ public class MemoryIndex {
                     // 计数器减1
                     countDownLatch.countDown();
                 }
-            }).start();
+            });
         }
+        executorService.shutdown();
         try {
             countDownLatch.await();
         } catch (InterruptedException e) {
