@@ -3,6 +3,7 @@ package moe.cnkirito.kiritodb;
 import com.carrotsearch.hppc.LongIntHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.nio.ch.DirectBuffer;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,7 +30,7 @@ public class MemoryIndex {
     // channel
     private FileChannel[] indexFileChannels = null;
     // index 分片
-    private final int fileNum = 64;
+    private final int fileNum = 38;
     // 当前索引写入的区域
     private AtomicLong[] indexPositions = null;
     // buffer
@@ -87,21 +88,25 @@ public class MemoryIndex {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
+                    // 全局buffer
+                    ByteBuffer buffer = ByteBuffer.allocate(Constant.IndexLength * 2048);
                     // 源数据
                     FileChannel indexFileChannel = indexFileChannels[index];
-                    long len = indexPositions[index].get();
-                    if (len > 0) {
-                        // 全局buffer
-                        ByteBuffer buffer = ByteBuffer.allocate((int) len);
+                    // 加载index中数据到内存中
+                    while (true) {
+                        buffer.clear();
+                        int size = 0;
                         try {
-                            indexFileChannel.read(buffer);
+                            size = indexFileChannel.read(buffer);
                         } catch (IOException e) {
                             logger.error("读取文件error，index=" + index, e);
                         }
+                        if (size == -1) {
+                            logger.info("size == -1");
+                            break;
+                        }
                         buffer.flip();
-                        // 加载index中数据到内存中
-                        for (long i = 0; i < len; i += Constant.IndexLength) {
-
+                        while (buffer.hasRemaining()) {
                             long key = buffer.getLong();
                             int offset = buffer.getInt();
                             // 脏数据，不进行处理
