@@ -88,31 +88,21 @@ public class MemoryIndex {
                 @Override
                 public void run() {
                     logger.info("start load index:" + index);
-                    // 全局buffer
-                    ByteBuffer buffer = ByteBuffer.allocate(Constant.IndexLength);
                     // 源数据
                     FileChannel indexFileChannel = indexFileChannels[index];
                     long len = indexPositions[index].get();
+                    // 全局buffer
+                    ByteBuffer buffer = ByteBuffer.allocate((int)len);
+                    try {
+                        indexFileChannel.read(buffer);
+                    } catch (IOException e) {
+                        logger.error("读取文件error，index=" + index, e);
+                    }
+                    buffer.flip();
                     // 加载index中数据到内存中
                     for (long i = 0; i < len; i += Constant.IndexLength) {
-                        buffer.clear();
-                        int size = 0;
-                        try {
-                            size = indexFileChannel.read(buffer);
-                        } catch (IOException e) {
-                            logger.error("读取文件error，index=" + index, e);
-                        }
-                        if (size == -1) {
-                            logger.error("文件size=" + index + "提前截止");
-                            break;
-                        }
-                        buffer.flip();
                         long key = buffer.getLong();
                         int offset = buffer.getInt();
-                        // 脏数据，不进行处理
-                        if (offset <= 0) {
-                            continue;
-                        }
                         // 插入内存
                         insertIndexCache(key, offset);
                     }
