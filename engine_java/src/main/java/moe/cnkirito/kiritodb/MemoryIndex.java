@@ -25,11 +25,11 @@ public class MemoryIndex {
     // 利用了hppc的longlonghashmap
     private LongIntHashMap[] indexCacheArray = null;
     // 分片
-    private final int cacheNum = 1000;
+    private final int cacheNum = 1024;
     // channel
     private FileChannel[] indexFileChannels = null;
     // index 分片
-    private final int fileNum = 38;
+    private final int fileNum = 64;
     // 当前索引写入的区域
     private AtomicLong[] indexPositions = null;
     // buffer
@@ -87,34 +87,30 @@ public class MemoryIndex {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    logger.info("start load index:" + index);
-                    // 全局buffer
-                    ByteBuffer buffer = ByteBuffer.allocate(Constant.IndexLength);
                     // 源数据
                     FileChannel indexFileChannel = indexFileChannels[index];
                     long len = indexPositions[index].get();
-                    // 加载index中数据到内存中
-                    for (long i = 0; i < len; i += Constant.IndexLength) {
-                        buffer.clear();
-                        int size = 0;
+                    if (len > 0) {
+                        // 全局buffer
+                        ByteBuffer buffer = ByteBuffer.allocate((int) len);
                         try {
-                            size = indexFileChannel.read(buffer);
+                            indexFileChannel.read(buffer);
                         } catch (IOException e) {
                             logger.error("读取文件error，index=" + index, e);
                         }
-                        if (size == -1) {
-                            logger.error("文件size=" + index + "提前截止");
-                            break;
-                        }
                         buffer.flip();
-                        long key = buffer.getLong();
-                        int offset = buffer.getInt();
-                        // 脏数据，不进行处理
-                        if (offset <= 0) {
-                            continue;
+                        // 加载index中数据到内存中
+                        for (long i = 0; i < len; i += Constant.IndexLength) {
+
+                            long key = buffer.getLong();
+                            int offset = buffer.getInt();
+                            // 脏数据，不进行处理
+                            if (offset <= 0) {
+                                continue;
+                            }
+                            // 插入内存
+                            insertIndexCache(key, offset);
                         }
-                        // 插入内存
-                        insertIndexCache(key, offset);
                     }
                     // 计数器减1
                     countDownLatch.countDown();
@@ -143,10 +139,7 @@ public class MemoryIndex {
 
     public Long read(long key) {
         // 分片的位置
-        int index = (int) (key % cacheNum);
-        if (index < 0) {
-            index = -index;
-        }
+        int index = (int) (Math.abs(key) % cacheNum);
         LongIntHashMap map = indexCacheArray[index];
         int ans = map.get(key);
         // 不存在offset
