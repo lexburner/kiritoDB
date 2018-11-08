@@ -31,7 +31,7 @@ public class MemoryIndex {
     // channel
     private FileChannel[] indexFileChannels = null;
     // index 分片
-    private final int fileNum = 1024;
+    private final int fileNum = 38;
     // 当前索引写入的区域
     private AtomicLong[] indexPositions = null;
     // buffer
