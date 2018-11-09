@@ -3,6 +3,7 @@ package moe.cnkirito.kiritodb;
 import com.carrotsearch.hppc.LongIntHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.nio.ch.DirectBuffer;
 
 import java.io.File;
 import java.io.IOException;
@@ -87,25 +88,35 @@ public class MemoryIndex {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    logger.info("start load index:" + index);
+                    // 全局buffer
+                    ByteBuffer buffer = ByteBuffer.allocateDirect(16 * 1024 * 3);
                     // 源数据
                     FileChannel indexFileChannel = indexFileChannels[index];
-                    long len = indexPositions[index].get();
-                    // 全局buffer
-                    ByteBuffer buffer = ByteBuffer.allocate((int)len);
-                    try {
-                        indexFileChannel.read(buffer);
-                    } catch (IOException e) {
-                        logger.error("读取文件error，index=" + index, e);
-                    }
-                    buffer.flip();
                     // 加载index中数据到内存中
-                    for (long i = 0; i < len; i += Constant.IndexLength) {
-                        long key = buffer.getLong();
-                        int offset = buffer.getInt();
-                        // 插入内存
-                        insertIndexCache(key, offset);
+                    while (true) {
+                        buffer.clear();
+                        int size = 0;
+                        try {
+                            size = indexFileChannel.read(buffer);
+                        } catch (IOException e) {
+                            logger.error("读取文件error，index=" + index, e);
+                        }
+                        if (size == -1) {
+                            break;
+                        }
+                        buffer.flip();
+                        while (buffer.hasRemaining()) {
+                            long key = buffer.getLong();
+                            int offset = buffer.getInt();
+                            // 脏数据，不进行处理
+                            if (offset <= 0) {
+                                continue;
+                            }
+                            // 插入内存
+                            insertIndexCache(key, offset);
+                        }
                     }
+                    ((DirectBuffer) buffer).cleaner().clean();
                     // 计数器减1
                     countDownLatch.countDown();
                 }
@@ -133,10 +144,7 @@ public class MemoryIndex {
 
     public Long read(long key) {
         // 分片的位置
-        int index = (int) (key % cacheNum);
-        if (index < 0) {
-            index = -index;
-        }
+        int index = (int) (Math.abs(key) % cacheNum);
         LongIntHashMap map = indexCacheArray[index];
         int ans = map.get(key);
         // 不存在offset
