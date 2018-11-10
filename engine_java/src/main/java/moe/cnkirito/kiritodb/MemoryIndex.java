@@ -83,6 +83,7 @@ public class MemoryIndex {
             logger.info("第一次进入索引文件，里面没内容，所以不用初始化到内存中");
             return;
         }
+        this.load();
     }
 
     public void load(){
@@ -173,7 +174,7 @@ public class MemoryIndex {
             logger.error("写入文件错误, error", e);
         }
         // 写入到内存
-        insertIndexCache(key, offsetInt);
+//        insertIndexCache(key, offsetInt);
     }
 
     private void insertIndexCache(Long key, Integer value) {

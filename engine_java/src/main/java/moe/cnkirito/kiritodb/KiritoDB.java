@@ -49,7 +49,7 @@ public class KiritoDB {
         try {
             // append value
             Long offset = commitLog.write(kI, value);
-//                memoryIndex.write(kI, offset);
+            memoryIndex.write(kI, offset);
         } catch (IOException e) {
             logger.error("io2 error", e);
             throw new EngineException(RetCodeEnum.IO_ERROR, e.getMessage());
@@ -58,13 +58,13 @@ public class KiritoDB {
     }
 
     public byte[] read(byte[] key) throws EngineException {
-        if(!memoryIndex.isLoadFlag()){
-            synchronized (this){
-                if(!memoryIndex.isLoadFlag()){
-                    memoryIndex.load();
-                }
-            }
-        }
+//        if(!memoryIndex.isLoadFlag()){
+//            synchronized (this){
+//                if(!memoryIndex.isLoadFlag()){
+//                    memoryIndex.load();
+//                }
+//            }
+//        }
         long kI = Util.bytes2Long(key);
         Long offset = memoryIndex.read(kI);
         if (offset == null) {
