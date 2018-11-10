@@ -35,6 +35,7 @@ public class MemoryIndex {
     private final int fileNum = 38;
     // 当前索引写入的区域
     private AtomicLong[] indexPositions = null;
+    private volatile boolean loadFlag = false;
 
     public void init(String path) throws IOException {
         // 先创建文件夹
@@ -82,6 +83,9 @@ public class MemoryIndex {
             logger.info("第一次进入索引文件，里面没内容，所以不用初始化到内存中");
             return;
         }
+    }
+
+    public void load(){
         CountDownLatch countDownLatch = new CountDownLatch(fileNum);
         long tmp = System.currentTimeMillis();
         // 说明索引文件中已经有内容，则读取索引文件内容到内存中
@@ -132,7 +136,7 @@ public class MemoryIndex {
             logger.error("多线程读取index文件失败", e);
         }
         logger.info("end load index" + (System.currentTimeMillis() - tmp) + "ms");
-
+        this.loadFlag = true;
     }
 
     public void destroy() throws IOException {
@@ -194,4 +198,11 @@ public class MemoryIndex {
         // 加载元数据
     }
 
+    public boolean isLoadFlag() {
+        return loadFlag;
+    }
+
+    public void setLoadFlag(boolean loadFlag) {
+        this.loadFlag = loadFlag;
+    }
 }
