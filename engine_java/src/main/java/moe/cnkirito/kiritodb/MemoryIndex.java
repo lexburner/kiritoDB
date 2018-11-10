@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,12 +30,11 @@ public class MemoryIndex {
     private final int cacheNum = 1000;
     // channel
     private FileChannel[] indexFileChannels = null;
+    private MappedByteBuffer[] mappedByteBuffers = null;
     // index 分片
     private final int fileNum = 38;
     // 当前索引写入的区域
     private AtomicLong[] indexPositions = null;
-    // buffer
-    private ThreadLocal<ByteBuffer> bufferThreadLocal = ThreadLocal.withInitial(() -> ByteBuffer.allocate(Constant.IndexLength));
 
     public void init(String path) throws IOException {
         // 先创建文件夹
@@ -62,6 +62,7 @@ public class MemoryIndex {
         }
         // 文件channel
         this.indexFileChannels = new FileChannel[fileNum];
+        this.mappedByteBuffers = new MappedByteBuffer[fileNum];
         // 文件position
         this.indexPositions = new AtomicLong[fileNum];
         for (int i = 0; i < fileNum; ++i) {
@@ -70,6 +71,7 @@ public class MemoryIndex {
             this.indexFileChannels[i] = fileChannel;
             AtomicLong atomicLong = new AtomicLong(file.length());
             this.indexPositions[i] = atomicLong;
+            mappedByteBuffers[i] = fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, 800 * 1024 * 1024 / fileNum);
         }
         // 创建内存索引
         this.indexCacheArray = new LongIntHashMap[cacheNum];
@@ -92,8 +94,9 @@ public class MemoryIndex {
                     ByteBuffer buffer = ByteBuffer.allocateDirect(16 * 1024 * 3);
                     // 源数据
                     FileChannel indexFileChannel = indexFileChannels[index];
+                    boolean endFlag = true;
                     // 加载index中数据到内存中
-                    while (true) {
+                    while (endFlag) {
                         buffer.clear();
                         int size = 0;
                         try {
@@ -109,8 +112,9 @@ public class MemoryIndex {
                             long key = buffer.getLong();
                             int offset = buffer.getInt();
                             // 脏数据，不进行处理
-                            if (offset <= 0) {
-                                continue;
+                            if (offset == 0 && key == 0) {
+                                endFlag = false;
+                                break;
                             }
                             // 插入内存
                             insertIndexCache(key, offset);
@@ -181,19 +185,13 @@ public class MemoryIndex {
     private void writeIndexFile(long key, Integer value) throws Exception {
         // 文件分片
         int index = (int) (Math.abs(key) % fileNum);
+        long position = this.indexPositions[index].getAndAdd(Constant.IndexLength);
         // buffer
-        ByteBuffer buffer = this.bufferThreadLocal.get();
-        buffer.clear();
+        ByteBuffer buffer = this.mappedByteBuffers[index].slice();
+        buffer.position((int) position);
         buffer.putLong(key);
         buffer.putInt(value);
-        buffer.flip();
         // 加载元数据
-        long idx = this.indexPositions[index].getAndAdd(Constant.IndexLength);
-        FileChannel fileChannel = this.indexFileChannels[index];
-        // 写入数据
-        while (buffer.hasRemaining()) {
-            fileChannel.write(buffer, idx + (Constant.IndexLength - buffer.remaining()));
-        }
     }
 
 }
