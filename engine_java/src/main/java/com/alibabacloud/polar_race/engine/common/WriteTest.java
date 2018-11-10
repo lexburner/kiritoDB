@@ -23,7 +23,7 @@ public class WriteTest {
 
         // 打开引擎
         final EngineRace engine = new EngineRace();
-        engine.open("/tmp/kiritoDB");
+        engine.open("D:/tmp/kiritoDB");
 
         // 写数据
         final AtomicInteger atomicInteger = new AtomicInteger();

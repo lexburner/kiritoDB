@@ -36,25 +36,25 @@ public class KiritoDB {
 
     public void write(byte[] key, byte[] value) throws EngineException {
         long kI = Util.bytes2Long(key);
-        Long offset = memoryIndex.read(kI);
-        if (offset != null) {
-            // 已经写过的key，直接写offset的value就好
-            try {
-                commitLog.write(kI, offset, value);
-            } catch (IOException e) {
-                logger.error("io error", e);
-                throw new EngineException(RetCodeEnum.IO_ERROR, e.getMessage());
-            }
-        } else {
+//        Long offset = memoryIndex.read(kI);
+//        if (offset != null) {
+//            // 已经写过的key，直接写offset的value就好
+//            try {
+//                commitLog.write(kI, offset, value);
+//            } catch (IOException e) {
+//                logger.error("io error", e);
+//                throw new EngineException(RetCodeEnum.IO_ERROR, e.getMessage());
+//            }
+//        } else {
             try {
                 // append value
-                offset = commitLog.write(kI, value);
+                Long offset = commitLog.write(kI, value);
                 memoryIndex.write(kI, offset);
             } catch (IOException e) {
                 logger.error("io2 error", e);
                 throw new EngineException(RetCodeEnum.IO_ERROR, e.getMessage());
             }
-        }
+//        }
     }
 
     public byte[] read(byte[] key) throws EngineException {

@@ -15,7 +15,7 @@ public class ReadTest {
         long start = System.currentTimeMillis();
 
         EngineRace engine = new EngineRace();
-        engine.open("/tmp/kiritoDB");
+        engine.open("D:/tmp/kiritoDB");
 
         for (int i = 0; i < 6400000; i += 256) {
             try {
