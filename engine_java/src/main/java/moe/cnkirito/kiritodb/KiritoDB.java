@@ -49,7 +49,7 @@ public class KiritoDB {
             try {
                 // append value
                 Long offset = commitLog.write(kI, value);
-                memoryIndex.write(kI, offset);
+//                memoryIndex.write(kI, offset);
             } catch (IOException e) {
                 logger.error("io2 error", e);
                 throw new EngineException(RetCodeEnum.IO_ERROR, e.getMessage());
