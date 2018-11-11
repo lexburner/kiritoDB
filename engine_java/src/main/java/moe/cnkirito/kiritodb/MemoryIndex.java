@@ -3,6 +3,7 @@ package moe.cnkirito.kiritodb;
 import com.carrotsearch.hppc.LongIntHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.misc.Unsafe;
 import sun.nio.ch.DirectBuffer;
 
 import java.io.File;

@@ -1,10 +1,13 @@
 package moe.cnkirito.kiritodb;
 
+import sun.misc.Unsafe;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.management.ManagementFactory;
+import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -116,4 +119,16 @@ public class Util {
         }
         return buffer.array();
     }
+
+    public static Unsafe getUnsafe() {
+        try {
+            Field singletonInstanceField = Unsafe.class.getDeclaredField("theUnsafe");
+            singletonInstanceField.setAccessible(true);
+            return (Unsafe) singletonInstanceField.get(null);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 }

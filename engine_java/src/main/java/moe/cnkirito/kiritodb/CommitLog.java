@@ -4,6 +4,7 @@ import com.alibabacloud.polar_race.engine.common.exceptions.EngineException;
 import com.alibabacloud.polar_race.engine.common.exceptions.RetCodeEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.misc.Unsafe;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -29,9 +30,10 @@ public class CommitLog {
     private AtomicLong[] atomicLongs = null;
     private final int bitOffset = 7;
     private final int fileNum = 2 << bitOffset;
+    private Unsafe unsafe = Util.getUnsafe();
 
     // buffer
-    private ThreadLocal<ByteBuffer> bufferThreadLocal = ThreadLocal.withInitial(() -> ByteBuffer.allocateDirect(Constant.ValueLength));
+    private ThreadLocal<ByteBuffer> bufferThreadLocal = ThreadLocal.withInitial(() -> ByteBuffer.allocate(Constant.ValueLength));
 
     public void init(String path) throws IOException {
         File dirFile = new File(path);
