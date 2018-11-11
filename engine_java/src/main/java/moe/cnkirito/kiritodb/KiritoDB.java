@@ -46,13 +46,6 @@ public class KiritoDB {
     }
 
     public byte[] read(byte[] key) throws EngineException {
-//        if(!memoryIndex.isLoadFlag()){
-//            synchronized (this){
-//                if(!memoryIndex.isLoadFlag()){
-//                    memoryIndex.load();
-//                }
-//            }
-//        }
         long kI = Util.bytes2Long(key);
         Long offset = memoryIndex.read(kI);
         if (offset == null) {
@@ -71,21 +64,19 @@ public class KiritoDB {
     }
 
     public void close() {
-        if (memoryIndex != null) {
-            try {
-                memoryIndex.destroy();
-            } catch (IOException e) {
-                logger.error("index destory error", e);
-            }
-        }
-        if (commitLog != null) {
-            try {
-                commitLog.destroy();
-            } catch (IOException e) {
-                logger.error("data destory error", e);
-            }
-        }
-        memoryIndex = null;
-        commitLog = null;
+//        if (memoryIndex != null) {
+//            try {
+//                memoryIndex.destroy();
+//            } catch (IOException e) {
+//                logger.error("index destory error", e);
+//            }
+//        }
+//        if (commitLog != null) {
+//            try {
+//                commitLog.destroy();
+//            } catch (IOException e) {
+//                logger.error("data destory error", e);
+//            }
+//        }
     }
 }
