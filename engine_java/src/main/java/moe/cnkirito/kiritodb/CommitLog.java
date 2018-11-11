@@ -105,6 +105,6 @@ public class CommitLog {
     }
 
     private int getPartition(long key){
-        return (int) (Math.abs(key) >> (63 - bitOffset));
+        return (int) (Math.abs(key) % (63 - bitOffset));
     }
 }
