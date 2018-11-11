@@ -31,7 +31,7 @@ public class CommitLog {
     private final int fileNum = 2 << bitOffset;
 
     // buffer
-    private ThreadLocal<ByteBuffer> bufferThreadLocal = ThreadLocal.withInitial(() -> ByteBuffer.allocate(Constant.ValueLength));
+    private ThreadLocal<ByteBuffer> bufferThreadLocal = ThreadLocal.withInitial(() -> ByteBuffer.allocateDirect(Constant.ValueLength));
 
     public void init(String path) throws IOException {
         File dirFile = new File(path);
@@ -81,7 +81,9 @@ public class CommitLog {
             throw new EngineException(RetCodeEnum.IO_ERROR, "read != size");
         }
         buffer.flip();
-        return buffer.array();
+        byte[] result = new byte[Constant.ValueLength];
+        buffer.get(result);
+        return result;
     }
 
     public long write(long key, byte[] data) throws IOException {
