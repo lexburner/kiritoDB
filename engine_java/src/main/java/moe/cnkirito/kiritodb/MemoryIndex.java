@@ -33,7 +33,7 @@ public class MemoryIndex {
     private FileChannel[] indexFileChannels = null;
     private MappedByteBuffer[] mappedByteBuffers = null;
     // index 分片
-    private final int fileNum = 38;
+    private final int fileNum = 64;
     // 当前索引写入的区域
     private AtomicLong[] indexPositions = null;
 
@@ -72,7 +72,7 @@ public class MemoryIndex {
             this.indexFileChannels[i] = fileChannel;
             AtomicLong atomicLong = new AtomicLong(file.length());
             this.indexPositions[i] = atomicLong;
-            mappedByteBuffers[i] = fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, 800 * 1024 * 1024 / fileNum);
+            mappedByteBuffers[i] = fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, 1024 * 1024 * 1024 / fileNum);
         }
         // 创建内存索引
         this.indexCacheArray = new LongIntHashMap[cacheNum];
