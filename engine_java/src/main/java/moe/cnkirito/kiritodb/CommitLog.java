@@ -27,7 +27,8 @@ public class CommitLog {
     private FileChannel[] fileChannels = null;
     // 自增索引
     private AtomicLong[] atomicLongs = null;
-    private final int fileNum = 38;
+    private final int bitOffset = 7;
+    private final int fileNum = 2 << bitOffset;
 
     // buffer
     private ThreadLocal<ByteBuffer> bufferThreadLocal = ThreadLocal.withInitial(() -> ByteBuffer.allocate(Constant.ValueLength));
@@ -67,12 +68,10 @@ public class CommitLog {
                     channel.force(true);
             }
         }
-        this.fileChannels = null;
-        this.atomicLongs = null;
     }
 
     public byte[] read(long key, long offset, int size) throws IOException, EngineException {
-        int index = (int) (Math.abs(key) % fileNum);
+        int index = getPartition(key);
         ByteBuffer buffer = bufferThreadLocal.get();
         buffer.clear();
         FileChannel fileChannel = this.fileChannels[index];
@@ -86,7 +85,7 @@ public class CommitLog {
     }
 
     public long write(long key, byte[] data) throws IOException {
-        int index = (int) (Math.abs(key) % fileNum);
+        int index = getPartition(key);
         AtomicLong atomicLong = atomicLongs[index];
         // 先获取自增的offset
         long curOffset = atomicLong.addAndGet(Constant.ValueLength);
@@ -96,7 +95,7 @@ public class CommitLog {
     }
 
     public void write(long key, long offset, byte[] data) throws IOException {
-        int index = (int) (Math.abs(key) % fileNum);
+        int index = getPartition(key);
         FileChannel fileChannel = this.fileChannels[index];
         ByteBuffer buffer = ByteBuffer.wrap(data);
         int size = data.length;
@@ -105,4 +104,7 @@ public class CommitLog {
         }
     }
 
+    private int getPartition(long key){
+        return (int) (Math.abs(key) >> (63 - bitOffset));
+    }
 }

@@ -35,7 +35,6 @@ public class MemoryIndex {
     private final int fileNum = 38;
     // 当前索引写入的区域
     private AtomicLong[] indexPositions = null;
-    private volatile boolean loadFlag = false;
 
     public void init(String path) throws IOException {
         // 先创建文件夹
@@ -137,7 +136,6 @@ public class MemoryIndex {
             logger.error("多线程读取index文件失败", e);
         }
         logger.info("end load index" + (System.currentTimeMillis() - tmp) + "ms");
-        this.loadFlag = true;
     }
 
     public void destroy() throws IOException {
@@ -164,7 +162,7 @@ public class MemoryIndex {
         return ((long) ans - 1) * Constant.ValueLength;
     }
 
-    public void write(long key, long offset) throws IOException {
+    public void write(long key, long offset) {
         // 为了让offset大于0
         int offsetInt = (int) (offset / Constant.ValueLength) + 1;
         try {
@@ -173,8 +171,6 @@ public class MemoryIndex {
         } catch (Exception e) {
             logger.error("写入文件错误, error", e);
         }
-        // 写入到内存
-//        insertIndexCache(key, offsetInt);
     }
 
     private void insertIndexCache(Long key, Integer value) {
@@ -187,7 +183,7 @@ public class MemoryIndex {
         }
     }
 
-    private void writeIndexFile(long key, Integer value) throws Exception {
+    private void writeIndexFile(long key, Integer value) {
         // 文件分片
         int index = (int) (Math.abs(key) % fileNum);
         long position = this.indexPositions[index].getAndAdd(Constant.IndexLength);
@@ -196,14 +192,5 @@ public class MemoryIndex {
         buffer.position((int) position);
         buffer.putLong(key);
         buffer.putInt(value);
-        // 加载元数据
-    }
-
-    public boolean isLoadFlag() {
-        return loadFlag;
-    }
-
-    public void setLoadFlag(boolean loadFlag) {
-        this.loadFlag = loadFlag;
     }
 }
