@@ -83,9 +83,7 @@ public class CommitLog {
             throw new EngineException(RetCodeEnum.IO_ERROR, "read != size");
         }
         buffer.flip();
-        byte[] result = new byte[Constant.ValueLength];
-        buffer.get(result);
-        return result;
+        return buffer.array();
     }
 
     public long write(long key, byte[] data) throws IOException {
