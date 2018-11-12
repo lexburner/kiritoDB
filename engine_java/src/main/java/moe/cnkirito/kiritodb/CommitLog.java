@@ -4,17 +4,16 @@ import com.alibabacloud.polar_race.engine.common.exceptions.EngineException;
 import com.alibabacloud.polar_race.engine.common.exceptions.RetCodeEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.nio.ch.DirectBuffer;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
+
+import static moe.cnkirito.kiritodb.UnsafeUtil.UNSAFE;
 
 /**
  * @author kirito.moe@foxmail.com
@@ -32,6 +31,7 @@ public class CommitLog {
 
     // buffer
     private ThreadLocal<ByteBuffer> bufferThreadLocal = ThreadLocal.withInitial(() -> ByteBuffer.allocate(Constant.ValueLength));
+    private ThreadLocal<byte[]> threadLocalReadBytes = ThreadLocal.withInitial(() -> new byte[4096]);
 
     public void init(String path) throws IOException {
         File dirFile = new File(path);
@@ -80,8 +80,11 @@ public class CommitLog {
             logger.error(String.format("read=%d,size=%d", read, size));
             throw new EngineException(RetCodeEnum.IO_ERROR, "read != size");
         }
-        buffer.flip();
-        return buffer.array();
+//        buffer.flip();
+        byte[] bytes = threadLocalReadBytes.get();
+        UNSAFE.copyMemory(null, ((DirectBuffer) buffer).address(), bytes, 16, 4096);
+
+        return bytes;
     }
 
     public long write(long key, byte[] data) throws IOException {
@@ -104,7 +107,7 @@ public class CommitLog {
         }
     }
 
-    private int getPartition(long key){
+    private int getPartition(long key) {
         return (int) (Math.abs(key) >> (63 - bitOffset));
     }
 }

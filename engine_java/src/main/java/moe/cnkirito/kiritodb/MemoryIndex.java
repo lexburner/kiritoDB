@@ -76,7 +76,8 @@ public class MemoryIndex {
         // 创建内存索引
         this.indexCacheArray = new LongIntHashMap[cacheNum];
         for (int i = 0; i < cacheNum; ++i) {
-            this.indexCacheArray[i] = new LongIntHashMap();
+//            this.indexCacheArray[i] = new LongIntHashMap();
+            this.indexCacheArray[i] = new LongIntHashMap(1024 * 64, 0.99); // test
         }
         if (!hasSave) {
             logger.info("第一次进入索引文件，里面没内容，所以不用初始化到内存中");
