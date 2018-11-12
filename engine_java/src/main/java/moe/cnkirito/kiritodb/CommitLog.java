@@ -30,7 +30,6 @@ public class CommitLog {
     private AtomicLong[] atomicLongs = null;
     private final int bitOffset = 7;
     private final int fileNum = 2 << bitOffset;
-    private Unsafe unsafe = Util.getUnsafe();
 
     // buffer
     private ThreadLocal<ByteBuffer> bufferThreadLocal = ThreadLocal.withInitial(() -> ByteBuffer.allocate(Constant.ValueLength));

@@ -28,7 +28,7 @@ public class MemoryIndex {
     // 利用了hppc的longlonghashmap
     private LongIntHashMap[] indexCacheArray = null;
     // 分片
-    private final int cacheNum = 1000;
+    private final int cacheNum = 256;
     // channel
     private FileChannel[] indexFileChannels = null;
     private MappedByteBuffer[] mappedByteBuffers = null;
@@ -86,7 +86,7 @@ public class MemoryIndex {
         this.load();
     }
 
-    public void load(){
+    public void load() {
         CountDownLatch countDownLatch = new CountDownLatch(fileNum);
         long tmp = System.currentTimeMillis();
         // 说明索引文件中已经有内容，则读取索引文件内容到内存中
@@ -152,7 +152,7 @@ public class MemoryIndex {
 
     public Long read(long key) {
         // 分片的位置
-        int index = (int) (Math.abs(key) % cacheNum);
+        int index = (int) (Math.abs(key) & 0xff);
         LongIntHashMap map = indexCacheArray[index];
         int ans = map.get(key);
         // 不存在offset
@@ -176,7 +176,7 @@ public class MemoryIndex {
 
     private void insertIndexCache(Long key, Integer value) {
         // cache分片
-        int index = (int) (Math.abs(key) % cacheNum);
+        int index = (int) (Math.abs(key) & 0xff);
         // 写入内存。因为LongLongHashMap不支持并发，所以加锁
         LongIntHashMap map = indexCacheArray[index];
         synchronized (map) {
