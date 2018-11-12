@@ -81,7 +81,7 @@ public class MemoryIndex {
             final int index = i;
             executorService.execute(() -> {
                 MappedByteBuffer mappedByteBuffer = mappedByteBuffers[index];
-                int indexSize = (int) (commitLog.getFileLength(index) / 12);
+                int indexSize = (int) (commitLog.getFileLength(index) >> 12);
                 for (int curIndex = 0; curIndex < indexSize; curIndex++) {
                     mappedByteBuffer.position(curIndex * 12);
                     long key = mappedByteBuffer.getLong();
@@ -95,7 +95,7 @@ public class MemoryIndex {
         try {
             countDownLatch.await();
         } catch (InterruptedException e) {
-            logger.error("thread interrupted exception",e);
+            logger.error("thread interrupted exception", e);
         }
     }
 
