@@ -69,13 +69,11 @@ public class CommitLog {
 
     public long write(byte[] key, byte[] data) throws IOException {
         int index = getPartition(key);
-        // 在offset位置写data
+        AtomicLong atomicLong = fileLength[index];
         FileChannel fileChannel = this.fileChannels[index];
         long curOffset;
         synchronized (fileChannel){
-            AtomicLong atomicLong = fileLength[index];
-            // 先获取自增的offset
-            curOffset = atomicLong.addAndGet(Constant.ValueLength);
+            curOffset = atomicLong.getAndAdd(Constant.ValueLength);
             ByteBuffer buffer = ByteBuffer.wrap(data);
             fileChannel.write(buffer);
         }

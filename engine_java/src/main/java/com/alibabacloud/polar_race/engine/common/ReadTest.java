@@ -16,7 +16,7 @@ public class ReadTest {
 
         EngineRace engine = new EngineRace();
         engine.open("D:/tmp/kiritoDB");
-        int len = 6400000;
+        int len = 640000;
         long base = Long.MAX_VALUE / len;
         for (int i = 0; i < len; i += 256) {
             try {
