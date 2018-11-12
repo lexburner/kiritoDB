@@ -21,8 +21,8 @@ public class CommitLog {
 
     private FileChannel[] fileChannels = null;
     // 自增索引
-    private AtomicLong[] atomicLongs = null;
-    private final int bitOffset = 8;
+    private AtomicLong[] fileLength = null;
+    private final int bitOffset = 7;
     private final int fileNum = 2 << bitOffset;//256
 
     // buffer
@@ -42,11 +42,11 @@ public class CommitLog {
             files[i] = file;
         }
         this.fileChannels = new FileChannel[fileNum];
-        this.atomicLongs = new AtomicLong[fileNum];
+        this.fileLength = new AtomicLong[fileNum];
         for (int i = 0; i < fileNum; ++i) {
             FileChannel fileChannel = new RandomAccessFile(files[i], "rw").getChannel();
             this.fileChannels[i] = fileChannel;
-            this.atomicLongs[i] = new AtomicLong(files[i].length());
+            this.fileLength[i] = new AtomicLong(files[i].length());
         }
     }
 
@@ -72,7 +72,7 @@ public class CommitLog {
 
     public long write(byte[] key, byte[] data) throws IOException {
         int index = getPartition(key);
-        AtomicLong atomicLong = atomicLongs[index];
+        AtomicLong atomicLong = fileLength[index];
         // 先获取自增的offset
         long curOffset = atomicLong.addAndGet(Constant.ValueLength);
         // 在offset位置写data
@@ -85,6 +85,10 @@ public class CommitLog {
         FileChannel fileChannel = this.fileChannels[index];
         ByteBuffer buffer = ByteBuffer.wrap(data);
         fileChannel.write(buffer, offset);
+    }
+
+    public long getFileLength(int no){
+        return this.fileLength[no].get();
     }
 
     private int getPartition(byte[] key) {

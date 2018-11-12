@@ -26,7 +26,7 @@ public class KiritoDB {
         memoryIndex = new MemoryIndex();
         try {
             commitLog.init(path);
-            memoryIndex.init(path);
+            memoryIndex.init(path, commitLog);
         } catch (IOException e) {
             throw Constant.ioException;
         }
@@ -58,11 +58,7 @@ public class KiritoDB {
 
     public void close() {
         if (memoryIndex != null) {
-            try {
-                memoryIndex.destroy();
-            } catch (IOException e) {
-                logger.error("index destory error", e);
-            }
+            memoryIndex.destroy();
         }
         if (commitLog != null) {
             try {

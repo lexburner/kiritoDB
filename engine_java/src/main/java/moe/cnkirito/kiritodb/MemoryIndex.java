@@ -13,6 +13,9 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -22,20 +25,19 @@ import java.util.concurrent.atomic.AtomicLong;
 public class MemoryIndex {
 
     private final static Logger logger = LoggerFactory.getLogger(MemoryIndex.class);
-
-    // 利用了hppc的longlonghashmap
-    private LongIntHashMap[] indexCacheArray = null;
     // 分片
     private final int cacheNum = 256;
-    // channel
-    private FileChannel[] indexFileChannels = null;
-    private MappedByteBuffer[] mappedByteBuffers = null;
     // index 分片
     private final int fileNum = 256;
+    // 利用了hppc的longlonghashmap
+    private LongIntHashMap[] indexCacheArray = null;
+    private final MappedByteBuffer[] mappedByteBuffers = new MappedByteBuffer[fileNum];
     // 当前索引写入的区域
-    private AtomicLong[] indexPositions = null;
+    private final AtomicLong[] indexPositions = new AtomicLong[fileNum];
+    private CommitLog commitLog;
 
-    public void init(String path) throws IOException {
+    public void init(String path, CommitLog commitLog) throws IOException {
+        this.commitLog = commitLog;
         // 先创建文件夹
         File dirFile = new File(path);
         boolean hasSave = true;
@@ -53,15 +55,10 @@ public class MemoryIndex {
             }
             files.add(file);
         }
-        // 文件channel
-        this.indexFileChannels = new FileChannel[fileNum];
-        this.mappedByteBuffers = new MappedByteBuffer[fileNum];
         // 文件position
-        this.indexPositions = new AtomicLong[fileNum];
         for (int i = 0; i < fileNum; ++i) {
             File file = files.get(i);
             FileChannel fileChannel = new RandomAccessFile(file, "rw").getChannel();
-            this.indexFileChannels[i] = fileChannel;
             AtomicLong atomicLong = new AtomicLong(file.length());
             this.indexPositions[i] = atomicLong;
             mappedByteBuffers[i] = fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, Constant.IndexLength * 252000);
@@ -74,73 +71,37 @@ public class MemoryIndex {
         if (hasSave) {
             this.load();
         }
-
     }
 
     public void load() {
         // 说明索引文件中已经有内容，则读取索引文件内容到内存中
-        Thread[] threads = new Thread[fileNum];
+        ExecutorService executorService = Executors.newFixedThreadPool(64);
+        CountDownLatch countDownLatch = new CountDownLatch(fileNum);
         for (int i = 0; i < fileNum; ++i) {
             final int index = i;
-            threads[i] = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    // 全局buffer
-                    ByteBuffer buffer = ByteBuffer.allocateDirect(5 * 1024 * 3);
-                    // 源数据
-                    FileChannel indexFileChannel = indexFileChannels[index];
-                    boolean endFlag = true;
-                    // 加载index中数据到内存中
-                    while (endFlag) {
-                        buffer.clear();
-                        int size = 0;
-                        try {
-                            size = indexFileChannel.read(buffer);
-                        } catch (IOException e) {
-                            logger.error("读取文件error，index={}", index, e);
-                        }
-                        if (size == -1) {
-                            break;
-                        }
-                        buffer.flip();
-                        while (buffer.hasRemaining()) {
-                            long key = buffer.getLong();
-                            int offset = buffer.getInt();
-                            // 脏数据，不进行处理
-                            if (offset == 0 && key == 0) {
-                                endFlag = false;
-                                break;
-                            }
-                            // 插入内存
-                            insertIndexCache(key, offset);
-                        }
-                    }
-                    ((DirectBuffer) buffer).cleaner().clean();
+            executorService.execute(() -> {
+                MappedByteBuffer mappedByteBuffer = mappedByteBuffers[index];
+                int indexSize = (int) (commitLog.getFileLength(index) / 12);
+                for (int curIndex = 0; curIndex < indexSize; curIndex++) {
+                    mappedByteBuffer.position(curIndex * 12);
+                    long key = mappedByteBuffer.getLong();
+                    int offset = mappedByteBuffer.getInt();
+                    // 插入内存
+                    insertIndexCache(key, offset);
                 }
+                countDownLatch.countDown();
             });
         }
-        for (Thread thread : threads) {
-            thread.start();
-        }
-        for (Thread thread : threads) {
-            try {
-                thread.join();
-            } catch (InterruptedException e) {
-                logger.error("Join Interrupted", e);
-            }
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            logger.error("thread interrupted exception",e);
         }
     }
 
-    public void destroy() throws IOException {
-        if (this.mappedByteBuffers != null) {
-            for (MappedByteBuffer mappedByteBuffer : this.mappedByteBuffers) {
-                Util.clean(mappedByteBuffer);
-            }
-        }
-        if (this.indexFileChannels != null) {
-            for (FileChannel fileChannel : this.indexFileChannels) {
-                fileChannel.close();
-            }
+    public void destroy() {
+        for (MappedByteBuffer mappedByteBuffer : this.mappedByteBuffers) {
+            Util.clean(mappedByteBuffer);
         }
     }
 
