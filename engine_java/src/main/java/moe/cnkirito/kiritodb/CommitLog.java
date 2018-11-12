@@ -28,7 +28,7 @@ public class CommitLog {
     private FileChannel[] fileChannels = null;
     // 自增索引
     private AtomicLong[] atomicLongs = null;
-    private final int bitOffset = 7;
+    private final int bitOffset = 8;
     private final int fileNum = 2 << bitOffset;
 
     // buffer

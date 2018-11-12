@@ -77,7 +77,7 @@ public class MemoryIndex {
         // 创建内存索引
         this.indexCacheArray = new LongIntHashMap[cacheNum];
         for (int i = 0; i < cacheNum; ++i) {
-            this.indexCacheArray[i] = new LongIntHashMap();
+            this.indexCacheArray[i] = new LongIntHashMap(250000+2000,0.99);
         }
         if (!hasSave) {
 //            logger.info("第一次进入索引文件，里面没内容，所以不用初始化到内存中");
@@ -96,7 +96,7 @@ public class MemoryIndex {
                 @Override
                 public void run() {
                     // 全局buffer
-                    ByteBuffer buffer = ByteBuffer.allocateDirect(16 * 1024 * 3);
+                    ByteBuffer buffer = ByteBuffer.allocateDirect(5 * 1024 * 3);
                     // 源数据
                     FileChannel indexFileChannel = indexFileChannels[index];
                     boolean endFlag = true;
