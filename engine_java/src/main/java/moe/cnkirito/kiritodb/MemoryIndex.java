@@ -97,6 +97,7 @@ public class MemoryIndex {
         } catch (InterruptedException e) {
             logger.error("thread interrupted exception", e);
         }
+        executorService.shutdown();
     }
 
     public void destroy() {

@@ -16,12 +16,13 @@ public class ReadTest {
 
         EngineRace engine = new EngineRace();
         engine.open("D:/tmp/kiritoDB");
-
-        for (int i = 0; i < 6400000; i += 256) {
+        int len = 6400000;
+        long base = Long.MAX_VALUE / len;
+        for (int i = 0; i < len; i += 256) {
             try {
-                byte[] bs = engine.read(Util.long2bytes(i));
+                byte[] bs = engine.read(Util.long2bytes(i*base));
                 long ans = Util.bytes2Long(bs);
-                if (i != ans) {
+                if (i*base != ans) {
                     System.err.println("no equal:" + i);
                 }
             } catch (Exception e) {

@@ -63,10 +63,7 @@ public class CommitLog {
         ByteBuffer buffer = bufferThreadLocal.get();
         buffer.clear();
         FileChannel fileChannel = this.fileChannels[index];
-        int read = fileChannel.read(buffer, offset);
-        if (read != size) {
-            throw Constant.ioException;
-        }
+        fileChannel.read(buffer, offset);
         return buffer.array();
     }
 

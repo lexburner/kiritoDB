@@ -28,13 +28,14 @@ public class WriteTest {
         // 写数据
         final AtomicInteger atomicInteger = new AtomicInteger();
         int len = 6400000;
+        long base = Long.MAX_VALUE / len;
         final CountDownLatch downLatch = new CountDownLatch(len);
         for (int i = 0; i < len; ++i) {
             final int cur = i;
             executor.execute(new Runnable() {
                 public void run() {
                     try {
-                        engine.write(Util.long2bytes(cur), Util._4kb(cur));
+                        engine.write(Util.long2bytes(cur*base), Util._4kb(cur*base));
                         System.out.println(atomicInteger.incrementAndGet());
                         downLatch.countDown();
                     } catch (EngineException e) {
