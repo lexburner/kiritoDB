@@ -47,7 +47,7 @@ public class KiritoDB {
             throw Constant.keyNotFoundException;
         }
         try {
-            return commitLog.read(key, offset, Constant.ValueLength);
+            return commitLog.read(key, offset);
         } catch (IOException e) {
             throw Constant.ioException;
         }

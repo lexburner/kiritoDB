@@ -58,7 +58,7 @@ public class CommitLog {
         }
     }
 
-    public byte[] read(byte[] key, long offset, int size) throws IOException, EngineException {
+    public byte[] read(byte[] key, long offset) throws IOException, EngineException {
         int index = getPartition(key);
         ByteBuffer buffer = bufferThreadLocal.get();
         buffer.clear();
@@ -69,19 +69,17 @@ public class CommitLog {
 
     public long write(byte[] key, byte[] data) throws IOException {
         int index = getPartition(key);
-        AtomicLong atomicLong = fileLength[index];
-        // 先获取自增的offset
-        long curOffset = atomicLong.addAndGet(Constant.ValueLength);
         // 在offset位置写data
-        write(key, curOffset, data);
-        return curOffset;
-    }
-
-    public void write(byte[] key, long offset, byte[] data) throws IOException {
-        int index = getPartition(key);
         FileChannel fileChannel = this.fileChannels[index];
-        ByteBuffer buffer = ByteBuffer.wrap(data);
-        fileChannel.write(buffer, offset);
+        long curOffset;
+        synchronized (fileChannel){
+            AtomicLong atomicLong = fileLength[index];
+            // 先获取自增的offset
+            curOffset = atomicLong.addAndGet(Constant.ValueLength);
+            ByteBuffer buffer = ByteBuffer.wrap(data);
+            fileChannel.write(buffer);
+        }
+        return curOffset;
     }
 
     public long getFileLength(int no){
