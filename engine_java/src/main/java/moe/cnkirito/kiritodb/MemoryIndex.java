@@ -59,8 +59,7 @@ public class MemoryIndex {
         for (int i = 0; i < fileNum; ++i) {
             File file = files.get(i);
             FileChannel fileChannel = new RandomAccessFile(file, "rw").getChannel();
-            AtomicLong atomicLong = new AtomicLong(file.length());
-            this.indexPositions[i] = atomicLong;
+            this.indexPositions[i] = new AtomicLong(0);
             mappedByteBuffers[i] = fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, Constant.IndexLength * 252000);
         }
         // 创建内存索引
@@ -82,6 +81,7 @@ public class MemoryIndex {
             executorService.execute(() -> {
                 MappedByteBuffer mappedByteBuffer = mappedByteBuffers[index];
                 int indexSize = (int) (commitLog.getFileLength(index) >> 12);
+                indexPositions[index].set(indexSize * 12);
                 for (int curIndex = 0; curIndex < indexSize; curIndex++) {
                     mappedByteBuffer.position(curIndex * 12);
                     long key = mappedByteBuffer.getLong();
