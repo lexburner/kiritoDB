@@ -38,9 +38,9 @@ public class CommitLog {
         File dirFile = new File(path);
         if (!dirFile.exists()) {
             if (dirFile.mkdirs()) {
-                logger.info("创建文件夹成功,dir=" + path);
+//                logger.info("创建文件夹成功,dir=" + path);
             } else {
-                logger.error("创建文件夹失败,dir=" + path);
+//                logger.error("创建文件夹失败,dir=" + path);
             }
         }
         File[] files = new File[fileNum];
@@ -48,7 +48,7 @@ public class CommitLog {
             File file = new File(path + Constant.DataName + i + Constant.DataSuffix);
             if (!file.exists()) {
                 if (!file.createNewFile()) {
-                    logger.error("创建文件失败,file=" + file.getPath());
+//                    logger.error("创建文件失败,file=" + file.getPath());
                 }
             }
             files[i] = file;
@@ -78,10 +78,9 @@ public class CommitLog {
         FileChannel fileChannel = this.fileChannels[index];
         int read = fileChannel.read(buffer, offset);
         if (read != size) {
-            logger.error(String.format("read=%d,size=%d", read, size));
+//            logger.error(String.format("read=%d,size=%d", read, size));
             throw new EngineException(RetCodeEnum.IO_ERROR, "read != size");
         }
-        buffer.flip();
         return buffer.array();
     }
 

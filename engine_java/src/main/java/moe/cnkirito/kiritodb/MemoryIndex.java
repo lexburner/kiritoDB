@@ -43,9 +43,9 @@ public class MemoryIndex {
         boolean hasSave = true;
         if (!dirFile.exists()) {
             if (dirFile.mkdirs()) {
-                logger.info("创建文件夹成功,dir=" + path);
+//                logger.info("创建文件夹成功,dir=" + path);
             } else {
-                logger.error("创建文件夹失败,dir=" + path);
+//                logger.error("创建文件夹失败,dir=" + path);
             }
             hasSave = false;
         }
@@ -55,7 +55,7 @@ public class MemoryIndex {
             File file = new File(path + Constant.IndexName + i + Constant.IndexSuffix);
             if (!file.exists()) {
                 if (!file.createNewFile()) {
-                    logger.error("创建文件失败,file=" + file.getPath());
+//                    logger.error("创建文件失败,file=" + file.getPath());
                 }
                 hasSave = false;
             }
@@ -80,7 +80,7 @@ public class MemoryIndex {
             this.indexCacheArray[i] = new LongIntHashMap();
         }
         if (!hasSave) {
-            logger.info("第一次进入索引文件，里面没内容，所以不用初始化到内存中");
+//            logger.info("第一次进入索引文件，里面没内容，所以不用初始化到内存中");
             return;
         }
         this.load();
@@ -107,7 +107,7 @@ public class MemoryIndex {
                         try {
                             size = indexFileChannel.read(buffer);
                         } catch (IOException e) {
-                            logger.error("读取文件error，index=" + index, e);
+//                            logger.error("读取文件error，index=" + index, e);
                         }
                         if (size == -1) {
                             break;
@@ -134,9 +134,9 @@ public class MemoryIndex {
         try {
             countDownLatch.await();
         } catch (InterruptedException e) {
-            logger.error("多线程读取index文件失败", e);
+//            logger.error("多线程读取index文件失败", e);
         }
-        logger.info("end load index" + (System.currentTimeMillis() - tmp) + "ms");
+//        logger.info("end load index" + (System.currentTimeMillis() - tmp) + "ms");
     }
 
     public void destroy() throws IOException {
@@ -170,7 +170,7 @@ public class MemoryIndex {
             // 写入到索引文件
             writeIndexFile(key, offsetInt);
         } catch (Exception e) {
-            logger.error("写入文件错误, error", e);
+//            logger.error("写入文件错误, error", e);
         }
     }
 
