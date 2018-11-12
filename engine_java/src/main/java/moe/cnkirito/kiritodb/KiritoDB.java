@@ -34,8 +34,8 @@ public class KiritoDB {
 
     public void write(byte[] key, byte[] value) throws EngineException {
         try {
-            Long offset = commitLog.write(key, value);
-            memoryIndex.write(key, offset);
+            int offsetInt = commitLog.write(key, value);
+            memoryIndex.write(key, offsetInt);
         } catch (IOException e) {
             throw Constant.ioException;
         }

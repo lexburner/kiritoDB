@@ -80,7 +80,7 @@ public class MemoryIndex {
             final int index = i;
             executorService.execute(() -> {
                 MappedByteBuffer mappedByteBuffer = mappedByteBuffers[index];
-                int indexSize = (int) (commitLog.getFileLength(index) >> 12);
+                int indexSize = commitLog.getFileLength(index);
                 indexPositions[index].set(indexSize * 12);
                 for (int curIndex = 0; curIndex < indexSize; curIndex++) {
                     mappedByteBuffer.position(curIndex * 12);
@@ -116,8 +116,7 @@ public class MemoryIndex {
         return ((long) ans) * Constant.ValueLength;
     }
 
-    public void write(byte[] key, long offset) {
-        int offsetInt = (int) (offset / Constant.ValueLength);
+    public void write(byte[] key, int offsetInt) {
         try {
             writeIndexFile(key, offsetInt);
         } catch (Exception e) {
