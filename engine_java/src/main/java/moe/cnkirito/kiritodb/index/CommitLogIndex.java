@@ -31,10 +31,8 @@ public class CommitLogIndex implements CommitLogAware {
     private FileChannel fileChannel;
     private MappedByteBuffer mappedByteBuffer;
     // 当前索引写入的区域
-    private long wrotePosition;
     private CommitLog commitLog;
     private volatile boolean loadFlag = false;
-    private Lock lock = new ReentrantLock();
 
     public void init(String path, int no) throws IOException {
         // 先创建文件夹
@@ -51,7 +49,6 @@ public class CommitLogIndex implements CommitLogAware {
         }
         // 文件position
         this.fileChannel = new RandomAccessFile(file, "rw").getChannel();
-        this.wrotePosition = 0;
         this.mappedByteBuffer = this.fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, Constant.IndexLength * 252000);
         this.key2OffsetMap = new LongIntHashMap(252000, 0.99);
     }
@@ -60,7 +57,6 @@ public class CommitLogIndex implements CommitLogAware {
         // 说明索引文件中已经有内容，则读取索引文件内容到内存中
         MappedByteBuffer mappedByteBuffer = this.mappedByteBuffer;
         int indexSize = commitLog.getFileLength();
-        wrotePosition = indexSize * Constant.IndexLength;
         for (int curIndex = 0; curIndex < indexSize; curIndex++) {
             mappedByteBuffer.position(curIndex * Constant.IndexLength);
             long key = mappedByteBuffer.getLong();
@@ -84,19 +80,13 @@ public class CommitLogIndex implements CommitLogAware {
         return ((long) offsetInt) * Constant.ValueLength;
     }
 
-    public void write(byte[] key, int offsetInt) throws EngineException {
-        lock.lock();
+    public synchronized void write(byte[] key, int offsetInt) throws EngineException {
         try {
-//            long position = this.wrotePosition;
-            this.wrotePosition += Constant.IndexLength;
             ByteBuffer buffer = this.mappedByteBuffer;
-//            buffer.position((int) position);
             buffer.put(key);
             buffer.putInt(offsetInt);
         } catch (Exception e) {
             throw Constant.ioException;
-        }finally {
-            lock.unlock();
         }
     }
 

@@ -20,9 +20,9 @@ public class ReadTest {
         long base = Long.MAX_VALUE / len;
         for (int i = 0; i < len; i += 256) {
             try {
-                byte[] bs = engine.read(Util.long2bytes(i * base));
+                byte[] bs = engine.read(Util.long2bytes(base * i));
                 long ans = Util.bytes2Long(bs);
-                if (i * base != ans) {
+                if (base * i != ans) {
                     System.err.println("no equal:" + i);
                 }
             } catch (Exception e) {

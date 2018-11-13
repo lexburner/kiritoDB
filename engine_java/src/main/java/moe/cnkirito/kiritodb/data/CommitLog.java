@@ -10,8 +10,6 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import static moe.cnkirito.kiritodb.common.UnsafeUtil.UNSAFE;
 
@@ -23,13 +21,13 @@ public class CommitLog {
 
     private static Logger logger = LoggerFactory.getLogger(CommitLog.class);
     // buffer
-    private static ThreadLocal<ByteBuffer> bufferThreadLocal = ThreadLocal.withInitial(() -> ByteBuffer.allocate(Constant.ValueLength));
+    private static ThreadLocal<ByteBuffer> bufferThreadLocal = ThreadLocal.withInitial(() -> ByteBuffer.allocateDirect(Constant.ValueLength));
+    private static ThreadLocal<byte[]> byteArrayThreadLocal = ThreadLocal.withInitial(() -> new byte[Constant.ValueLength]);
     private FileChannel fileChannel;
     // 逻辑长度 要乘以 4096
     private int fileLength;
     private ByteBuffer writeBuffer;
     private long addresses;
-    private Lock lock = new ReentrantLock();
 
     public void init(String path, int no) throws IOException {
         File dirFile = new File(path);
@@ -54,27 +52,23 @@ public class CommitLog {
 
     public byte[] read(long offset) throws IOException {
         ByteBuffer buffer = bufferThreadLocal.get();
+        byte[] bytes = byteArrayThreadLocal.get();
         buffer.clear();
         this.fileChannel.read(buffer, offset);
-        return buffer.array();
+        UNSAFE.copyMemory(null, ((DirectBuffer) buffer).address(), bytes, 16, Constant.ValueLength);
+        return bytes;
     }
 
-    public int write(byte[] data) {
-        lock.lock();
+    public synchronized int write(byte[] data) {
+        int offsetInt = fileLength++;
+        UNSAFE.copyMemory(data, 16, null, addresses, 4096);
+        this.writeBuffer.position(0);
         try {
-            int offsetInt = fileLength++;
-            UNSAFE.copyMemory(data, 16, null, addresses, 4096);
-            this.writeBuffer.position(0);
-            try {
-                this.fileChannel.write(this.writeBuffer);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-            return offsetInt;
-        } finally {
-            lock.unlock();
+            this.fileChannel.write(this.writeBuffer);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-
+        return offsetInt;
     }
 
     public int getFileLength() {
