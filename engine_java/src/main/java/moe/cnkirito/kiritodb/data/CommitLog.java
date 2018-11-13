@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static moe.cnkirito.kiritodb.common.UnsafeUtil.UNSAFE;
 
@@ -27,6 +29,7 @@ public class CommitLog {
     private int fileLength;
     private ByteBuffer writeBuffer;
     private long addresses;
+    private Lock lock = new ReentrantLock();
 
     public void init(String path, int no) throws IOException {
         File dirFile = new File(path);
@@ -56,16 +59,22 @@ public class CommitLog {
         return buffer.array();
     }
 
-    public synchronized int write(byte[] data) {
-        int offsetInt = fileLength++;
-        UNSAFE.copyMemory(data, 16, null, addresses, 4096);
-        this.writeBuffer.position(0);
+    public int write(byte[] data) {
+        lock.lock();
         try {
-            this.fileChannel.write(this.writeBuffer);
-        } catch (IOException e) {
-            e.printStackTrace();
+            int offsetInt = fileLength++;
+            UNSAFE.copyMemory(data, 16, null, addresses, 4096);
+            this.writeBuffer.position(0);
+            try {
+                this.fileChannel.write(this.writeBuffer);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return offsetInt;
+        } finally {
+            lock.unlock();
         }
-        return offsetInt;
+
     }
 
     public int getFileLength() {

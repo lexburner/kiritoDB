@@ -16,6 +16,8 @@ import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author kirito.moe@foxmail.com
@@ -32,6 +34,7 @@ public class CommitLogIndex implements CommitLogAware {
     private long wrotePosition;
     private CommitLog commitLog;
     private volatile boolean loadFlag = false;
+    private Lock lock = new ReentrantLock();
 
     public void init(String path, int no) throws IOException {
         // 先创建文件夹
@@ -81,16 +84,19 @@ public class CommitLogIndex implements CommitLogAware {
         return ((long) offsetInt) * Constant.ValueLength;
     }
 
-    public synchronized void write(byte[] key, int offsetInt) throws EngineException {
+    public void write(byte[] key, int offsetInt) throws EngineException {
+        lock.lock();
         try {
-            long position = this.wrotePosition;
+//            long position = this.wrotePosition;
             this.wrotePosition += Constant.IndexLength;
-            ByteBuffer buffer = this.mappedByteBuffer.slice();
-            buffer.position((int) position);
+            ByteBuffer buffer = this.mappedByteBuffer;
+//            buffer.position((int) position);
             buffer.put(key);
             buffer.putInt(offsetInt);
         } catch (Exception e) {
             throw Constant.ioException;
+        }finally {
+            lock.unlock();
         }
     }
 
