@@ -23,11 +23,11 @@ public class WriteTest {
 
         // 打开引擎
         final EngineRace engine = new EngineRace();
-        engine.open("/tmp/kiritoDB");
+        engine.open("D:/tmp/kiritoDB");
 
         // 写数据
         final AtomicInteger atomicInteger = new AtomicInteger();
-        int len = 640000;
+        int len = 6400000;
         long base = Long.MAX_VALUE / len;
         final CountDownLatch downLatch = new CountDownLatch(len);
         for (int i = 0; i < len; ++i) {

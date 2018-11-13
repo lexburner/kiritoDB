@@ -74,8 +74,7 @@ public class Util {
 //                    (((long)buffer[1] & 0xff) <<  8) |
 //                    (((long)buffer[0] & 0xff)      ));
 //    }
-
-    public static long bytes2Long(byte[] buffer){
+    public static long bytes2Long(byte[] buffer) {
         long values = 0;
         int len = 8;
         for (int i = 0; i < len; ++i) {

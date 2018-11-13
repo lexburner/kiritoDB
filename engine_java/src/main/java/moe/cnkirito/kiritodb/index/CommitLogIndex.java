@@ -46,8 +46,8 @@ public class CommitLogIndex implements CommitLogAware {
         }
         // 文件position
         this.fileChannel = new RandomAccessFile(file, "rw").getChannel();
-        this.mappedByteBuffer = this.fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, Constant.IndexLength * 252000 * 4);
-        this.key2OffsetMap = new LongIntHashMap(252000 * 4, 0.99);
+        this.mappedByteBuffer = this.fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, Constant.IndexLength * 252000);
+        this.key2OffsetMap = new LongIntHashMap(252000, 0.99);
     }
 
     public void load() {
