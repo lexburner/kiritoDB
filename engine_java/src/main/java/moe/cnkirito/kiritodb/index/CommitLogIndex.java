@@ -68,6 +68,9 @@ public class CommitLogIndex implements CommitLogAware {
     }
 
     public void destroy() throws IOException {
+        key2OffsetMap = null;
+        commitLog = null;
+        loadFlag = false;
         fileChannel.close();
         Util.clean(this.mappedByteBuffer);
     }
