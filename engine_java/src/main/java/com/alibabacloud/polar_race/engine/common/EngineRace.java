@@ -30,7 +30,6 @@ public class EngineRace extends AbstractEngine {
     @Override
     public void close() {
         kiritoDB.close();
-		System.gc();
     }
 
 }

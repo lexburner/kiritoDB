@@ -53,7 +53,6 @@ public class KiritoDB {
                 if (commitLogIndices[i] instanceof CommitLogAware) {
                     ((CommitLogAware) commitLogIndices[i]).setCommitLog(commitLogs[i]);
                 }
-
                 this.loadFlag = commitLogIndices[i].isLoadFlag();
             }
             if (!loadFlag) {
@@ -134,7 +133,5 @@ public class KiritoDB {
         this.partitionable = null;
         this.commitLogs = null;
         this.commitLogIndices = null;
-        // 判断是否需要加载索引进入内存
-        this.loadFlag = false;
     }
 }
