@@ -21,8 +21,7 @@ public class CommitLog {
 
     private static Logger logger = LoggerFactory.getLogger(CommitLog.class);
     // buffer
-    private static ThreadLocal<ByteBuffer> bufferThreadLocal = ThreadLocal.withInitial(() -> ByteBuffer.allocateDirect(Constant.ValueLength));
-    private static ThreadLocal<byte[]> byteArrayThreadLocal = ThreadLocal.withInitial(() -> new byte[Constant.ValueLength]);
+    private static ThreadLocal<ByteBuffer> bufferThreadLocal = ThreadLocal.withInitial(() -> ByteBuffer.allocate(Constant.ValueLength));
     private FileChannel fileChannel;
     // 逻辑长度 要乘以 4096
     private int fileLength;
@@ -52,11 +51,9 @@ public class CommitLog {
 
     public byte[] read(long offset) throws IOException {
         ByteBuffer buffer = bufferThreadLocal.get();
-        byte[] bytes = byteArrayThreadLocal.get();
         buffer.clear();
         this.fileChannel.read(buffer, offset);
-        UNSAFE.copyMemory(null, ((DirectBuffer) buffer).address(), bytes, 16, Constant.ValueLength);
-        return bytes;
+        return buffer.array();
     }
 
     public synchronized int write(byte[] data) {
