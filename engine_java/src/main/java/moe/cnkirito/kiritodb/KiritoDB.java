@@ -23,8 +23,8 @@ import java.util.concurrent.Executors;
 public class KiritoDB {
 
     private static final Logger logger = LoggerFactory.getLogger(KiritoDB.class);
-    private final int commitLogNum = 2 << 7; //256
-    private final int indexNum = 2 << 7; //256
+    private final int commitLogNum = 1 << 6; //64
+    private final int indexNum = 1 << 6; //64
     // 用于获取 key 的分区
     private Partitionable partitionable;
     private CommitLog[] commitLogs;
