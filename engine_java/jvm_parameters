@@ -1,1 +1,1 @@
--server -Xms2560m -Xmx2560m -XX:MaxMetaspaceSize=200m -XX:MaxDirectMemorySize=300m -XX:NewRatio=1 -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:-UseBiasedLocking
+-server -Xms2560m -Xmx2560m -XX:MaxDirectMemorySize=2560m -XX:NewRatio=1 -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:-UseBiasedLocking

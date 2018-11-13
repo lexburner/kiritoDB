@@ -15,9 +15,6 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author kirito.moe@foxmail.com
@@ -64,15 +61,31 @@ public class CommitLogIndex implements CommitLogAware {
             // 插入内存
             insertIndexCache(key, offset);
         }
+        // 读阶段释放内存
+        if(key2OffsetMap.size()>242000){
+            try {
+                releaseFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
         this.loadFlag = true;
+    }
+
+    public void releaseFile() throws IOException {
+        if (this.mappedByteBuffer != null) {
+            fileChannel.close();
+            Util.clean(this.mappedByteBuffer);
+            this.fileChannel = null;
+            this.mappedByteBuffer = null;
+        }
     }
 
     public void destroy() throws IOException {
         key2OffsetMap = null;
         commitLog = null;
         loadFlag = false;
-        fileChannel.close();
-        Util.clean(this.mappedByteBuffer);
+        releaseFile();
     }
 
     public Long read(byte[] key) {
