@@ -21,7 +21,6 @@ public class CommitLog {
 
     // buffer
     public static ThreadLocal<ByteBuffer> bufferThreadLocal = ThreadLocal.withInitial(() -> ByteBuffer.allocate(Constant.ValueLength));
-    private static Logger logger = LoggerFactory.getLogger(CommitLog.class);
     private FileChannel fileChannel;
     // 逻辑长度 要乘以 4096
     private int fileLength;

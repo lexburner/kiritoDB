@@ -78,7 +78,6 @@ public class KiritoDB {
         CommitLogIndex hitIndex = commitLogIndices[partition];
         Long offset = hitIndex.read(key);
         if (offset == null) {
-            logger.error("key:{},partition:{}", Util.bytes2Long(key), partition);
             throw Constant.keyNotFoundException;
         }
         try {
