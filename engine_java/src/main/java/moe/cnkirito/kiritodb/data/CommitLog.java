@@ -56,17 +56,14 @@ public class CommitLog {
         return buffer.array();
     }
 
-    public int write(byte[] data) {
-        int offsetInt;
-        synchronized (fileChannel) {
-            offsetInt = fileLength++;
-            UNSAFE.copyMemory(data, 16, null, addresses, 4096);
-            this.writeBuffer.position(0);
-            try {
-                this.fileChannel.write(this.writeBuffer);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+    public synchronized int write(byte[] data) {
+        int offsetInt = fileLength++;
+        UNSAFE.copyMemory(data, 16, null, addresses, 4096);
+        this.writeBuffer.position(0);
+        try {
+            this.fileChannel.write(this.writeBuffer);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         return offsetInt;
     }

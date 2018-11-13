@@ -1,5 +1,6 @@
 package moe.cnkirito.kiritodb.index;
 
+import com.alibabacloud.polar_race.engine.common.exceptions.EngineException;
 import com.carrotsearch.hppc.LongIntHashMap;
 import moe.cnkirito.kiritodb.common.Constant;
 import moe.cnkirito.kiritodb.common.Util;
@@ -28,7 +29,7 @@ public class CommitLogIndex implements CommitLogAware {
     private FileChannel fileChannel;
     private MappedByteBuffer mappedByteBuffer;
     // 当前索引写入的区域
-    private AtomicLong wrotePosition;
+    private long wrotePosition;
     private CommitLog commitLog;
     private volatile boolean loadFlag = false;
 
@@ -47,7 +48,7 @@ public class CommitLogIndex implements CommitLogAware {
         }
         // 文件position
         this.fileChannel = new RandomAccessFile(file, "rw").getChannel();
-        this.wrotePosition = new AtomicLong(0);
+        this.wrotePosition = 0;
         this.mappedByteBuffer = this.fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, Constant.IndexLength * 252000);
         this.key2OffsetMap = new LongIntHashMap(252000, 0.99);
     }
@@ -56,7 +57,7 @@ public class CommitLogIndex implements CommitLogAware {
         // 说明索引文件中已经有内容，则读取索引文件内容到内存中
         MappedByteBuffer mappedByteBuffer = this.mappedByteBuffer;
         int indexSize = commitLog.getFileLength();
-        wrotePosition.set(indexSize * Constant.IndexLength);
+        wrotePosition = indexSize * Constant.IndexLength;
         for (int curIndex = 0; curIndex < indexSize; curIndex++) {
             mappedByteBuffer.position(curIndex * Constant.IndexLength);
             long key = mappedByteBuffer.getLong();
@@ -80,27 +81,22 @@ public class CommitLogIndex implements CommitLogAware {
         return ((long) offsetInt) * Constant.ValueLength;
     }
 
-    public void write(byte[] key, int offsetInt) {
+    public synchronized void write(byte[] key, int offsetInt) throws EngineException {
         try {
-            writeIndexFile(key, offsetInt);
+            long position = this.wrotePosition;
+            this.wrotePosition += Constant.IndexLength;
+            ByteBuffer buffer = this.mappedByteBuffer.slice();
+            buffer.position((int) position);
+            buffer.put(key);
+            buffer.putInt(offsetInt);
         } catch (Exception e) {
-            logger.error("写入文件错误, error", e);
+            throw Constant.ioException;
         }
     }
 
     private void insertIndexCache(long key, Integer value) {
         // TODO need synchronized?
-        synchronized (this) {
-            this.key2OffsetMap.put(key, value);
-        }
-    }
-
-    private void writeIndexFile(byte[] key, Integer value) {
-        long position = this.wrotePosition.getAndAdd(Constant.IndexLength);
-        ByteBuffer buffer = this.mappedByteBuffer.slice();
-        buffer.position((int) position);
-        buffer.put(key);
-        buffer.putInt(value);
+        this.key2OffsetMap.put(key, value);
     }
 
     public boolean isLoadFlag() {

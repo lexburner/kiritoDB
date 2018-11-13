@@ -4,6 +4,7 @@ import com.alibabacloud.polar_race.engine.common.AbstractVisitor;
 import com.alibabacloud.polar_race.engine.common.exceptions.EngineException;
 import moe.cnkirito.kiritodb.common.Constant;
 import moe.cnkirito.kiritodb.data.CommitLog;
+import moe.cnkirito.kiritodb.data.CommitLogAware;
 import moe.cnkirito.kiritodb.index.CommitLogIndex;
 import moe.cnkirito.kiritodb.partition.FirstBytePartitoner;
 import moe.cnkirito.kiritodb.partition.Partitionable;
@@ -22,12 +23,13 @@ import java.util.concurrent.Executors;
 public class KiritoDB {
 
     private static final Logger logger = LoggerFactory.getLogger(KiritoDB.class);
-    private final int commitLogNum = 2 << 7;//256
-    private final int indexNum = 2 << 7;//256
-    // 用于获取 k 的分区
+    private final int commitLogNum = 2 << 7; //256
+    private final int indexNum = 2 << 7; //256
+    // 用于获取 key 的分区
     private Partitionable partitionable;
     private CommitLog[] commitLogs;
     private CommitLogIndex[] commitLogIndices;
+    // 判断是否需要加载索引进入内存
     private boolean loadFlag = false;
 
     public KiritoDB() {
@@ -48,10 +50,13 @@ public class KiritoDB {
             for (int i = 0; i < indexNum; i++) {
                 commitLogIndices[i] = new CommitLogIndex();
                 commitLogIndices[i].init(path, i);
-                commitLogIndices[i].setCommitLog(commitLogs[i]);
+                if (commitLogIndices[i] instanceof CommitLogAware) {
+                    ((CommitLogAware) commitLogIndices[i]).setCommitLog(commitLogs[i]);
+                }
+
                 this.loadFlag = commitLogIndices[i].isLoadFlag();
             }
-            if (!loadFlag){
+            if (!loadFlag) {
                 loadAllIndex();
             }
         } catch (IOException e) {
@@ -59,7 +64,7 @@ public class KiritoDB {
         }
     }
 
-    public void write(byte[] key, byte[] value) throws EngineException {
+    public void write(byte[] key, byte[] value) throws EngineException{
         int partition = partitionable.getPartition(key);
         CommitLog hitCommitLog = commitLogs[partition];
         CommitLogIndex hitIndex = commitLogIndices[partition];
@@ -101,7 +106,7 @@ public class KiritoDB {
         try {
             countDownLatch.await();
         } catch (InterruptedException e) {
-            logger.error("load index interrupted",e);
+            logger.error("load index interrupted", e);
         }
         executorService.shutdown();
         this.loadFlag = true;
