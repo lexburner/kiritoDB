@@ -1,7 +1,7 @@
 package com.alibabacloud.polar_race.engine.common;
 
 import com.alibabacloud.polar_race.engine.common.exceptions.EngineException;
-import moe.cnkirito.kiritodb.Util;
+import moe.cnkirito.kiritodb.common.Util;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
@@ -23,7 +23,7 @@ public class WriteTest {
 
         // 打开引擎
         final EngineRace engine = new EngineRace();
-        engine.open("D:/tmp/kiritoDB");
+        engine.open("/tmp/kiritoDB");
 
         // 写数据
         final AtomicInteger atomicInteger = new AtomicInteger();
@@ -35,7 +35,7 @@ public class WriteTest {
             executor.execute(new Runnable() {
                 public void run() {
                     try {
-                        engine.write(Util.long2bytes(cur*base), Util._4kb(cur*base));
+                        engine.write(Util.long2bytes(cur * base), Util._4kb(cur * base));
                         System.out.println(atomicInteger.incrementAndGet());
                         downLatch.countDown();
                     } catch (EngineException e) {

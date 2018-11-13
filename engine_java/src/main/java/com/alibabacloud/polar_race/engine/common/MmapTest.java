@@ -18,11 +18,11 @@ public class MmapTest {
     @Test
     public void test1() throws IOException {
         File file = new File("/tmp/mmaptest");
-        if(file.exists()){
+        if (file.exists()) {
             file.delete();
         }
         file.createNewFile();
-        RandomAccessFile randomAccessFile = new RandomAccessFile(file,"rw");
+        RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
         MappedByteBuffer mappedByteBuffer = randomAccessFile.getChannel().map(FileChannel.MapMode.READ_WRITE, 0, 800 * 1024 * 1024);
         mappedByteBuffer.putInt(1);
         mappedByteBuffer.putInt(2);
@@ -33,10 +33,10 @@ public class MmapTest {
     @Test
     public void test2() throws IOException {
         File file = new File("/tmp/mmaptest");
-        RandomAccessFile randomAccessFile = new RandomAccessFile(file,"rw");
+        RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
         FileChannel channel = randomAccessFile.getChannel();
         ByteBuffer buffer = ByteBuffer.allocateDirect(4 * 5);
-        int size = channel.read(buffer,800 * 1024 * 1024 - 4);
+        int size = channel.read(buffer, 800 * 1024 * 1024 - 4);
         System.out.println(size);
         buffer.flip();
         System.out.println(buffer.getInt());

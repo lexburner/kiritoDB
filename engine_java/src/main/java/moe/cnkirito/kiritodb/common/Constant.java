@@ -1,4 +1,4 @@
-package moe.cnkirito.kiritodb;
+package moe.cnkirito.kiritodb.common;
 
 import com.alibabacloud.polar_race.engine.common.exceptions.EngineException;
 import com.alibabacloud.polar_race.engine.common.exceptions.RetCodeEnum;

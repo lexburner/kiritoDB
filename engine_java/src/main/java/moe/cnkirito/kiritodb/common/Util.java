@@ -1,4 +1,4 @@
-package moe.cnkirito.kiritodb;
+package moe.cnkirito.kiritodb.common;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -65,6 +65,14 @@ public class Util {
      * @return
      */
     public static Long bytes2Long(byte[] buffer) {
+//        return (
+//                (((long) buffer[1] & 0xff) << 48) |
+//                        (((long) buffer[2] & 0xff) << 40) |
+//                        (((long) buffer[3] & 0xff) << 32) |
+//                        (((long) buffer[4] & 0xff) << 24) |
+//                        (((long) buffer[5] & 0xff) << 16) |
+//                        (((long) buffer[6] & 0xff) << 8) |
+//                        (((long) buffer[7] & 0xff)));
         long values = 0;
         int len = 8;
         // 8 与 buffer.length 较小者
@@ -127,6 +135,7 @@ public class Util {
             return;
         invoke(invoke(viewed(buffer), "cleaner"), "clean");
     }
+
     private static Object invoke(final Object target, final String methodName, final Class<?>... args) {
         return AccessController.doPrivileged(new PrivilegedAction<Object>() {
             public Object run() {

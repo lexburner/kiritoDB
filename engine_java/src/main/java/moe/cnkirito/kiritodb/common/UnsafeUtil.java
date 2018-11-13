@@ -1,9 +1,8 @@
-package moe.cnkirito.kiritodb;
+package moe.cnkirito.kiritodb.common;
 
 import sun.misc.Unsafe;
 
 import java.lang.reflect.Field;
-import java.nio.Buffer;
 
 public class UnsafeUtil {
 
@@ -19,7 +18,5 @@ public class UnsafeUtil {
             throw new RuntimeException(e);
         }
     }
-
-    private static final long BYTE_ARRAY_BASE_OFFSET = UNSAFE.arrayBaseOffset(byte[].class);
 
 }
