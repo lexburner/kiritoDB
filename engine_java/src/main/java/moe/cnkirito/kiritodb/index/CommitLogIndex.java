@@ -116,4 +116,12 @@ public class CommitLogIndex implements CommitLogAware {
     public void setCommitLog(CommitLog commitLog) {
         this.commitLog = commitLog;
     }
+
+//    public static void main(String[] args) {
+//        byte low = -127;
+//        byte high = 127;
+//        for(byte i = low;i!=high;i++){
+//            System.out.println(i & 0x3f);
+//        }
+//    }
 }
