@@ -75,7 +75,7 @@ public class CommitLog {
         }
     }
 
-    public synchronized int write(byte[] data) {
+    public int write(byte[] data) {
         int offsetInt = fileLength++;
         UNSAFE.copyMemory(data, 16, null, addresses, 4096);
         this.writeBuffer.position(0);

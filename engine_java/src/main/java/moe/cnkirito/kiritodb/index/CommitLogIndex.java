@@ -57,9 +57,9 @@ public class CommitLogIndex implements CommitLogAware {
         for (int curIndex = 0; curIndex < indexSize; curIndex++) {
             mappedByteBuffer.position(curIndex * Constant.IndexLength);
             long key = mappedByteBuffer.getLong();
-            int offset = mappedByteBuffer.getInt();
+//            int offset = mappedByteBuffer.getInt();
             // 插入内存
-            insertIndexCache(key, offset);
+            insertIndexCache(key, curIndex);
         }
         this.loadFlag = true;
     }
@@ -88,18 +88,17 @@ public class CommitLogIndex implements CommitLogAware {
         return ((long) offsetInt) * Constant.ValueLength;
     }
 
-    public synchronized void write(byte[] key, int offsetInt) throws EngineException {
+    public void write(byte[] key, int offsetInt) throws EngineException {
         try {
             ByteBuffer buffer = this.mappedByteBuffer;
             buffer.put(key);
-            buffer.putInt(offsetInt);
+//            buffer.putInt(offsetInt);
         } catch (Exception e) {
             throw Constant.ioException;
         }
     }
 
     private void insertIndexCache(long key, Integer value) {
-        // TODO need synchronized?
         this.key2OffsetMap.put(key, value);
     }
 

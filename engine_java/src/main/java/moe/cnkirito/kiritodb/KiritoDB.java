@@ -68,8 +68,10 @@ public class KiritoDB {
         int partition = partitionable.getPartition(key);
         CommitLog hitCommitLog = commitLogs[partition];
         CommitLogIndex hitIndex = commitLogIndices[partition];
-        int offsetInt = hitCommitLog.write(value);
-        hitIndex.write(key, offsetInt);
+        synchronized (hitCommitLog){
+            int offsetInt = hitCommitLog.write(value);
+            hitIndex.write(key, offsetInt);
+        }
     }
 
     public byte[] read(byte[] key) throws EngineException {
