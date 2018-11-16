@@ -77,8 +77,7 @@ public class CommitLog {
         }
     }
 
-    public int write(byte[] data) {
-        int offsetInt = fileLength++;
+    public void write(byte[] data) {
         UNSAFE.copyMemory(data, 16, null, addresses, 4096);
         this.writeBuffer.position(0);
         try {
@@ -86,7 +85,6 @@ public class CommitLog {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return offsetInt;
     }
 
     public int getFileLength() {

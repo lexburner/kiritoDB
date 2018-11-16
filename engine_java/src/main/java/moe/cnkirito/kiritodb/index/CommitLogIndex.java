@@ -59,7 +59,6 @@ public class CommitLogIndex implements CommitLogAware {
         for (int curIndex = 0; curIndex < indexSize; curIndex++) {
             mappedByteBuffer.position(curIndex * Constant.IndexLength);
             long key = mappedByteBuffer.getLong();
-//            int offset = mappedByteBuffer.getInt();
             // 插入内存
             insertIndexCache(key, curIndex);
         }
@@ -90,11 +89,10 @@ public class CommitLogIndex implements CommitLogAware {
         return ((long) offsetInt) * Constant.ValueLength;
     }
 
-    public void write(byte[] key, int offsetInt) throws EngineException {
+    public void write(byte[] key) throws EngineException {
         try {
             ByteBuffer buffer = this.mappedByteBuffer;
             buffer.put(key);
-//            buffer.putInt(offsetInt);
         } catch (Exception e) {
             throw Constant.ioException;
         }
@@ -118,11 +116,4 @@ public class CommitLogIndex implements CommitLogAware {
         this.commitLog = commitLog;
     }
 
-//    public static void main(String[] args) {
-//        byte low = -127;
-//        byte high = 127;
-//        for(byte i = low;i!=high;i++){
-//            System.out.println(i & 0x3f);
-//        }
-//    }
 }

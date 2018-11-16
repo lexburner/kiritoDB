@@ -69,8 +69,8 @@ public class KiritoDB {
         CommitLog hitCommitLog = commitLogs[partition];
         CommitLogIndex hitIndex = commitLogIndices[partition];
         synchronized (hitCommitLog){
-            int offsetInt = hitCommitLog.write(value);
-            hitIndex.write(key, offsetInt);
+            hitCommitLog.write(value);
+            hitIndex.write(key);
         }
     }
 
