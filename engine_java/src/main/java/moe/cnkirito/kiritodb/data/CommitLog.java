@@ -28,6 +28,7 @@ public class CommitLog {
     private int fileLength;
     private ByteBuffer writeBuffer;
     private long addresses;
+    private boolean dioSupport;
 
     public void init(String path, int no) throws IOException {
         File dirFile = new File(path);
@@ -39,14 +40,19 @@ public class CommitLog {
             file.createNewFile();
         }
         this.fileChannel = new RandomAccessFile(file, "rw").getChannel();
-        this.directRandomAccessFile = new DirectRandomAccessFile(file, "r");
+        try {
+            this.directRandomAccessFile = new DirectRandomAccessFile(file, "r");
+            this.dioSupport = true;
+        } catch (Exception e) {
+            this.dioSupport = false;
+        }
         this.fileLength = (int) (this.fileChannel.size() / Constant.ValueLength);
         this.writeBuffer = ByteBuffer.allocateDirect(Constant.ValueLength);
         this.addresses = ((DirectBuffer) this.writeBuffer).address();
     }
 
     public void destroy() throws IOException {
-        writeBuffer = null;
+        this.writeBuffer = null;
         if (this.fileChannel != null) {
             this.fileChannel.close();
         }
@@ -56,14 +62,17 @@ public class CommitLog {
     }
 
     public synchronized byte[] read(long offset) throws IOException {
-//        ByteBuffer buffer = bufferThreadLocal.get();
-//        buffer.clear();
-//        this.fileChannel.read(buffer, offset);
-//        return buffer.array();
-        byte[] bytes = byteArrayThreadLocal.get();
-        directRandomAccessFile.seek(offset);
-        directRandomAccessFile.read(bytes);
-        return bytes;
+        if (this.dioSupport) {
+            byte[] bytes = byteArrayThreadLocal.get();
+            directRandomAccessFile.seek(offset);
+            directRandomAccessFile.read(bytes);
+            return bytes;
+        } else {
+            ByteBuffer buffer = bufferThreadLocal.get();
+            buffer.clear();
+            this.fileChannel.read(buffer, offset);
+            return buffer.array();
+        }
     }
 
     public synchronized int write(byte[] data) {
