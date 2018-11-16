@@ -2,6 +2,7 @@ package moe.cnkirito.kiritodb.data;
 
 import moe.cnkirito.kiritodb.common.Constant;
 import net.smacke.jaydio.DirectRandomAccessFile;
+import sun.misc.Contended;
 import sun.nio.ch.DirectBuffer;
 
 import java.io.File;
@@ -16,6 +17,7 @@ import static moe.cnkirito.kiritodb.common.UnsafeUtil.UNSAFE;
  * @author kirito.moe@foxmail.com
  * Date 2018-10-28
  */
+@Contended
 public class CommitLog {
 
     // buffer

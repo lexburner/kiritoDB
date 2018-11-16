@@ -8,6 +8,7 @@ import moe.cnkirito.kiritodb.data.CommitLog;
 import moe.cnkirito.kiritodb.data.CommitLogAware;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.misc.Contended;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,6 +21,7 @@ import java.nio.channels.FileChannel;
  * @author kirito.moe@foxmail.com
  * Date 2018-10-28
  */
+@Contended
 public class CommitLogIndex implements CommitLogAware {
 
     private final static Logger logger = LoggerFactory.getLogger(CommitLogIndex.class);
