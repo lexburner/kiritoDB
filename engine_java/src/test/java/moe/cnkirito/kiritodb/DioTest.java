@@ -1,4 +1,4 @@
-package moe.cnkirito.kritodb;
+package moe.cnkirito.kiritodb;
 
 import moe.cnkirito.kiritodb.common.Util;
 import net.smacke.jaydio.DirectRandomAccessFile;

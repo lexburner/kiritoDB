@@ -1,8 +1,7 @@
 package moe.cnkirito.kiritodb.data;
 
 import moe.cnkirito.kiritodb.common.Constant;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import net.smacke.jaydio.DirectRandomAccessFile;
 import sun.nio.ch.DirectBuffer;
 
 import java.io.File;
@@ -21,7 +20,10 @@ public class CommitLog {
 
     // buffer
     public static ThreadLocal<ByteBuffer> bufferThreadLocal = ThreadLocal.withInitial(() -> ByteBuffer.allocate(Constant.ValueLength));
+    public static ThreadLocal<byte[]> byteArrayThreadLocal = ThreadLocal.withInitial(() -> new byte[Constant.ValueLength]);
+
     private FileChannel fileChannel;
+    private DirectRandomAccessFile directRandomAccessFile;
     // 逻辑长度 要乘以 4096
     private int fileLength;
     private ByteBuffer writeBuffer;
@@ -37,6 +39,7 @@ public class CommitLog {
             file.createNewFile();
         }
         this.fileChannel = new RandomAccessFile(file, "rw").getChannel();
+        this.directRandomAccessFile = new DirectRandomAccessFile(file, "r");
         this.fileLength = (int) (this.fileChannel.size() / Constant.ValueLength);
         this.writeBuffer = ByteBuffer.allocateDirect(Constant.ValueLength);
         this.addresses = ((DirectBuffer) this.writeBuffer).address();
@@ -47,13 +50,20 @@ public class CommitLog {
         if (this.fileChannel != null) {
             this.fileChannel.close();
         }
+        if (this.directRandomAccessFile != null) {
+            this.directRandomAccessFile.close();
+        }
     }
 
-    public byte[] read(long offset) throws IOException {
-        ByteBuffer buffer = bufferThreadLocal.get();
-        buffer.clear();
-        this.fileChannel.read(buffer, offset);
-        return buffer.array();
+    public synchronized byte[] read(long offset) throws IOException {
+//        ByteBuffer buffer = bufferThreadLocal.get();
+//        buffer.clear();
+//        this.fileChannel.read(buffer, offset);
+//        return buffer.array();
+        byte[] bytes = byteArrayThreadLocal.get();
+        directRandomAccessFile.seek(offset);
+        directRandomAccessFile.read(bytes);
+        return bytes;
     }
 
     public synchronized int write(byte[] data) {
