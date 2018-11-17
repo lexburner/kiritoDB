@@ -57,7 +57,6 @@ public class CommitLog {
     }
 
     public void destroy() throws IOException {
-
         if (bufferSize != 0) {
             this.writeBuffer.position(0);
             this.writeBuffer.limit(bufferSize * Constant.ValueLength);
@@ -78,17 +77,17 @@ public class CommitLog {
     }
 
     public synchronized byte[] read(long offset) throws IOException {
-        if (this.dioSupport) {
+//        if (this.dioSupport) {
         byte[] bytes = byteArrayThreadLocal.get();
         directRandomAccessFile.seek(offset);
         directRandomAccessFile.read(bytes);
         return bytes;
-        } else {
-            ByteBuffer buffer = bufferThreadLocal.get();
-            buffer.clear();
-            this.fileChannel.read(buffer, offset);
-            return buffer.array();
-        }
+//        } else {
+//            ByteBuffer buffer = bufferThreadLocal.get();
+//            buffer.clear();
+//            this.fileChannel.read(buffer, offset);
+//            return buffer.array();
+//        }
     }
 
     public synchronized void write(byte[] data) throws EngineException {
@@ -103,7 +102,6 @@ public class CommitLog {
             }
             bufferSize = 0;
         }
-
     }
 
     public int getFileLength() {

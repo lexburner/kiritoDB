@@ -86,7 +86,7 @@ public class KiritoDB {
         try {
             return hitCommitLog.read(offset);
         } catch (IOException e) {
-            throw new EngineException(RetCodeEnum.IO_ERROR,"commit log read exception");
+            throw new EngineException(RetCodeEnum.IO_ERROR, "commit log read exception");
         }
     }
 
@@ -117,13 +117,24 @@ public class KiritoDB {
 
     public void close() {
         if (commitLogs != null) {
+            ExecutorService executorService = Executors.newFixedThreadPool(64);
+            CountDownLatch countDownLatch = new CountDownLatch(commitLogNum);
             for (CommitLog commitLog : commitLogs) {
-                try {
-                    commitLog.destroy();
-                } catch (IOException e) {
-                    logger.error("data destory error", e);
-                }
+                executorService.execute(() -> {
+                    try {
+                        commitLog.destroy();
+                    } catch (IOException e) {
+                        logger.error("data destory error", e);
+                    }
+                    countDownLatch.countDown();
+                });
             }
+            try {
+                countDownLatch.await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            executorService.shutdown();
         }
         if (commitLogIndices != null) {
             for (CommitLogIndex commitLogIndex : commitLogIndices) {
