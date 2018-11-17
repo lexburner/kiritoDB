@@ -45,4 +45,18 @@ public class MmapTest {
 //        System.out.println(buffer.getInt());
 //        System.out.println(buffer.getInt());
     }
+
+    @Test
+    public void test3() throws IOException {
+        File file = new File("/tmp/filechanneltest");
+        RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
+        FileChannel channel = randomAccessFile.getChannel();
+        ByteBuffer buffer = ByteBuffer.allocateDirect(4 * 2);
+        buffer.putInt(1);
+        buffer.putInt(2);
+        buffer.position(0);
+        buffer.limit(4);
+        channel.write(buffer);
+    }
+
 }

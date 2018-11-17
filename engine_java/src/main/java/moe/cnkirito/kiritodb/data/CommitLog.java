@@ -31,6 +31,7 @@ public class CommitLog {
     // 逻辑长度 要乘以 4096
     private int fileLength;
     private ByteBuffer writeBuffer;
+    private int bufferSize = 0;
     private long addresses;
     private boolean dioSupport;
 
@@ -51,11 +52,22 @@ public class CommitLog {
             this.dioSupport = false;
         }
         this.fileLength = (int) (this.fileChannel.size() / Constant.ValueLength);
-        this.writeBuffer = ByteBuffer.allocateDirect(Constant.ValueLength);
+        this.writeBuffer = ByteBuffer.allocateDirect(Constant.ValueLength * 4);
         this.addresses = ((DirectBuffer) this.writeBuffer).address();
     }
 
     public void destroy() throws IOException {
+
+        if (bufferSize != 0) {
+            this.writeBuffer.position(0);
+            this.writeBuffer.limit(bufferSize * Constant.ValueLength);
+            try {
+                this.fileChannel.write(this.writeBuffer);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
         this.writeBuffer = null;
         if (this.fileChannel != null) {
             this.fileChannel.close();
@@ -67,10 +79,10 @@ public class CommitLog {
 
     public synchronized byte[] read(long offset) throws IOException {
         if (this.dioSupport) {
-            byte[] bytes = byteArrayThreadLocal.get();
-            directRandomAccessFile.seek(offset);
-            directRandomAccessFile.read(bytes);
-            return bytes;
+        byte[] bytes = byteArrayThreadLocal.get();
+        directRandomAccessFile.seek(offset);
+        directRandomAccessFile.read(bytes);
+        return bytes;
         } else {
             ByteBuffer buffer = bufferThreadLocal.get();
             buffer.clear();
@@ -80,13 +92,18 @@ public class CommitLog {
     }
 
     public synchronized void write(byte[] data) throws EngineException {
-        UNSAFE.copyMemory(data, 16, null, addresses, 4096);
-        this.writeBuffer.position(0);
-        try {
-            this.fileChannel.write(this.writeBuffer);
-        } catch (IOException e) {
-            throw new EngineException(RetCodeEnum.IO_ERROR,"write data io error");
+        UNSAFE.copyMemory(data, 16, null, addresses + Constant.ValueLength * bufferSize, 4096);
+        bufferSize++;
+        if (bufferSize >= 4) {
+            this.writeBuffer.position(0);
+            try {
+                this.fileChannel.write(this.writeBuffer);
+            } catch (IOException e) {
+                throw new EngineException(RetCodeEnum.IO_ERROR, "write data io error");
+            }
+            bufferSize = 0;
         }
+
     }
 
     public int getFileLength() {
