@@ -32,7 +32,6 @@ public class CommitLog {
     private int fileLength;
     private ByteBuffer writeBuffer;
     private int bufferSize = 0;
-    private long addresses;
     private boolean dioSupport;
 
     public void init(String path, int no) throws IOException {
@@ -53,7 +52,6 @@ public class CommitLog {
         }
         this.fileLength = (int) (this.fileChannel.size() / Constant.ValueLength);
         this.writeBuffer = ByteBuffer.allocateDirect(Constant.ValueLength * 4);
-        this.addresses = ((DirectBuffer) this.writeBuffer).address();
     }
 
     public void destroy() throws IOException {
@@ -77,29 +75,30 @@ public class CommitLog {
     }
 
     public synchronized byte[] read(long offset) throws IOException {
-//        if (this.dioSupport) {
-        byte[] bytes = byteArrayThreadLocal.get();
-        directRandomAccessFile.seek(offset);
-        directRandomAccessFile.read(bytes);
-        return bytes;
-//        } else {
-//            ByteBuffer buffer = bufferThreadLocal.get();
-//            buffer.clear();
-//            this.fileChannel.read(buffer, offset);
-//            return buffer.array();
-//        }
+        if (this.dioSupport) {
+            byte[] bytes = byteArrayThreadLocal.get();
+            directRandomAccessFile.seek(offset);
+            directRandomAccessFile.read(bytes);
+            return bytes;
+        } else {
+            ByteBuffer buffer = bufferThreadLocal.get();
+            buffer.clear();
+            this.fileChannel.read(buffer, offset);
+            return buffer.array();
+        }
     }
 
     public synchronized void write(byte[] data) throws EngineException {
-        UNSAFE.copyMemory(data, 16, null, addresses + Constant.ValueLength * bufferSize, 4096);
-        bufferSize++;
+        this.writeBuffer.put(data);
+        this.bufferSize++;
         if (bufferSize >= 4) {
-            this.writeBuffer.position(0);
+            this.writeBuffer.flip();
             try {
                 this.fileChannel.write(this.writeBuffer);
             } catch (IOException e) {
                 throw new EngineException(RetCodeEnum.IO_ERROR, "write data io error");
             }
+            writeBuffer.clear();
             bufferSize = 0;
         }
     }
