@@ -1,6 +1,5 @@
 package moe.cnkirito.kiritodb.index;
 
-import com.alibabacloud.polar_race.engine.common.exceptions.EngineException;
 import com.carrotsearch.hppc.LongIntHashMap;
 import moe.cnkirito.kiritodb.common.Constant;
 import moe.cnkirito.kiritodb.common.Util;
@@ -41,14 +40,14 @@ public class CommitLogIndex implements CommitLogAware {
             loadFlag = true;
         }
         // 创建多个索引文件
-        File file = new File(path + Constant.IndexName + no + Constant.IndexSuffix);
+        File file = new File(path + Constant.indexPrefix + no + Constant.indexSuffix);
         if (!file.exists()) {
             file.createNewFile();
             loadFlag = true;
         }
         // 文件position
         this.fileChannel = new RandomAccessFile(file, "rw").getChannel();
-        this.mappedByteBuffer = this.fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, Constant.IndexLength * 252000 * 4);
+        this.mappedByteBuffer = this.fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, Constant.indexLength * 252000 * 4);
         this.key2OffsetMap = new LongIntHashMap(252000*4, 0.99);
     }
 
@@ -57,7 +56,7 @@ public class CommitLogIndex implements CommitLogAware {
         MappedByteBuffer mappedByteBuffer = this.mappedByteBuffer;
         int indexSize = commitLog.getFileLength();
         for (int curIndex = 0; curIndex < indexSize; curIndex++) {
-            mappedByteBuffer.position(curIndex * Constant.IndexLength);
+            mappedByteBuffer.position(curIndex * Constant.indexLength);
             long key = mappedByteBuffer.getLong();
             // 插入内存
             insertIndexCache(key, curIndex);
@@ -86,7 +85,7 @@ public class CommitLogIndex implements CommitLogAware {
         if (offsetInt == -1) {
             return null;
         }
-        return ((long) offsetInt) * Constant.ValueLength;
+        return ((long) offsetInt) * Constant.valueLength;
     }
 
     public void write(byte[] key)  {

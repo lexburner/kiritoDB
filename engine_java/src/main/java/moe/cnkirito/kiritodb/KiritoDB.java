@@ -61,7 +61,7 @@ public class KiritoDB {
                 loadAllIndex();
             }
         } catch (IOException e) {
-            throw Constant.ioException;
+            throw new EngineException(RetCodeEnum.IO_ERROR, "open exception");
         }
     }
 

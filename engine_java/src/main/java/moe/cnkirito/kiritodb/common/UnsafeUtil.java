@@ -10,7 +10,6 @@ public class UnsafeUtil {
 
     static {
         try {
-            //由于Unsafe是个单列，所以需要通过反射方式获取到
             Field field = Unsafe.class.getDeclaredField("theUnsafe");
             field.setAccessible(true);
             UNSAFE = (Unsafe) field.get(null);
