@@ -27,7 +27,7 @@ public class WriteTest {
 
         // 写数据
         final AtomicInteger atomicInteger = new AtomicInteger();
-        int len = 6400000;
+        int len = 640000;
         long base = Long.MAX_VALUE / len;
         final CountDownLatch downLatch = new CountDownLatch(len);
         for (int i = 0; i < len; ++i) {

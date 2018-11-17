@@ -1,5 +1,7 @@
 package moe.cnkirito.kiritodb.data;
 
+import com.alibabacloud.polar_race.engine.common.exceptions.EngineException;
+import com.alibabacloud.polar_race.engine.common.exceptions.RetCodeEnum;
 import moe.cnkirito.kiritodb.common.Constant;
 import net.smacke.jaydio.DirectRandomAccessFile;
 import sun.misc.Contended;
@@ -77,13 +79,13 @@ public class CommitLog {
         }
     }
 
-    public void write(byte[] data) {
+    public synchronized void write(byte[] data) throws EngineException {
         UNSAFE.copyMemory(data, 16, null, addresses, 4096);
         this.writeBuffer.position(0);
         try {
             this.fileChannel.write(this.writeBuffer);
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new EngineException(RetCodeEnum.IO_ERROR,"write data io error");
         }
     }
 

@@ -89,13 +89,9 @@ public class CommitLogIndex implements CommitLogAware {
         return ((long) offsetInt) * Constant.ValueLength;
     }
 
-    public void write(byte[] key) throws EngineException {
-        try {
-            ByteBuffer buffer = this.mappedByteBuffer;
-            buffer.put(key);
-        } catch (Exception e) {
-            throw Constant.ioException;
-        }
+    public void write(byte[] key)  {
+        ByteBuffer buffer = this.mappedByteBuffer;
+        buffer.put(key);
     }
 
     private void insertIndexCache(long key, Integer value) {

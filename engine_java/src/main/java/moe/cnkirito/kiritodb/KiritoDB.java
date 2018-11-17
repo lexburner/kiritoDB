@@ -2,6 +2,7 @@ package moe.cnkirito.kiritodb;
 
 import com.alibabacloud.polar_race.engine.common.AbstractVisitor;
 import com.alibabacloud.polar_race.engine.common.exceptions.EngineException;
+import com.alibabacloud.polar_race.engine.common.exceptions.RetCodeEnum;
 import moe.cnkirito.kiritodb.common.Constant;
 import moe.cnkirito.kiritodb.common.Util;
 import moe.cnkirito.kiritodb.data.CommitLog;
@@ -68,7 +69,7 @@ public class KiritoDB {
         int partition = partitionable.getPartition(key);
         CommitLog hitCommitLog = commitLogs[partition];
         CommitLogIndex hitIndex = commitLogIndices[partition];
-        synchronized (hitCommitLog){
+        synchronized (hitCommitLog) {
             hitCommitLog.write(value);
             hitIndex.write(key);
         }
@@ -80,12 +81,12 @@ public class KiritoDB {
         CommitLogIndex hitIndex = commitLogIndices[partition];
         Long offset = hitIndex.read(key);
         if (offset == null) {
-            throw Constant.keyNotFoundException;
+            throw new EngineException(RetCodeEnum.NOT_FOUND, Util.bytes2Long(key) + " not found");
         }
         try {
             return hitCommitLog.read(offset);
         } catch (IOException e) {
-            throw Constant.ioException;
+            throw new EngineException(RetCodeEnum.IO_ERROR,"commit log read exception");
         }
     }
 
