@@ -10,7 +10,7 @@ public class ArrayMemoryIndex implements MemoryIndex {
     private int indexSize;
 
     public ArrayMemoryIndex() {
-        this.indexEntries = new IndexEntry[252000 * 4];
+        this.indexEntries = new IndexEntry[CommitLogIndex.expectedNumPerPartition];
         this.indexSize = 0;
     }
 

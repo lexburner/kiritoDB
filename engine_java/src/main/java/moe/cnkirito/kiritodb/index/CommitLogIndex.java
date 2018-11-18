@@ -33,6 +33,8 @@ public class CommitLogIndex implements CommitLogAware {
     private CommitLog commitLog;
     private volatile boolean loadFlag = false;
 
+    public static final int expectedNumPerPartition = 252000;
+
     public void init(String path, int no) throws IOException {
         // 先创建文件夹
         File dirFile = new File(path);
@@ -48,10 +50,10 @@ public class CommitLogIndex implements CommitLogAware {
         }
         // 文件position
         this.fileChannel = new RandomAccessFile(file, "rw").getChannel();
-        this.mappedByteBuffer = this.fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, Constant.INDEX_LENGTH * 252000 * 4);
+        this.mappedByteBuffer = this.fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, Constant.INDEX_LENGTH * expectedNumPerPartition);
         this.address = ((DirectBuffer) mappedByteBuffer).address();
-        this.memoryIndex = new HppcMemoryIndex();
-//        this.memoryIndex = new ArrayMemoryIndex();
+//        this.memoryIndex = new HppcMemoryIndex();
+        this.memoryIndex = new ArrayMemoryIndex();
     }
 
     public void load() {
