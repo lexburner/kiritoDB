@@ -30,7 +30,7 @@
 //        int len = 640000;
 //        long base = Long.MAX_VALUE / len;
 //        final CountDownLatch downLatch = new CountDownLatch(len);
-//        for (int i = 0; i < len; ++i) {
+//        for (int i = len-1; i >= 0; --i) {
 //            final int cur = i;
 //            executor.execute(new Runnable() {
 //                public void run() {

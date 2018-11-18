@@ -29,7 +29,7 @@ public class CommitLogIndex implements CommitLogAware {
     private final static Logger logger = LoggerFactory.getLogger(CommitLogIndex.class);
     // key 和文件逻辑偏移的映射
     private IndexEntry[] indexEntries;
-    private IndexEntry entryForSearch;
+    private static ThreadLocal<IndexEntry> entryForSearch = ThreadLocal.withInitial(()->new IndexEntry(-1,-1));
     private int indexSize;
     private FileChannel fileChannel;
     private MappedByteBuffer mappedByteBuffer;
@@ -57,7 +57,6 @@ public class CommitLogIndex implements CommitLogAware {
         this.address = ((DirectBuffer) mappedByteBuffer).address();
         this.indexEntries = new IndexEntry[252000 * 4];
         this.indexSize = 0;
-        this.entryForSearch = new IndexEntry(-1, -1);
     }
 
     public void load() {
@@ -96,8 +95,9 @@ public class CommitLogIndex implements CommitLogAware {
     }
 
     private int binarySearchPosition(long key) {
-        entryForSearch.setKey(key);
-        int index = Arrays.binarySearch(indexEntries, 0, indexSize, entryForSearch, Comparator.comparingLong(IndexEntry::getKey));
+        IndexEntry indexEntry = entryForSearch.get();
+        indexEntry.setKey(key);
+        int index = Arrays.binarySearch(indexEntries, 0, indexSize, indexEntry, Comparator.comparingLong(IndexEntry::getKey));
         if (index >= 0) {
             return this.indexEntries[index].getOffsetInt();
         } else {
