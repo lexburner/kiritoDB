@@ -8,13 +8,15 @@ import moe.cnkirito.kiritodb.data.CommitLogAware;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sun.misc.Contended;
+import sun.nio.ch.DirectBuffer;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+
+import static moe.cnkirito.kiritodb.common.UnsafeUtil.UNSAFE;
 
 /**
  * @author kirito.moe@foxmail.com
@@ -28,6 +30,7 @@ public class CommitLogIndex implements CommitLogAware {
     private LongIntHashMap key2OffsetMap;
     private FileChannel fileChannel;
     private MappedByteBuffer mappedByteBuffer;
+    private long address;
     // 当前索引写入的区域
     private CommitLog commitLog;
     private volatile boolean loadFlag = false;
@@ -40,15 +43,16 @@ public class CommitLogIndex implements CommitLogAware {
             loadFlag = true;
         }
         // 创建多个索引文件
-        File file = new File(path + Constant.indexPrefix + no + Constant.indexSuffix);
+        File file = new File(path + Constant.INDEX_PREFIX + no + Constant.INDEX_SUFFIX);
         if (!file.exists()) {
             file.createNewFile();
             loadFlag = true;
         }
         // 文件position
         this.fileChannel = new RandomAccessFile(file, "rw").getChannel();
-        this.mappedByteBuffer = this.fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, Constant.indexLength * 252000 * 4);
-        this.key2OffsetMap = new LongIntHashMap(252000*4, 0.99);
+        this.mappedByteBuffer = this.fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, Constant.INDEX_LENGTH * 252000 * 4);
+        this.address = ((DirectBuffer) mappedByteBuffer).address();
+        this.key2OffsetMap = new LongIntHashMap(252000 * 4, 0.99);
     }
 
     public void load() {
@@ -56,7 +60,7 @@ public class CommitLogIndex implements CommitLogAware {
         MappedByteBuffer mappedByteBuffer = this.mappedByteBuffer;
         int indexSize = commitLog.getFileLength();
         for (int curIndex = 0; curIndex < indexSize; curIndex++) {
-            mappedByteBuffer.position(curIndex * Constant.indexLength);
+            mappedByteBuffer.position(curIndex * Constant.INDEX_LENGTH);
             long key = mappedByteBuffer.getLong();
             // 插入内存
             insertIndexCache(key, curIndex);
@@ -85,12 +89,13 @@ public class CommitLogIndex implements CommitLogAware {
         if (offsetInt == -1) {
             return null;
         }
-        return ((long) offsetInt) * Constant.valueLength;
+        return ((long) offsetInt) * Constant.VALUE_LENGTH;
     }
 
-    public void write(byte[] key)  {
-        ByteBuffer buffer = this.mappedByteBuffer;
-        buffer.put(key);
+    public void write(byte[] key) {
+        int position = this.mappedByteBuffer.position();
+        UNSAFE.copyMemory(key, 16, null, address + position, Constant.INDEX_LENGTH);
+        this.mappedByteBuffer.position(position + Constant.INDEX_LENGTH);
     }
 
     private void insertIndexCache(long key, Integer value) {

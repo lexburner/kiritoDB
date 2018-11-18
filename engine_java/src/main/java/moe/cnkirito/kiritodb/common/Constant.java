@@ -2,12 +2,12 @@ package moe.cnkirito.kiritodb.common;
 
 public class Constant {
 
-    public static final String dataPrefix = "/data";
-    public static final String dataSuffix = ".polar";
-    public static final String indexPrefix = "/index";
-    public static final String indexSuffix = ".polar";
-    public static final int valueLength = 4 * 1024;
-    public static final int indexLength = 8;
+    public static final String DATA_PREFIX = "/data";
+    public static final String DATA_SUFFIX = ".polar";
+    public static final String INDEX_PREFIX = "/index";
+    public static final String INDEX_SUFFIX = ".polar";
+    public static final int VALUE_LENGTH = 4 * 1024;
+    public static final int INDEX_LENGTH = 8;
 
 
 }
