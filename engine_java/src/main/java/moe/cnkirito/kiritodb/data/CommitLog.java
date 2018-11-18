@@ -22,11 +22,10 @@ import static moe.cnkirito.kiritodb.common.UnsafeUtil.UNSAFE;
 @Contended
 public class CommitLog {
 
+    private final static int bufferSize = 4;
     // buffer
     public static ThreadLocal<ByteBuffer> bufferThreadLocal = ThreadLocal.withInitial(() -> ByteBuffer.allocate(Constant.VALUE_LENGTH));
     public static ThreadLocal<byte[]> byteArrayThreadLocal = ThreadLocal.withInitial(() -> new byte[Constant.VALUE_LENGTH]);
-    private final static int bufferSize = 4;
-
     private FileChannel fileChannel;
     private DirectRandomAccessFile directRandomAccessFile;
     // 逻辑长度 要乘以 4096

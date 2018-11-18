@@ -16,7 +16,7 @@
 //        engine.open("/tmp/kiritoDB");
 //        int len = 640000;
 //        long base = Long.MAX_VALUE / len;
-//        for (int i = 0; i < len; i ++) {
+//        for (int i = 0; i < len; i++) {
 //            try {
 //                byte[] bs = engine.read(Util.long2bytes(base * i));
 //                long ans = Util.bytes2Long(bs);
