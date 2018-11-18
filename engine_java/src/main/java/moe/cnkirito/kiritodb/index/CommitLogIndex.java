@@ -81,25 +81,33 @@ public class CommitLogIndex implements CommitLogAware {
                 return Long.compare(a.getKey(), b.getKey());
             }
         });
-        IndexEntry[] newIndexEntries = new IndexEntry[252000 * 4];
-        newIndexEntries[0] = indexEntries[0];
-        int newIndexSize = 1;
-        for (int i = 1; i < this.indexSize; i++) {
-            if (indexEntries[i].getKey() != indexEntries[i - 1].getKey()) {
-                newIndexSize++;
-            }
-            newIndexEntries[newIndexSize - 1] = indexEntries[i];
-        }
-        this.indexEntries = newIndexEntries;
-        this.indexSize = newIndexSize;
+//        IndexEntry[] newIndexEntries = new IndexEntry[252000 * 4];
+//        newIndexEntries[0] = indexEntries[0];
+//        int newIndexSize = 1;
+//        for (int i = 1; i < this.indexSize; i++) {
+//            if (indexEntries[i].getKey() != indexEntries[i - 1].getKey()) {
+//                newIndexSize++;
+//            }
+//            newIndexEntries[newIndexSize - 1] = indexEntries[i];
+//        }
+//        this.indexEntries = newIndexEntries;
+//        this.indexSize = newIndexSize;
     }
 
-    private int binarySearchPosition(long key) {
+    private synchronized int binarySearchPosition(long key) {
         IndexEntry indexEntry = entryForSearch.get();
         indexEntry.setKey(key);
         int index = Arrays.binarySearch(indexEntries, 0, indexSize, indexEntry, Comparator.comparingLong(IndexEntry::getKey));
         if (index >= 0) {
-            return this.indexEntries[index].getOffsetInt();
+            int resultIndex = index;
+            for(int i=index+1;i<indexSize;i++){
+                if(indexEntries[i].getKey()==key){
+                    resultIndex = i;
+                }else {
+                    break;
+                }
+            }
+            return this.indexEntries[resultIndex].getOffsetInt();
         } else {
             return -1;
         }
