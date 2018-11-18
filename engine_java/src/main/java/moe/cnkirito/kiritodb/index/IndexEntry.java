@@ -1,7 +1,5 @@
 package moe.cnkirito.kiritodb.index;
 
-import java.util.Objects;
-
 public class IndexEntry {
 
     private long key;

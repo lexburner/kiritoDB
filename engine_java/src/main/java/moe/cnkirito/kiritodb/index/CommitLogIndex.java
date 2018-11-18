@@ -14,8 +14,6 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.Arrays;
-import java.util.Comparator;
 
 import static moe.cnkirito.kiritodb.common.UnsafeUtil.UNSAFE;
 
@@ -27,10 +25,7 @@ import static moe.cnkirito.kiritodb.common.UnsafeUtil.UNSAFE;
 public class CommitLogIndex implements CommitLogAware {
 
     private final static Logger logger = LoggerFactory.getLogger(CommitLogIndex.class);
-    // key 和文件逻辑偏移的映射
-    private IndexEntry[] indexEntries;
-    private static ThreadLocal<IndexEntry> entryForSearch = ThreadLocal.withInitial(()->new IndexEntry(-1,-1));
-    private int indexSize;
+    private MemoryIndex memoryIndex;
     private FileChannel fileChannel;
     private MappedByteBuffer mappedByteBuffer;
     private long address;
@@ -55,63 +50,25 @@ public class CommitLogIndex implements CommitLogAware {
         this.fileChannel = new RandomAccessFile(file, "rw").getChannel();
         this.mappedByteBuffer = this.fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, Constant.INDEX_LENGTH * 252000 * 4);
         this.address = ((DirectBuffer) mappedByteBuffer).address();
-        this.indexEntries = new IndexEntry[252000 * 4];
-        this.indexSize = 0;
+        this.memoryIndex = new HppcMemoryIndex();
+//        this.memoryIndex = new ArrayMemoryIndex();
     }
 
     public void load() {
         // 说明索引文件中已经有内容，则读取索引文件内容到内存中
         MappedByteBuffer mappedByteBuffer = this.mappedByteBuffer;
-        this.indexSize = commitLog.getFileLength();
+        int indexSize = commitLog.getFileLength();
         for (int curIndex = 0; curIndex < indexSize; curIndex++) {
             mappedByteBuffer.position(curIndex * Constant.INDEX_LENGTH);
             long key = mappedByteBuffer.getLong();
             // 插入内存
-            insertIndexCache(key, curIndex);
+            this.memoryIndex.insertIndexCache(key, curIndex);
         }
-        sortAndCompact();
+        memoryIndex.setSize(indexSize);
+        memoryIndex.init();
         this.loadFlag = true;
     }
 
-    private void sortAndCompact() {
-        Arrays.sort(indexEntries, 0, this.indexSize, (a, b) -> {
-            if (a.getKey() == b.getKey()) {
-                return Integer.compare(a.getOffsetInt(), b.getOffsetInt());
-            } else {
-                return Long.compare(a.getKey(), b.getKey());
-            }
-        });
-//        IndexEntry[] newIndexEntries = new IndexEntry[252000 * 4];
-//        newIndexEntries[0] = indexEntries[0];
-//        int newIndexSize = 1;
-//        for (int i = 1; i < this.indexSize; i++) {
-//            if (indexEntries[i].getKey() != indexEntries[i - 1].getKey()) {
-//                newIndexSize++;
-//            }
-//            newIndexEntries[newIndexSize - 1] = indexEntries[i];
-//        }
-//        this.indexEntries = newIndexEntries;
-//        this.indexSize = newIndexSize;
-    }
-
-    private synchronized int binarySearchPosition(long key) {
-        IndexEntry indexEntry = entryForSearch.get();
-        indexEntry.setKey(key);
-        int index = Arrays.binarySearch(indexEntries, 0, indexSize, indexEntry, Comparator.comparingLong(IndexEntry::getKey));
-        if (index >= 0) {
-            int resultIndex = index;
-            for(int i=index+1;i<indexSize;i++){
-                if(indexEntries[i].getKey()==key){
-                    resultIndex = i;
-                }else {
-                    break;
-                }
-            }
-            return this.indexEntries[resultIndex].getOffsetInt();
-        } else {
-            return -1;
-        }
-    }
 
     public void releaseFile() throws IOException {
         if (this.mappedByteBuffer != null) {
@@ -123,14 +80,13 @@ public class CommitLogIndex implements CommitLogAware {
     }
 
     public void destroy() throws IOException {
-        indexEntries = null;
         commitLog = null;
         loadFlag = false;
         releaseFile();
     }
 
     public Long read(byte[] key) {
-        int offsetInt = this.binarySearchPosition(Util.bytes2Long(key));
+        int offsetInt = this.memoryIndex.get(Util.bytes2Long(key));
         if (offsetInt < 0) {
             return null;
         }
@@ -141,10 +97,6 @@ public class CommitLogIndex implements CommitLogAware {
         int position = this.mappedByteBuffer.position();
         UNSAFE.copyMemory(key, 16, null, address + position, Constant.INDEX_LENGTH);
         this.mappedByteBuffer.position(position + Constant.INDEX_LENGTH);
-    }
-
-    private void insertIndexCache(long key, int value) {
-        this.indexEntries[value] = new IndexEntry(key, value);
     }
 
     public boolean isLoadFlag() {
