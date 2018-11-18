@@ -50,16 +50,18 @@ public class CommitLogIndex implements CommitLogAware {
         }
         // 文件position
         this.fileChannel = new RandomAccessFile(file, "rw").getChannel();
-        this.mappedByteBuffer = this.fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, Constant.INDEX_LENGTH * expectedNumPerPartition);
+        //todo
+        this.mappedByteBuffer = this.fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, Constant.INDEX_LENGTH * expectedNumPerPartition * 2);
         this.address = ((DirectBuffer) mappedByteBuffer).address();
-//        this.memoryIndex = new HppcMemoryIndex();
-        this.memoryIndex = new ArrayMemoryIndex();
+        this.memoryIndex = new HppcMemoryIndex();
+//        this.memoryIndex = new ArrayMemoryIndex();
     }
 
     public void load() {
         // 说明索引文件中已经有内容，则读取索引文件内容到内存中
         MappedByteBuffer mappedByteBuffer = this.mappedByteBuffer;
         int indexSize = commitLog.getFileLength();
+        logger.info("index size:{}",indexSize);
         for (int curIndex = 0; curIndex < indexSize; curIndex++) {
             mappedByteBuffer.position(curIndex * Constant.INDEX_LENGTH);
             long key = mappedByteBuffer.getLong();
