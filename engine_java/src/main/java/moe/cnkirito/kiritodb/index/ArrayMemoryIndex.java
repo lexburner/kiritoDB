@@ -1,7 +1,6 @@
 package moe.cnkirito.kiritodb.index;
 
 import java.util.Arrays;
-import java.util.Comparator;
 
 public class ArrayMemoryIndex implements MemoryIndex {
 
@@ -55,8 +54,8 @@ public class ArrayMemoryIndex implements MemoryIndex {
 //        this.indexSize = newIndexSize;
     }
 
-    private synchronized int binarySearchPosition(long key) {
-        int index = Arrays.binarySearch(indexEntries, 0, indexSize, new IndexEntry(key,-1), Comparator.comparingLong(IndexEntry::getKey));
+    private int binarySearchPosition(long key) {
+        int index = this.binarySearch(indexEntries, 0, indexSize, key);
         if (index >= 0) {
             int resultIndex = index;
             for (int i = index + 1; i < indexSize; i++) {
@@ -70,6 +69,24 @@ public class ArrayMemoryIndex implements MemoryIndex {
         } else {
             return -1;
         }
+    }
+
+    private int binarySearch(IndexEntry[] indexEntries, int fromIndex, int toIndex, long key) {
+        int low = fromIndex;
+        int high = toIndex - 1;
+
+        while (low <= high) {
+            int mid = (low + high) >>> 1;
+            long midVal = indexEntries[mid].getKey();
+            int cmp = Long.compare(midVal, key);
+            if (cmp < 0)
+                low = mid + 1;
+            else if (cmp > 0)
+                high = mid - 1;
+            else
+                return mid; // key found
+        }
+        return -(low + 1);  // key not found.
     }
 
 }

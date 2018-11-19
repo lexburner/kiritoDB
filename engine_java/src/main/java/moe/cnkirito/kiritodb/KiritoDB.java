@@ -90,6 +90,7 @@ public class KiritoDB {
     }
 
     public void range(byte[] lower, byte[] upper, AbstractVisitor visitor) throws EngineException {
+        System.exit(0);
     }
 
     private void loadAllIndex() {
