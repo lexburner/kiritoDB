@@ -1,6 +1,11 @@
 package moe.cnkirito.kiritodb.index;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class ArrayMemoryIndex implements MemoryIndex {
+
+    Logger logger = LoggerFactory.getLogger(ArrayMemoryIndex.class);
 
     // keys 和文件逻辑偏移的映射
     private long keys[];
@@ -60,6 +65,7 @@ public class ArrayMemoryIndex implements MemoryIndex {
                 newOffsetInts[curIndex] = Math.max(newOffsetInts[curIndex], this.offsetInts[i]);
             }
         }
+        logger.info("before[{}] after[{}]", this.indexSize, curIndex + 1);
         this.indexSize = curIndex + 1;
         this.offsetInts = newOffsetInts;
         this.keys = newKeys;

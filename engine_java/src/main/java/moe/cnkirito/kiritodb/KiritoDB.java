@@ -94,7 +94,7 @@ public class KiritoDB {
     }
 
     private void loadAllIndex() {
-        ExecutorService executorService = Executors.newFixedThreadPool(64);
+        ExecutorService executorService = Executors.newFixedThreadPool(64*2);
         CountDownLatch countDownLatch = new CountDownLatch(indexNum);
         for (int i = 0; i < indexNum; i++) {
             final int index = i;

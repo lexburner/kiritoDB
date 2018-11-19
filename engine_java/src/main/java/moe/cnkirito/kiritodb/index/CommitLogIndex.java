@@ -53,8 +53,8 @@ public class CommitLogIndex implements CommitLogAware {
         //todo
         this.mappedByteBuffer = this.fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, Constant.INDEX_LENGTH * expectedNumPerPartition);
         this.address = ((DirectBuffer) mappedByteBuffer).address();
-        this.memoryIndex = new HppcMemoryIndex();
-//        this.memoryIndex = new ArrayMemoryIndex();
+//        this.memoryIndex = new HppcMemoryIndex();
+        this.memoryIndex = new ArrayMemoryIndex();
     }
 
     public void load() {
@@ -69,7 +69,6 @@ public class CommitLogIndex implements CommitLogAware {
         }
         memoryIndex.setSize(indexSize);
         memoryIndex.init();
-        logger.info("memoryIndex size:[{}]",memoryIndex.getSize());
         this.loadFlag = true;
     }
 
