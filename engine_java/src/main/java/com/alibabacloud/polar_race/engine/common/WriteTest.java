@@ -24,18 +24,28 @@ public class WriteTest {
         // 打开引擎
         final EngineRace engine = new EngineRace();
         engine.open("/tmp/kiritoDB");
+        write(executor, engine, 10);
+        write(executor, engine, 0);
+        ((ExecutorService) executor).shutdownNow();
 
+        System.out.println(getFreeMemory());
+        engine.close();
+        long end = System.currentTimeMillis();
+        System.out.println("耗时：" + (end - start) + "ms");
+    }
+
+    private static void write(Executor executor, EngineRace engine, int offset) {
         // 写数据
         final AtomicInteger atomicInteger = new AtomicInteger();
         int len = 640000;
         long base = Long.MAX_VALUE / len;
         final CountDownLatch downLatch = new CountDownLatch(len);
-        for (int i = len-1; i >= 0; --i) {
+        for (int i = len - 1; i >= 0; --i) {
             final int cur = i;
             executor.execute(new Runnable() {
                 public void run() {
                     try {
-                        engine.write(Util.long2bytes(cur * base), Util._4kb(cur * base));
+                        engine.write(Util.long2bytes(cur * base), Util._4kb(cur * base - offset));
                         System.out.println(atomicInteger.incrementAndGet());
                         downLatch.countDown();
                     } catch (EngineException e) {
@@ -49,12 +59,6 @@ public class WriteTest {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        ((ExecutorService) executor).shutdownNow();
-
-        System.out.println(getFreeMemory());
-        engine.close();
-        long end = System.currentTimeMillis();
-        System.out.println("耗时：" + (end - start) + "ms");
     }
 
     private static String getFreeMemory() {
