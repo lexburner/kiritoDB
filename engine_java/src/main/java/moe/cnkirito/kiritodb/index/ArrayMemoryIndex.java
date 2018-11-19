@@ -3,13 +3,11 @@ package moe.cnkirito.kiritodb.index;
 public class ArrayMemoryIndex implements MemoryIndex {
 
     // keys 和文件逻辑偏移的映射
-//    private IndexEntry[] indexEntries;
     private long keys[];
     private int offsetInts[];
     private int indexSize;
 
     public ArrayMemoryIndex() {
-//        this.indexEntries = new IndexEntry[CommitLogIndex.expectedNumPerPartition];
         this.keys = new long[CommitLogIndex.expectedNumPerPartition];
         this.offsetInts = new int[CommitLogIndex.expectedNumPerPartition];
         this.indexSize = 0;
@@ -21,6 +19,11 @@ public class ArrayMemoryIndex implements MemoryIndex {
     }
 
     @Override
+    public int getSize() {
+        return this.indexSize;
+    }
+
+    @Override
     public void init() {
         this.sortAndCompact();
     }
@@ -29,7 +32,6 @@ public class ArrayMemoryIndex implements MemoryIndex {
     public void insertIndexCache(long key, int value) {
         this.keys[value] = key;
         this.offsetInts[value] = value;
-//        this.indexEntries[value] = new IndexEntry(keys, value);
     }
 
     @Override
@@ -40,17 +42,6 @@ public class ArrayMemoryIndex implements MemoryIndex {
     private void sortAndCompact() {
         sort(0, this.indexSize - 1);
         compact();
-//        IndexEntry[] newIndexEntries = new IndexEntry[252000 * 4];
-//        newIndexEntries[0] = indexEntries[0];
-//        int newIndexSize = 1;
-//        for (int i = 1; i < this.indexSize; i++) {
-//            if (indexEntries[i].getKey() != indexEntries[i - 1].getKey()) {
-//                newIndexSize++;
-//            }
-//            newIndexEntries[newIndexSize - 1] = indexEntries[i];
-//        }
-//        this.indexEntries = newIndexEntries;
-//        this.indexSize = newIndexSize;
     }
 
     private void compact() {
@@ -101,7 +92,6 @@ public class ArrayMemoryIndex implements MemoryIndex {
                 swap(start, end);
             }
         }
-        //递归
         if (start > low) sort(low, start - 1);
         if (end < high) sort(end + 1, high);
     }

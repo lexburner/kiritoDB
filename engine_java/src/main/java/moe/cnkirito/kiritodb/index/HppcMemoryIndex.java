@@ -18,6 +18,11 @@ public class HppcMemoryIndex implements MemoryIndex {
     }
 
     @Override
+    public int getSize() {
+        return indexMap.size();
+    }
+
+    @Override
     public void init() {
         //do nothing
     }
