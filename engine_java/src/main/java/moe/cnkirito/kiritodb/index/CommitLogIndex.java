@@ -116,4 +116,7 @@ public class CommitLogIndex implements CommitLogAware {
         this.commitLog = commitLog;
     }
 
+    public MemoryIndex getMemoryIndex() {
+        return memoryIndex;
+    }
 }

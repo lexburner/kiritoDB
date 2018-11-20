@@ -24,7 +24,6 @@ public class WriteTest {
         // 打开引擎
         final EngineRace engine = new EngineRace();
         engine.open("/tmp/kiritoDB");
-        write(executor, engine, 10);
         write(executor, engine, 0);
         ((ExecutorService) executor).shutdownNow();
 

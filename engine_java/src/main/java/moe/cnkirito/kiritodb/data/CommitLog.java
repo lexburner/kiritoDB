@@ -35,6 +35,9 @@ public class CommitLog {
     private boolean dioSupport;
     private long addresses;
 
+    // for range
+    private ByteBuffer rangeBuffer;
+
     public void init(String path, int no) throws IOException {
         File dirFile = new File(path);
         if (!dirFile.exists()) {
@@ -102,6 +105,15 @@ public class CommitLog {
             }
             curBufferSize = 0;
         }
+    }
+
+    /**
+     * 加载整个data文件进入内存
+     */
+    public void loadAll(ByteBuffer buffer) throws IOException {
+        buffer.clear();
+        this.fileChannel.read(buffer,0);
+        buffer.flip();
     }
 
     public int getFileLength() {

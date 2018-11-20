@@ -1,1 +1,1 @@
- -XX:+PrintGCDetails -XX:+PrintGCDateStamps
+-XX:+PrintGCDetails -XX:+PrintGCDateStamps

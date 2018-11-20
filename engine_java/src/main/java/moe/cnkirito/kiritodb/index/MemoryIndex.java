@@ -6,4 +6,6 @@ public interface MemoryIndex {
     void init();
     void insertIndexCache(long key, int value);
     int get(long key);
+    long[] getKeys();
+    int[] getOffsetInts();
 }

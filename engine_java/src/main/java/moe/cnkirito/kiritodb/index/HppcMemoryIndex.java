@@ -36,4 +36,14 @@ public class HppcMemoryIndex implements MemoryIndex {
     public int get(long key) {
         return this.indexMap.getOrDefault(key, -1);
     }
+
+    @Override
+    public long[] getKeys() {
+        throw new UnsupportedOperationException("getKeys() unsupported");
+    }
+
+    @Override
+    public int[] getOffsetInts() {
+        throw new UnsupportedOperationException("getOffsetInts() unsupported");
+    }
 }

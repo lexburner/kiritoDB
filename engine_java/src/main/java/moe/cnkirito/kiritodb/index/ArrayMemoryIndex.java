@@ -44,6 +44,16 @@ public class ArrayMemoryIndex implements MemoryIndex {
         return this.binarySearchPosition(key);
     }
 
+    @Override
+    public long[] getKeys() {
+        return this.keys;
+    }
+
+    @Override
+    public int[] getOffsetInts() {
+        return this.offsetInts;
+    }
+
     private void sortAndCompact() {
         sort(0, this.indexSize - 1);
         // todo 可能可以去掉
