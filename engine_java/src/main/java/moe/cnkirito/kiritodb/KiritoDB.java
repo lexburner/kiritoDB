@@ -34,7 +34,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class KiritoDB {
 
     private static final Logger logger = LoggerFactory.getLogger(KiritoDB.class);
-    private final int partitionNum = 1 << 10; //64
+    private final int partitionNum = 1 << 8; //64
     // 用于获取 key 的分区
     private volatile Partitionable partitionable;
     private volatile CommitLog[] commitLogs;

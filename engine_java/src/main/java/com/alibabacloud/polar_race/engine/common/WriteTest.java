@@ -37,14 +37,20 @@ public class WriteTest {
         // 写数据
         final AtomicInteger atomicInteger = new AtomicInteger();
         int len = 640000;
-        long base = Long.MAX_VALUE / len;
         final CountDownLatch downLatch = new CountDownLatch(len);
-        for (int i = len - 1; i >= 0; --i) {
+        byte[] hashByte = new byte[Byte.MAX_VALUE-Byte.MIN_VALUE+1];
+        byte now = Byte.MIN_VALUE;
+        for(int i = 0;i<  (Byte.MAX_VALUE-Byte.MIN_VALUE+1);i++){
+            hashByte[i] = now++;
+        }
+        for (int i=0;i<640000;i++) {
             final int cur = i;
             executor.execute(new Runnable() {
                 public void run() {
                     try {
-                        engine.write(Util.long2bytes(cur * base), Util._4kb(cur * base - offset));
+                        byte[] bytes = Util.long2bytes(cur);
+                        bytes[0] = hashByte[cur % (Byte.MAX_VALUE-Byte.MIN_VALUE+1)];
+                        engine.write(bytes, Util._4kb(cur - offset));
                         System.out.println(atomicInteger.incrementAndGet());
                         downLatch.countDown();
                     } catch (EngineException e) {

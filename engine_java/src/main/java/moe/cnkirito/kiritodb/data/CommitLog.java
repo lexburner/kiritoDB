@@ -35,9 +35,6 @@ public class CommitLog {
     private boolean dioSupport;
     private long addresses;
 
-    // for range
-    private ByteBuffer rangeBuffer;
-
     public void init(String path, int no) throws IOException {
         File dirFile = new File(path);
         if (!dirFile.exists()) {
