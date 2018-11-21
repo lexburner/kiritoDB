@@ -57,7 +57,9 @@ public class ArrayMemoryIndex implements MemoryIndex {
     private void sortAndCompact() {
         sort(0, this.indexSize - 1);
         // todo 可能可以去掉
-        compact();
+        if(this.indexSize!=0){
+            compact();
+        }
     }
 
     private void compact() {
@@ -79,7 +81,7 @@ public class ArrayMemoryIndex implements MemoryIndex {
 //        if (curIndex + 1 != this.indexSize) {
 //            logger.info("before[{}] after[{}]", this.indexSize, curIndex + 1);
 //        }
-        this.indexSize = curIndex + 1;
+        this.indexSize = curIndex+1;
         this.offsetInts = newOffsetInts;
         this.keys = newKeys;
     }
