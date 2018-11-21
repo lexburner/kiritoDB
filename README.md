@@ -1,1 +1,58 @@
+### 1. 赛题背景
+
+本次赛题是以 PolarDB 为背景，以 Optane SSD 为存储介质，参赛者在其基础之上探索实现一种高效的 kv 存储引擎。
+
+### 2. 赛题描述
+
+实现一个简化、高效的 kv 存储引擎，初赛要求实现 Write，Read 接口
+
+```java
+public abstract void write(byte[] key, byte[] value) throws EngineException;
+public abstract byte[] read(byte[] key) throws EngineException;
+```
+
+复赛要求实现一个 Range 接口
+
+```java
+public abstract void range(byte[] lower, byte[] upper, AbstractVisitor visitor) throws EngineException;
+```
+
+Write 和 Read 很好理解，Write 就是存放一个键值对，Read 则可以根据键返回对应值，Range 要求实现的是一个批量查询的接口，按照字节序遍历一定范围内键值对，并通过 visitor 回调，让评测程序去验证。
+
+程序评测逻辑分为2个阶段：
+1）Recover正确性评测
+此阶段评测程序会并发写入特定数据（key 8B、value 4KB）同时进行任意次kill -9来模拟进程意外退出（参赛引擎需要保证进程意外退出时数据持久化不丢失），接着重新打开DB，调用Read接口来进行正确性校验
+
+2）性能评测
+-  随机写入：64个线程并发随机写入，每个线程使用Write各写100万次随机数据（key 8B、value 4KB）
+-  随机读取：64个线程并发随机读取，每个线程各使用Read读取100万次随机数据
+注：2.2阶段会对所有读取的kv校验是否匹配，如不通过则终止，评测失败
+
+
+注：
+1. 共3个维度测试性能，每一个维度测试结束后会保留DB数据，关闭Engine实例，重启进程，清空PageCache，下一个维度开始后重新打开新的Engine实例
+2. 读取阶段会随机进行样本数据抽样校验，没有通过的话则评测不通过
+3. 参赛引擎只需保证进程意外退出时数据持久化不丢失即可，不要求保证在系统crash时的数据持久化不丢失
+
+### 3. 赛题分析
+key 的长度固定为 8 字节，因此可使用 uint64_t 表示。
+
+value 的长度固定 4096 字节，并且不可压缩，因此比不保存 value 的长度，可使用 LBA(Logical Block Addressing) 表示数据的位置。
+
+读写操作不会在同一次测试中发生，因此不需要维护“动态索引”。
+
+不要求“掉电不丢数据”，只要求“进程退出不丢数据”，因此可充分利用 page cache，索引不写透数据，data 写不加 O_SYNC。
+
+数据分 partition，减少冲突，加大并行度。
+
+性能评测中会有2次带数据重启，DB 加载的开销也计入总体时间，因此加载过程需要并行化。
+
+读写尽量使用大块 I/O。
+
+range 操作是本次比赛最关键的部分，因此能否设计出最有利于 range 的架构则是争夺第一的关键。
+
+### 优化点
+
+#### jvm 调优
+
 -XX:+PrintGCDetails -XX:+PrintGCDateStamps

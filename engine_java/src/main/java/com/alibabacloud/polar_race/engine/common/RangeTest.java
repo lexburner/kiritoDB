@@ -20,7 +20,7 @@ public class RangeTest {
                 } catch (EngineException e) {
                     e.printStackTrace();
                 }
-            }, "thread-" + i);
+            }, "thread" + i);
         }
         for (int i = 0; i < 64; i++) {
             threads[i].start();

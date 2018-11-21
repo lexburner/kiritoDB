@@ -98,11 +98,11 @@ public class KiritoDB {
         }
     }
 
-    private final int threadNum = 64;
     // 开启 fetch 线程的标记
     private final AtomicBoolean producerFlag = new AtomicBoolean(false);
     // 读完当前分区的线程计数器
-    private volatile AtomicInteger consumerReadCompleteCnt = new AtomicInteger(threadNum);
+    private volatile AtomicInteger consumerReadCompleteCnt = new AtomicInteger(0);
+    private volatile AtomicBoolean canRead = new AtomicBoolean(false);
     private final Lock partitionLock = new ReentrantLock();
     private final Condition writeCondition = partitionLock.newCondition();
     private final Condition readCondition = partitionLock.newCondition();
@@ -116,12 +116,13 @@ public class KiritoDB {
                 for (int i = 0; i < partitionNum; i++) {
                     partitionLock.lock();
                     try {
-                        while (consumerReadCompleteCnt.get() != threadNum) {
+                        canRead.set(false);
+                        while (consumerReadCompleteCnt.get() >0) {
                             writeCondition.await();
                         }
                         fetchDataProducer.resetPartition(commitLogs[i]);
                         buffer = fetchDataProducer.produce();
-                        consumerReadCompleteCnt.set(0);
+                        canRead.set(true);
                         readCondition.signalAll();
                     } catch (InterruptedException e) {
                         logger.error("writeCondition.await() interrupted", e);
@@ -134,9 +135,10 @@ public class KiritoDB {
         for (int i = 0; i < partitionNum; i++) {
             partitionLock.lock();
             try {
-                while (consumerReadCompleteCnt.get() == threadNum) {
+                while (!canRead.get()) {
                     readCondition.await();
                 }
+                consumerReadCompleteCnt.incrementAndGet();
                 CommitLogIndex commitLogIndex = this.commitLogIndices[i];
                 int size = commitLogIndex.getMemoryIndex().getSize();
                 int[] offsetInts = commitLogIndex.getMemoryIndex().getOffsetInts();
@@ -153,7 +155,7 @@ public class KiritoDB {
 
                     visitor.visit(Util.long2bytes(keys[j]), bytes);
                 }
-                consumerReadCompleteCnt.incrementAndGet();
+                consumerReadCompleteCnt.decrementAndGet();
                 writeCondition.signalAll();
             } catch (InterruptedException e) {
                 logger.error("readCondition.await() interrupted", e);
