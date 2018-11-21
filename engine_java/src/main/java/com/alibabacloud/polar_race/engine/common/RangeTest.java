@@ -13,7 +13,7 @@ public class RangeTest {
         engine.open("/tmp/kiritoDB");
 
         Thread[] threads = new Thread[64];
-        for (int i = 0; i < 1; i++) {
+        for (int i = 0; i < 64; i++) {
             threads[i] = new Thread(() -> {
                 try {
                     engine.range(null, null, new LocalVisitor());
@@ -22,10 +22,10 @@ public class RangeTest {
                 }
             }, "thread" + i);
         }
-        for (int i = 0; i < 1; i++) {
+        for (int i = 0; i < 64; i++) {
             threads[i].start();
         }
-        for (int i = 0; i < 1; i++) {
+        for (int i = 0; i < 64; i++) {
             try {
                 threads[i].join();
             } catch (InterruptedException e) {
