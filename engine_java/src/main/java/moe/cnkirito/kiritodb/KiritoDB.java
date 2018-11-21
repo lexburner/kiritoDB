@@ -129,9 +129,10 @@ public class KiritoDB {
 
             new Thread(() -> {
                 FetchDataProducer fetchDataProducer = new FetchDataProducer();
-                partitionLock.lock();
-                try {
-                    for (int i = 0; i < partitionNum; i++) {
+
+                for (int i = 0; i < partitionNum; i++) {
+                    partitionLock.lock();
+                    try {
                         while (consumerReadCompleteCnt.get() > 0) {
                             writeCondition.await();
                         }
@@ -147,17 +148,19 @@ public class KiritoDB {
                         logger.info("[range info] read partition {} success. buffer limit = {}", i, buffer.limit());
                         canRead.set(true);
                         readCondition.signalAll();
+                    } catch (InterruptedException e) {
+                        logger.error("writeCondition.await() interrupted", e);
+                    } finally {
+                        partitionLock.unlock();
                     }
-                } catch (InterruptedException e) {
-                    logger.error("writeCondition.await() interrupted", e);
-                } finally {
-                    partitionLock.unlock();
                 }
+
             }).start();
         }
-        partitionLock.lock();
-        try {
-            for (int i = 0; i < partitionNum; i++) {
+
+        for (int i = 0; i < partitionNum; i++) {
+            try {
+                partitionLock.lock();
                 while (!canRead.get()) {
                     readCondition.await();
                 }
@@ -173,19 +176,18 @@ public class KiritoDB {
                         slice.position(offsetInts[j] * Constant.VALUE_LENGTH);
                         slice.get(bytes);
                     } catch (IndexOutOfBoundsException | BufferUnderflowException | IllegalArgumentException e) {
-                        logger.error("[range error] size={},offset={},buffer limit={}", size, offsetInts[j] * Constant.VALUE_LENGTH, buffer.limit(), e);
+                        logger.error("[partition {} range error] size={},offset={},buffer limit={}", i, size, offsetInts[j] * Constant.VALUE_LENGTH, buffer.limit(), e);
                     }
 
                     visitor.visit(Util.long2bytes(keys[j]), bytes);
                 }
                 consumerReadCompleteCnt.decrementAndGet();
                 writeCondition.signalAll();
-
+            } catch (InterruptedException e) {
+                logger.error("readCondition.await() interrupted", e);
+            } finally {
+                partitionLock.unlock();
             }
-        } catch (InterruptedException e) {
-            logger.error("readCondition.await() interrupted", e);
-        } finally {
-            partitionLock.unlock();
         }
     }
 
