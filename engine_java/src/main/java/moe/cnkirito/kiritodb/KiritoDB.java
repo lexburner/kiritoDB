@@ -147,7 +147,7 @@ public class KiritoDB {
                         buffer = fetchDataProducer.produce();
                         logger.info("[range info] read partition {} success. buffer limit = {}", i, buffer.limit());
                         canRead.set(true);
-                        readCondition.signalAll();
+                        readCondition.signal();
                     } catch (InterruptedException e) {
                         logger.error("writeCondition.await() interrupted", e);
                     } finally {
@@ -182,7 +182,7 @@ public class KiritoDB {
                     visitor.visit(Util.long2bytes(keys[j]), bytes);
                 }
                 consumerReadCompleteCnt.decrementAndGet();
-                writeCondition.signalAll();
+                writeCondition.signal();
             } catch (InterruptedException e) {
                 logger.error("readCondition.await() interrupted", e);
             } finally {
