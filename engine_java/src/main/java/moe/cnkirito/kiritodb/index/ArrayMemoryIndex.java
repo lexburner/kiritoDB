@@ -76,9 +76,9 @@ public class ArrayMemoryIndex implements MemoryIndex {
                 newOffsetInts[curIndex] = Math.max(newOffsetInts[curIndex], this.offsetInts[i]);
             }
         }
-        if (curIndex + 1 != this.indexSize) {
-            logger.info("before[{}] after[{}]", this.indexSize, curIndex + 1);
-        }
+//        if (curIndex + 1 != this.indexSize) {
+//            logger.info("before[{}] after[{}]", this.indexSize, curIndex + 1);
+//        }
         this.indexSize = curIndex + 1;
         this.offsetInts = newOffsetInts;
         this.keys = newKeys;

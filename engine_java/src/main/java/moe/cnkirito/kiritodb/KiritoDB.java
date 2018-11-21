@@ -111,6 +111,16 @@ public class KiritoDB {
 
     public void range(byte[] lower, byte[] upper, AbstractVisitor visitor) throws EngineException {
         if (producerFlag.compareAndSet(false, true)) {
+            try{
+                if(lower!=null && upper!=null){
+                    logger.info("lower={},upper={}",Util.bytes2Long(lower),Util.bytes2Long(upper));
+                }
+                logger.info("first={}",commitLogIndices[0].getMemoryIndex().getKeys()[0]);
+                logger.info("size={}",commitLogIndices[0].getMemoryIndex().getSize());
+            }catch (Exception e){
+                logger.error("print error",e);
+            }
+
             new Thread(() -> {
                 FetchDataProducer fetchDataProducer = new FetchDataProducer();
                 for (int i = 0; i < partitionNum; i++) {
