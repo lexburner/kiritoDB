@@ -24,6 +24,7 @@ public class ConditionTest {
             try{
                 writeCondition.await();
                 System.out.println("1");
+                Thread.sleep(1000000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } finally {
@@ -34,8 +35,9 @@ public class ConditionTest {
         new Thread(()->{
             partitionLock.lock();
             try{
-                readCondition.await();
+                writeCondition.await();
                 System.out.println("2");
+                Thread.sleep(1000000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             } finally {
@@ -47,8 +49,8 @@ public class ConditionTest {
         try{
             System.out.println("==1");
             Thread.sleep(2000);
-            writeCondition.signalAll();
-            readCondition.signalAll();
+            writeCondition.signal();
+            writeCondition.signal();
             System.out.println("==2");
         } catch (InterruptedException e) {
             e.printStackTrace();
