@@ -108,7 +108,7 @@ public class KiritoDB {
     // 开启 fetch 线程的标记
     private final AtomicBoolean producerFlag = new AtomicBoolean(false);
     // 读完当前分区的线程计数器
-    private volatile AtomicInteger consumerReadCompleteCnt = new AtomicInteger(0);
+    private volatile AtomicInteger readingCacheCnt = new AtomicInteger(0);
     private volatile AtomicBoolean canRead = new AtomicBoolean(false);
     private final Lock partitionLock = new ReentrantLock();
     private final Condition writeCondition = partitionLock.newCondition();
@@ -126,45 +126,43 @@ public class KiritoDB {
             } catch (Exception e) {
                 logger.error("print error", e);
             }
-
             new Thread(() -> {
                 FetchDataProducer fetchDataProducer = new FetchDataProducer();
 
                 for (int i = 0; i < partitionNum; i++) {
                     partitionLock.lock();
                     try {
-                        while (consumerReadCompleteCnt.get() > 0) {
+                        while (readingCacheCnt.get()==0) {
                             writeCondition.await();
                         }
-                        canRead.set(false);
                         try {
                             logger.info("[range info] read partition {}, current partition has {} value.", i, commitLogs[i].getFileLength());
                         } catch (Exception e) {
                             logger.error("获取失败", e);
                         }
-
                         fetchDataProducer.resetPartition(commitLogs[i]);
                         buffer = fetchDataProducer.produce();
                         logger.info("[range info] read partition {} success. buffer limit = {}", i, buffer.limit());
-                        canRead.set(true);
-                        readCondition.signal();
+                        System.out.println("read partition"+i+" from disk");
+                        readingCacheCnt.set(64);
+                        readCondition.signalAll();
                     } catch (InterruptedException e) {
                         logger.error("writeCondition.await() interrupted", e);
                     } finally {
                         partitionLock.unlock();
                     }
                 }
-
             }).start();
         }
 
         for (int i = 0; i < partitionNum; i++) {
             try {
                 partitionLock.lock();
-                while (!canRead.get()) {
+                while (readingCacheCnt.get()!=0) {
                     readCondition.await();
                 }
-                consumerReadCompleteCnt.incrementAndGet();
+                readingCacheCnt.incrementAndGet();
+                System.out.println("read partition"+i+" from cache");
                 CommitLogIndex commitLogIndex = this.commitLogIndices[i];
                 int size = commitLogIndex.getMemoryIndex().getSize();
                 int[] offsetInts = commitLogIndex.getMemoryIndex().getOffsetInts();
@@ -181,8 +179,8 @@ public class KiritoDB {
 
                     visitor.visit(Util.long2bytes(keys[j]), bytes);
                 }
-                consumerReadCompleteCnt.decrementAndGet();
-                writeCondition.signal();
+                readingCacheCnt.decrementAndGet();
+                writeCondition.signalAll();
             } catch (InterruptedException e) {
                 logger.error("readCondition.await() interrupted", e);
             } finally {
