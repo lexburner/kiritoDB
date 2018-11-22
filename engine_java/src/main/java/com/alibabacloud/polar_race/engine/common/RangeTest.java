@@ -12,26 +12,29 @@ public class RangeTest {
         final EngineRace engine = new EngineRace();
         engine.open("/tmp/kiritoDB");
 
-        Thread[] threads = new Thread[64];
-        for (int i = 0; i < 64; i++) {
-            threads[i] = new Thread(() -> {
+        for(int k=0;k<2;k++){
+            Thread[] threads = new Thread[64];
+            for (int i = 0; i < 64; i++) {
+                threads[i] = new Thread(() -> {
+                    try {
+                        engine.range(null, null, new LocalVisitor());
+                    } catch (EngineException e) {
+                        e.printStackTrace();
+                    }
+                }, "thread" + i);
+            }
+            for (int i = 0; i < 64; i++) {
+                threads[i].start();
+            }
+            for (int i = 0; i < 64; i++) {
                 try {
-                    engine.range(null, null, new LocalVisitor());
-                } catch (EngineException e) {
+                    threads[i].join();
+                } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-            }, "thread" + i);
-        }
-        for (int i = 0; i < 64; i++) {
-            threads[i].start();
-        }
-        for (int i = 0; i < 64; i++) {
-            try {
-                threads[i].join();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
             }
         }
+
         engine.close();
         long end = System.currentTimeMillis();
         System.out.println("耗时：" + (end - start) + "ms");

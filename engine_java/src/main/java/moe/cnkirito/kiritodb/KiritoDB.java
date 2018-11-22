@@ -11,6 +11,7 @@ import moe.cnkirito.kiritodb.index.CommitLogIndex;
 import moe.cnkirito.kiritodb.partition.FirstBytePartitoner;
 import moe.cnkirito.kiritodb.partition.Partitionable;
 import moe.cnkirito.kiritodb.range.FetchDataProducer;
+import moe.cnkirito.kiritodb.range.RangeTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +21,7 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
@@ -120,35 +122,22 @@ public class KiritoDB {
     // 开启 fetch 线程的标记
     private final AtomicBoolean producerFlag = new AtomicBoolean(false);
     // 读完当前分区的线程计数器
-    private volatile AtomicInteger readingCacheCnt = new AtomicInteger(0);
-    private volatile AtomicBoolean fetchMode = new AtomicBoolean(true);
     private volatile ByteBuffer buffer;
     private static ThreadLocal<byte[]> visitorCallbackValue = ThreadLocal.withInitial(() -> new byte[Constant.VALUE_LENGTH]);
-    private AtomicInteger threadNum;
+    private final static int THREAD_NUM = 64;
+    private LinkedBlockingQueue<RangeTask> rangeTaskLinkedBlockingQueue = new LinkedBlockingQueue<>();
 
     public void range(byte[] lower, byte[] upper, AbstractVisitor visitor) throws EngineException {
-        threadNum.incrementAndGet();
         // 第一次 range 的时候开启 fetch 线程
         if (producerFlag.compareAndSet(false, true)) {
             initPreFetchThreads();
         }
-        for (int i = 0; i < partitionNum; i++) {
-            System.out.println("read partition" + i + " from cache");
-            CommitLogIndex commitLogIndex = this.commitLogIndices[i];
-            int size = commitLogIndex.getMemoryIndex().getSize();
-            int[] offsetInts = commitLogIndex.getMemoryIndex().getOffsetInts();
-            long[] keys = commitLogIndex.getMemoryIndex().getKeys();
-            for (int j = 0; j < size; j++) {
-                byte[] bytes = visitorCallbackValue.get();
-                try {
-                    ByteBuffer slice = buffer.slice();
-                    slice.position(offsetInts[j] * Constant.VALUE_LENGTH);
-                    slice.get(bytes);
-                } catch (IndexOutOfBoundsException | BufferUnderflowException | IllegalArgumentException e) {
-                    logger.error("[partition {} range error] size={},offset={},buffer limit={}", i, size, offsetInts[j] * Constant.VALUE_LENGTH, buffer.limit(), e);
-                }
-                visitor.visit(Util.long2bytes(keys[j]), bytes);
-            }
+        RangeTask rangeTask = new RangeTask(visitor, new CountDownLatch(1));
+        rangeTaskLinkedBlockingQueue.offer(rangeTask);
+        try {
+            rangeTask.getCountDownLatch().await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
@@ -156,27 +145,58 @@ public class KiritoDB {
      * 初始化preFetch线程
      */
     private void initPreFetchThreads() {
-        try {
-            logger.info("[range info]loadFlag={}", loadFlag);
-            for (int i = 0; i < partitionNum; i++) {
-                logger.info("[range info] partition[{}],commitLogLength[{}],indexSize[{}]", i, commitLogs[i].getFileLength(), commitLogIndices[i].getMemoryIndex().getSize());
-            }
-        } catch (Exception e) {
-            logger.error("print error", e);
-        }
+//        try {
+//            logger.info("[range info]loadFlag={}", loadFlag);
+//            for (int i = 0; i < partitionNum; i++) {
+//                logger.info("[range info] partition[{}],commitLogLength[{}],indexSize[{}]", i, commitLogs[i].getFileLength(), commitLogIndices[i].getMemoryIndex().getSize());
+//            }
+//        } catch (Exception e) {
+//            logger.error("print error", e);
+//        }
         new Thread(() -> {
+            RangeTask[] rangeTasks = new RangeTask[THREAD_NUM];
+            for(int i=0;i<THREAD_NUM;i++){
+                try {
+                    rangeTasks[i] = rangeTaskLinkedBlockingQueue.take();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
             FetchDataProducer fetchDataProducer = new FetchDataProducer();
             for (int i = 0; i < partitionNum; i++) {
-                try {
-                    logger.info("[range info] read partition {}, current partition has {} value.", i, commitLogs[i].getFileLength());
-                } catch (Exception e) {
-                    logger.error("获取失败", e);
-                }
+//                try {
+//                    logger.info("[range info] read partition {}, current partition has {} value.", i, commitLogs[i].getFileLength());
+//                } catch (Exception e) {
+//                    logger.error("获取失败", e);
+//                }
                 fetchDataProducer.resetPartition(commitLogs[i]);
                 buffer = fetchDataProducer.produce();
-                logger.info("[range info] read partition {} success. buffer limit = {}", i, buffer.limit());
-                System.out.println("read partition" + i + " from disk");
+                CommitLogIndex commitLogIndex = this.commitLogIndices[i];
+                int size = commitLogIndex.getMemoryIndex().getSize();
+                int[] offsetInts = commitLogIndex.getMemoryIndex().getOffsetInts();
+                long[] keys = commitLogIndex.getMemoryIndex().getKeys();
+                for (int j = 0; j < size; j++) {
+                    byte[] bytes = visitorCallbackValue.get();
+                    try {
+                        ByteBuffer slice = buffer.slice();
+                        slice.position(offsetInts[j] * Constant.VALUE_LENGTH);
+                        slice.get(bytes);
+                    } catch (IndexOutOfBoundsException | BufferUnderflowException | IllegalArgumentException e) {
+                        logger.error("[partition {} range error] size={},offset={},buffer limit={}", i, size, offsetInts[j] * Constant.VALUE_LENGTH, buffer.limit(), e);
+                    }
+                    for (RangeTask rangeTask : rangeTasks) {
+                        rangeTask.getAbstractVisitor().visit(Util.long2bytes(keys[j]), bytes);
+                    }
+
+                }
+//                logger.info("[range info] read partition {} success. buffer limit = {}", i, buffer.limit());
+//                System.out.println("read partition" + i + " from disk");
             }
+            for (RangeTask rangeTask : rangeTasks) {
+                rangeTask.getCountDownLatch().countDown();
+            }
+            producerFlag.set(false);
         }).start();
     }
 
