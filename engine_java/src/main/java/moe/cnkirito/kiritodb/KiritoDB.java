@@ -133,37 +133,21 @@ public class KiritoDB {
             initPreFetchThreads();
         }
         for (int i = 0; i < partitionNum; i++) {
-            try {
-                partitionLocks[i].lock();
-                try{
-                    readDiskConditions[i].await();
-                }finally {
-                    partitionLocks[i].unlock();
+            System.out.println("read partition" + i + " from cache");
+            CommitLogIndex commitLogIndex = this.commitLogIndices[i];
+            int size = commitLogIndex.getMemoryIndex().getSize();
+            int[] offsetInts = commitLogIndex.getMemoryIndex().getOffsetInts();
+            long[] keys = commitLogIndex.getMemoryIndex().getKeys();
+            for (int j = 0; j < size; j++) {
+                byte[] bytes = visitorCallbackValue.get();
+                try {
+                    ByteBuffer slice = buffer.slice();
+                    slice.position(offsetInts[j] * Constant.VALUE_LENGTH);
+                    slice.get(bytes);
+                } catch (IndexOutOfBoundsException | BufferUnderflowException | IllegalArgumentException e) {
+                    logger.error("[partition {} range error] size={},offset={},buffer limit={}", i, size, offsetInts[j] * Constant.VALUE_LENGTH, buffer.limit(), e);
                 }
-                System.out.println("read partition" + i + " from cache");
-                CommitLogIndex commitLogIndex = this.commitLogIndices[i];
-                int size = commitLogIndex.getMemoryIndex().getSize();
-                int[] offsetInts = commitLogIndex.getMemoryIndex().getOffsetInts();
-                long[] keys = commitLogIndex.getMemoryIndex().getKeys();
-                for (int j = 0; j < size; j++) {
-                    byte[] bytes = visitorCallbackValue.get();
-                    try {
-                        ByteBuffer slice = buffer.slice();
-                        slice.position(offsetInts[j] * Constant.VALUE_LENGTH);
-                        slice.get(bytes);
-                    } catch (IndexOutOfBoundsException | BufferUnderflowException | IllegalArgumentException e) {
-                        logger.error("[partition {} range error] size={},offset={},buffer limit={}", i, size, offsetInts[j] * Constant.VALUE_LENGTH, buffer.limit(), e);
-                    }
-                    visitor.visit(Util.long2bytes(keys[j]), bytes);
-                }
-                if(readingCacheCnt.get()==64){
-                    fetchMode.set(true);
-                    writeCondition.signal();
-                }
-            } catch (InterruptedException e) {
-                logger.error("readCondition.await() interrupted", e);
-            } finally {
-                partitionLock.unlock();
+                visitor.visit(Util.long2bytes(keys[j]), bytes);
             }
         }
     }
@@ -183,29 +167,15 @@ public class KiritoDB {
         new Thread(() -> {
             FetchDataProducer fetchDataProducer = new FetchDataProducer();
             for (int i = 0; i < partitionNum; i++) {
-                partitionLocks[i].lock();
                 try {
-                    while (!fetchMode.get()) {
-                        writeCondition.await();
-                    }
-                    try {
-                        logger.info("[range info] read partition {}, current partition has {} value.", i, commitLogs[i].getFileLength());
-                    } catch (Exception e) {
-                        logger.error("获取失败", e);
-                    }
-                    fetchDataProducer.resetPartition(commitLogs[i]);
-                    buffer = fetchDataProducer.produce();
-                    logger.info("[range info] read partition {} success. buffer limit = {}", i, buffer.limit());
-                    System.out.println("read partition" + i + " from disk");
-                    readingCacheCnt.set(0);
-                    for (int k = 0; k < 64; k++) {
-                        readCondition.signal();
-                    }
-                } catch (InterruptedException e) {
-                    logger.error("writeCondition.await() interrupted", e);
-                } finally {
-                    partitionLock.unlock();
+                    logger.info("[range info] read partition {}, current partition has {} value.", i, commitLogs[i].getFileLength());
+                } catch (Exception e) {
+                    logger.error("获取失败", e);
                 }
+                fetchDataProducer.resetPartition(commitLogs[i]);
+                buffer = fetchDataProducer.produce();
+                logger.info("[range info] read partition {} success. buffer limit = {}", i, buffer.limit());
+                System.out.println("read partition" + i + " from disk");
             }
         }).start();
     }
