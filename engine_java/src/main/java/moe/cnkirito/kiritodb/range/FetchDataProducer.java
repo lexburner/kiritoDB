@@ -18,7 +18,7 @@ public class FetchDataProducer {
 
     public FetchDataProducer() {
         int expectedNumPerPartition = CommitLogIndex.expectedNumPerPartition * Constant.VALUE_LENGTH;
-        this.buffer = ByteBuffer.allocate(expectedNumPerPartition);
+        this.buffer = ByteBuffer.allocateDirect(expectedNumPerPartition);
     }
 
     public void resetPartition(CommitLog commitLog) {
