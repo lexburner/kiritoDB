@@ -157,7 +157,7 @@ public class KiritoDB {
         logger.info("[jvm info] now {} ", Util.getFreeMemory());
         new Thread(() -> {
             RangeTask[] rangeTasks = new RangeTask[THREAD_NUM];
-            long waitForTaskStartTime = System.currentTimeMillis();
+//            long waitForTaskStartTime = System.currentTimeMillis();
             for (int i = 0; i < THREAD_NUM; i++) {
                 try {
                     rangeTasks[i] = rangeTaskLinkedBlockingQueue.take();
@@ -165,7 +165,7 @@ public class KiritoDB {
                     e.printStackTrace();
                 }
             }
-            logger.info("[fetch thread] wait for all range thread reach cost {} ms", System.currentTimeMillis() - waitForTaskStartTime);
+//            logger.info("[fetch thread] wait for all range thread reach cost {} ms", System.currentTimeMillis() - waitForTaskStartTime);
 
             if (fetchDataProducer == null) {
                 fetchDataProducer = new FetchDataProducer();
@@ -200,8 +200,8 @@ public class KiritoDB {
                     }
 
                 }
-                logger.info("[range info] read partition {} success. [memory] cost {} s ", i, (System.currentTimeMillis() - scanPartitionMermoryStartTime) / 1000);
-                logger.info("[range info] read partition {} success. [disk + memory] cost {} s ", i, (System.currentTimeMillis() - scanPartitionStartTime) / 1000);
+//                logger.info("[range info] read partition {} success. [memory] cost {} s ", i, (System.currentTimeMillis() - scanPartitionMermoryStartTime) / 1000);
+//                logger.info("[range info] read partition {} success. [disk + memory] cost {} s ", i, (System.currentTimeMillis() - scanPartitionStartTime) / 1000);
             }
             for (RangeTask rangeTask : rangeTasks) {
                 rangeTask.getCountDownLatch().countDown();
