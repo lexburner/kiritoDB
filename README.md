@@ -55,4 +55,42 @@ range 操作是本次比赛最关键的部分，因此能否设计出最有利�
 
 #### jvm 调优
 
+打印 GC 日志
 -XX:+PrintGCDetails -XX:+PrintGCDateStamps
+
+newRatio=1 -> newRatio=4
+众所周知 newRatio 是控制 young 区和 old 区大小比例的，newRatio=1 -> newRatio=4 提升老年代的大小直接让成绩优化了 6s
+
+原因分析：
+（1）young 区过大，对象在年轻代待得太久，多次拷贝；
+    
+（2）old 区过小，cms gc次数过多
+    newRatio=1 123次 cms gc
+    newRatio=4 5次 cms gc
+
+CMS GC 控制
+建立在上面分析的基础之上的一个优化思路：UseCMSInitiatingOccupancyOnly 和 CMSInitiatingOccupancyFraction，两个参数用起来，可以自己确定老年代使用空间达到多少触发 CMS GC
+
+
+#### 堆内内存和堆外内存的坑点
+
+分配方式：
+堆内内存 ByteBuffer.allocate(capacity)
+堆外内存 ByteBuffer.allocateDirect(capacity)
+
+底层实现:
+堆内内存 数组，JVM 内存
+堆外内存 unsafe.allocateMemory(size)，返回直接内存的首地址
+
+分配大小限制：
+堆内内存 和 -Xms-Xmx 配置的 JVM 内存相关，并且数组的大小有限制，在做测试时发现，当 JVM free memory 大于 1.5G 时，ByteBuffer.allocate(900M) 时会报错
+堆外内存 可以通过 -XX:MaxDirectMemorySize 参数从 JVM 层面去限制，同时受到机器虚拟内存（说物理内存不太准确）的限制
+
+垃圾回收：
+两者都可以自动回收
+堆内内存 自然不必多说
+堆外内存 当 DirectByteBuffer 不再被使用时，会出发内部 cleaner 的钩子，比赛中为了保险起见，可以考虑手动回收
+```java
+((DirectBuffer) buffer).cleaner().clean();
+```
+

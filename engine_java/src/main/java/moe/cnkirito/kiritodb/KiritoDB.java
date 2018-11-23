@@ -99,10 +99,10 @@ public class KiritoDB {
 
     public byte[] read(byte[] key) throws EngineException {
         if (readFirst.compareAndSet(false, true)) {
-            logger.info("[read info] loadFlag={}", loadFlag);
-            for (int i = 0; i < partitionNum; i++) {
-                logger.info("[read info] partition[{}],commitLogLength[{}],indexSize[{}]", i, commitLogs[i].getFileLength(), commitLogIndices[i].getMemoryIndex().getSize());
-            }
+//            logger.info("[read info] loadFlag={}", loadFlag);
+//            for (int i = 0; i < partitionNum; i++) {
+//                logger.info("[read info] partition[{}],commitLogLength[{}],indexSize[{}]", i, commitLogs[i].getFileLength(), commitLogIndices[i].getMemoryIndex().getSize());
+//            }
         }
         int partition = partitionable.getPartition(key);
         CommitLog hitCommitLog = commitLogs[partition];
@@ -154,8 +154,10 @@ public class KiritoDB {
 //        } catch (Exception e) {
 //            logger.error("print error", e);
 //        }
+        logger.info("[jvm info] now {} ", Util.getFreeMemory());
         new Thread(() -> {
             RangeTask[] rangeTasks = new RangeTask[THREAD_NUM];
+            long waitForTaskStartTime = System.currentTimeMillis();
             for (int i = 0; i < THREAD_NUM; i++) {
                 try {
                     rangeTasks[i] = rangeTaskLinkedBlockingQueue.take();
@@ -163,11 +165,14 @@ public class KiritoDB {
                     e.printStackTrace();
                 }
             }
+            logger.info("[fetch thread] wait for all range thread reach cost {} ms", System.currentTimeMillis() - waitForTaskStartTime);
 
             if (fetchDataProducer == null) {
                 fetchDataProducer = new FetchDataProducer();
             }
+            // scan all partition
             for (int i = 0; i < partitionNum; i++) {
+                long scanPartitionStartTime = System.currentTimeMillis();
 //                try {
 //                    logger.info("[range info] read partition {}, current partition has {} value.", i, commitLogs[i].getFileLength());
 //                } catch (Exception e) {
@@ -179,6 +184,8 @@ public class KiritoDB {
                 int size = commitLogIndex.getMemoryIndex().getSize();
                 int[] offsetInts = commitLogIndex.getMemoryIndex().getOffsetInts();
                 long[] keys = commitLogIndex.getMemoryIndex().getKeys();
+                long scanPartitionMermoryStartTime = System.currentTimeMillis();
+                // scan one partition 4kb by 4kb according to index
                 for (int j = 0; j < size; j++) {
                     byte[] bytes = visitorCallbackValue.get();
                     try {
@@ -193,8 +200,8 @@ public class KiritoDB {
                     }
 
                 }
-//                logger.info("[range info] read partition {} success. buffer limit = {}", i, buffer.limit());
-//                System.out.println("read partition" + i + " from disk");
+                logger.info("[range info] read partition {} success. [memory] cost {} s ", i, (System.currentTimeMillis() - scanPartitionMermoryStartTime) / 1000);
+                logger.info("[range info] read partition {} success. [disk + memory] cost {} s ", i, (System.currentTimeMillis() - scanPartitionStartTime) / 1000);
             }
             for (RangeTask rangeTask : rangeTasks) {
                 rangeTask.getCountDownLatch().countDown();

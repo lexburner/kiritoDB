@@ -14,6 +14,14 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class Util {
+
+    public static String getFreeMemory() {
+        long free = Runtime.getRuntime().freeMemory() / 1024 / 1024;
+        long total = Runtime.getRuntime().totalMemory() / 1024 / 1024;
+        long max = Runtime.getRuntime().maxMemory() / 1024 / 1024;
+        return "free=" + free + "M,total=" + total + "M,max=" + max +"M";
+    }
+
     /**
      * 当前时间
      *
