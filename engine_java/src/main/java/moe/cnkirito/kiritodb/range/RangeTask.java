@@ -6,7 +6,7 @@ import java.util.concurrent.CountDownLatch;
 
 public class RangeTask {
     private AbstractVisitor abstractVisitor;
-    private CountDownLatch countDownLatch;
+    private volatile CountDownLatch countDownLatch;
 
     public RangeTask(AbstractVisitor abstractVisitor, CountDownLatch countDownLatch) {
         this.abstractVisitor = abstractVisitor;

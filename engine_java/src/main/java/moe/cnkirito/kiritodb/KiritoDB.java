@@ -23,6 +23,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -126,6 +127,8 @@ public class KiritoDB {
     private final static int THREAD_NUM = 64;
     private LinkedBlockingQueue<RangeTask> rangeTaskLinkedBlockingQueue = new LinkedBlockingQueue<>();
 
+    AtomicInteger atomicInteger = new AtomicInteger(0);
+
     public void range(byte[] lower, byte[] upper, AbstractVisitor visitor) throws EngineException {
         // 第一次 range 的时候开启 fetch 线程
         if (producerFlag.compareAndSet(false, true)) {
@@ -146,18 +149,11 @@ public class KiritoDB {
      * 初始化preFetch线程
      */
     private void initPreFetchThreads() {
-//        try {
-//            logger.info("[range info]loadFlag={}", loadFlag);
-//            for (int i = 0; i < partitionNum; i++) {
-//                logger.info("[range info] partition[{}],commitLogLength[{}],indexSize[{}]", i, commitLogs[i].getFileLength(), commitLogIndices[i].getMemoryIndex().getSize());
-//            }
-//        } catch (Exception e) {
-//            logger.error("print error", e);
-//        }
         logger.info("[jvm info] now {} ", Util.getFreeMemory());
         new Thread(() -> {
+            ExecutorService executorService = Executors.newFixedThreadPool(THREAD_NUM);
             RangeTask[] rangeTasks = new RangeTask[THREAD_NUM];
-            long waitForTaskStartTime = System.currentTimeMillis();
+//            long waitForTaskStartTime = System.currentTimeMillis();
             for (int i = 0; i < THREAD_NUM; i++) {
                 try {
                     rangeTasks[i] = rangeTaskLinkedBlockingQueue.take();
@@ -165,48 +161,49 @@ public class KiritoDB {
                     e.printStackTrace();
                 }
             }
-            logger.info("[fetch thread] wait for all range thread reach cost {} ms", System.currentTimeMillis() - waitForTaskStartTime);
+//            logger.info("[fetch thread] wait for all range thread reach cost {} ms", System.currentTimeMillis() - waitForTaskStartTime);
 
             if (fetchDataProducer == null) {
                 fetchDataProducer = new FetchDataProducer();
             }
             // scan all partition
             for (int i = 0; i < partitionNum; i++) {
-                long scanPartitionStartTime = System.currentTimeMillis();
-//                try {
-//                    logger.info("[range info] read partition {}, current partition has {} value.", i, commitLogs[i].getFileLength());
-//                } catch (Exception e) {
-//                    logger.error("获取失败", e);
-//                }
+//                long scanPartitionStartTime = System.currentTimeMillis();
                 fetchDataProducer.resetPartition(commitLogs[i]);
                 buffer = fetchDataProducer.produce();
                 CommitLogIndex commitLogIndex = this.commitLogIndices[i];
                 int size = commitLogIndex.getMemoryIndex().getSize();
                 int[] offsetInts = commitLogIndex.getMemoryIndex().getOffsetInts();
                 long[] keys = commitLogIndex.getMemoryIndex().getKeys();
-                long scanPartitionMermoryStartTime = System.currentTimeMillis();
+//                long scanPartitionMermoryStartTime = System.currentTimeMillis();
                 // scan one partition 4kb by 4kb according to index
-                for (int j = 0; j < size; j++) {
-                    byte[] bytes = visitorCallbackValue.get();
-                    try {
-                        ByteBuffer slice = buffer.slice();
-                        slice.position(offsetInts[j] * Constant.VALUE_LENGTH);
-                        slice.get(bytes);
-                    } catch (IndexOutOfBoundsException | BufferUnderflowException | IllegalArgumentException e) {
-                        logger.error("[partition {} range error] size={},offset={},buffer limit={}", i, size, offsetInts[j] * Constant.VALUE_LENGTH, buffer.limit(), e);
-                    }
-                    for (RangeTask rangeTask : rangeTasks) {
-                        rangeTask.getAbstractVisitor().visit(Util.long2bytes(keys[j]), bytes);
-                    }
-
+                CountDownLatch readCacheLatch = new CountDownLatch(THREAD_NUM);
+                for (RangeTask rangeTask : rangeTasks) {
+                    executorService.execute(()->{
+                        for (int j = 0; j < size; j++) {
+                            byte[] bytes = visitorCallbackValue.get();
+                            ByteBuffer slice = buffer.slice();
+                            slice.position(offsetInts[j] * Constant.VALUE_LENGTH);
+                            slice.get(bytes);
+                            rangeTask.getAbstractVisitor().visit(Util.long2bytes(keys[j]), bytes);
+                        }
+                        readCacheLatch.countDown();
+                    });
                 }
-                logger.info("[range info] read partition {} success. [memory] cost {} s ", i, (System.currentTimeMillis() - scanPartitionMermoryStartTime) / 1000);
-                logger.info("[range info] read partition {} success. [disk + memory] cost {} s ", i, (System.currentTimeMillis() - scanPartitionStartTime) / 1000);
+                try {
+                    readCacheLatch.await();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+//                logger.info("[range info] read partition {} success. [memory] cost {} s ", i, (System.currentTimeMillis() - scanPartitionMermoryStartTime) / 1000);
+//                logger.info("[range info] read partition {} success. [disk + memory] cost {} s ", i, (System.currentTimeMillis() - scanPartitionStartTime) / 1000);
             }
+            producerFlag.set(false);
             for (RangeTask rangeTask : rangeTasks) {
                 rangeTask.getCountDownLatch().countDown();
             }
-            producerFlag.set(false);
+            executorService.shutdown();
+
         }).start();
     }
 
