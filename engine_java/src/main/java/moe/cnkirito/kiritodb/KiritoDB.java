@@ -23,7 +23,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -141,6 +140,8 @@ public class KiritoDB {
         }
     }
 
+    private volatile FetchDataProducer fetchDataProducer;
+
     /**
      * 初始化preFetch线程
      */
@@ -155,7 +156,7 @@ public class KiritoDB {
 //        }
         new Thread(() -> {
             RangeTask[] rangeTasks = new RangeTask[THREAD_NUM];
-            for(int i=0;i<THREAD_NUM;i++){
+            for (int i = 0; i < THREAD_NUM; i++) {
                 try {
                     rangeTasks[i] = rangeTaskLinkedBlockingQueue.take();
                 } catch (InterruptedException e) {
@@ -163,7 +164,9 @@ public class KiritoDB {
                 }
             }
 
-            FetchDataProducer fetchDataProducer = new FetchDataProducer();
+            if (fetchDataProducer == null) {
+                fetchDataProducer = new FetchDataProducer();
+            }
             for (int i = 0; i < partitionNum; i++) {
 //                try {
 //                    logger.info("[range info] read partition {}, current partition has {} value.", i, commitLogs[i].getFileLength());
