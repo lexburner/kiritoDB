@@ -34,7 +34,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class KiritoDB {
 
     private static final Logger logger = LoggerFactory.getLogger(KiritoDB.class);
-    private final int partitionNum = 1 << 10; //64
+    private final int partitionNum = 1 << 8; //64
     // 用于获取 key 的分区
     private volatile Partitionable partitionable;
     private volatile CommitLog[] commitLogs;
@@ -176,6 +176,9 @@ public class KiritoDB {
 //                long scanPartitionMermoryStartTime = System.currentTimeMillis();
                 // scan one partition 4kb by 4kb according to index
                 for (int j = 0; j < size; j++) {
+                    if (j < 4) {
+                        logger.info("partition[{}]-key[{}]={}", i, j, keys[j]);
+                    }
                     byte[] bytes = visitorCallbackValue.get();
                     ByteBuffer slice = buffer.slice();
                     slice.position(offsetInts[j] * Constant.VALUE_LENGTH);
