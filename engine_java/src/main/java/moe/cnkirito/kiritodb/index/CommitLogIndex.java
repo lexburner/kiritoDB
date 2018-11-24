@@ -33,8 +33,8 @@ public class CommitLogIndex implements CommitLogAware {
     private CommitLog commitLog;
     private volatile boolean loadFlag = false;
 
-    public static final int expectedNumPerPartition = 64500;
-//    public static final int expectedNumPerPartition = 253000;
+//    public static final int expectedNumPerPartition = 66500;
+    public static final int expectedNumPerPartition = 253000;
 
     public void init(String path, int no) throws IOException {
         // 先创建文件夹
