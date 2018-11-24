@@ -36,7 +36,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class KiritoDB {
 
     private static final Logger logger = LoggerFactory.getLogger(KiritoDB.class);
-    private final int partitionNum = 1 << 8; //64
+    private final int partitionNum = Constant.partitionNum; //64
     // 用于获取 key 的分区
     private volatile Partitionable partitionable;
     private volatile CommitLog[] commitLogs;
@@ -48,7 +48,7 @@ public class KiritoDB {
     private volatile boolean loadFlag = false;
 
     public KiritoDB() {
-        partitionable = new FirstBytePartitoner();
+        partitionable = new HighTenPartitioner();
     }
 
     public void open(String path) throws EngineException {
@@ -102,23 +102,23 @@ public class KiritoDB {
     public byte[] read(byte[] key) throws EngineException {
         if (readFirst.compareAndSet(false, true)) {
             logger.info("[partition info] loadFlag={}", loadFlag);
-            HighTenPartitioner highTenPartitioner = new HighTenPartitioner();
-            for (int i = 0; i < partitionNum; i++) {
-//                logger.info("[read info] partition[{}],commitLogLength[{}],indexSize[{}]", i, commitLogs[i].getFileLength(), commitLogIndices[i].getMemoryIndex().getSize());
-                long[] keys = commitLogIndices[i].getMemoryIndex().getKeys();
-                int size = commitLogIndices[i].getMemoryIndex().getSize();
-                int count[] = new int[1023];
-                Arrays.fill(count, 0);
-                for (int j = 0; j < size; j++) {
-                    int partition = highTenPartitioner.getPartition(Util.long2bytes(keys[i]));
-                    count[partition]++;
-                }
-                for (int j = 0; j < 1023; j++) {
-                    if (count[j] > 0) {
-//                        logger.info("[read info] partition[{}],subPartiton[{}] nums[{}]", i, j, count[j]);
-                    }
-                }
-            }
+//            HighTenPartitioner highTenPartitioner = new HighTenPartitioner();
+//            for (int i = 0; i < partitionNum; i++) {
+////                logger.info("[read info] partition[{}],commitLogLength[{}],indexSize[{}]", i, commitLogs[i].getFileLength(), commitLogIndices[i].getMemoryIndex().getSize());
+//                long[] keys = commitLogIndices[i].getMemoryIndex().getKeys();
+//                int size = commitLogIndices[i].getMemoryIndex().getSize();
+//                int count[] = new int[1023];
+//                Arrays.fill(count, 0);
+//                for (int j = 0; j < size; j++) {
+//                    int partition = highTenPartitioner.getPartition(Util.long2bytes(keys[i]));
+//                    count[partition]++;
+//                }
+//                for (int j = 0; j < 1023; j++) {
+//                    if (count[j] > 0) {
+////                        logger.info("[read info] partition[{}],subPartiton[{}] nums[{}]", i, j, count[j]);
+//                    }
+//                }
+//            }
         }
         int partition = partitionable.getPartition(key);
         CommitLog hitCommitLog = commitLogs[partition];

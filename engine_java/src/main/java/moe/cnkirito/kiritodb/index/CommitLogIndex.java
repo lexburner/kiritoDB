@@ -33,8 +33,9 @@ public class CommitLogIndex implements CommitLogAware {
     private CommitLog commitLog;
     private volatile boolean loadFlag = false;
 
-//    public static final int expectedNumPerPartition = 66500;
-    public static final int expectedNumPerPartition = 253000;
+//    public static final int expectedNumPerPartition = 64000;
+//    public static final int expectedNumPerPartition = 253000;
+    public static final int expectedNumPerPartition = Constant.expectedNumPerPartition;
 
     public void init(String path, int no) throws IOException {
         // 先创建文件夹
@@ -103,8 +104,8 @@ public class CommitLogIndex implements CommitLogAware {
         try {
             this.mappedByteBuffer.position(position + Constant.INDEX_LENGTH);
         } catch (Exception e) {
-            logger.error("write index file exception, limit {},current write {}", expectedNumPerPartition, position / Constant.INDEX_LENGTH, e);
-            System.exit(0);
+            logger.error("write index file exception, limit {},current write {},key={}", expectedNumPerPartition, position / Constant.INDEX_LENGTH,Util.bytes2Long(key), e);
+            System.exit(-1);
         }
 
     }
