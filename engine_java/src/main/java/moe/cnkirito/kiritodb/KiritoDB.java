@@ -16,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -151,7 +150,6 @@ public class KiritoDB {
     private void initPreFetchThreads() {
         logger.info("[jvm info] now {} ", Util.getFreeMemory());
         new Thread(() -> {
-            ExecutorService executorService = Executors.newFixedThreadPool(THREAD_NUM);
             RangeTask[] rangeTasks = new RangeTask[THREAD_NUM];
 //            long waitForTaskStartTime = System.currentTimeMillis();
             for (int i = 0; i < THREAD_NUM; i++) {
@@ -177,23 +175,14 @@ public class KiritoDB {
                 long[] keys = commitLogIndex.getMemoryIndex().getKeys();
 //                long scanPartitionMermoryStartTime = System.currentTimeMillis();
                 // scan one partition 4kb by 4kb according to index
-                CountDownLatch readCacheLatch = new CountDownLatch(THREAD_NUM);
-                for (RangeTask rangeTask : rangeTasks) {
-                    executorService.execute(()->{
-                        for (int j = 0; j < size; j++) {
-                            byte[] bytes = visitorCallbackValue.get();
-                            ByteBuffer slice = buffer.slice();
-                            slice.position(offsetInts[j] * Constant.VALUE_LENGTH);
-                            slice.get(bytes);
-                            rangeTask.getAbstractVisitor().visit(Util.long2bytes(keys[j]), bytes);
-                        }
-                        readCacheLatch.countDown();
-                    });
-                }
-                try {
-                    readCacheLatch.await();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+                for (int j = 0; j < size; j++) {
+                    byte[] bytes = visitorCallbackValue.get();
+                    ByteBuffer slice = buffer.slice();
+                    slice.position(offsetInts[j] * Constant.VALUE_LENGTH);
+                    slice.get(bytes);
+                    for (RangeTask rangeTask : rangeTasks) {
+                        rangeTask.getAbstractVisitor().visit(Util.long2bytes(keys[j]), bytes);
+                    }
                 }
 //                logger.info("[range info] read partition {} success. [memory] cost {} s ", i, (System.currentTimeMillis() - scanPartitionMermoryStartTime) / 1000);
 //                logger.info("[range info] read partition {} success. [disk + memory] cost {} s ", i, (System.currentTimeMillis() - scanPartitionStartTime) / 1000);
@@ -202,8 +191,6 @@ public class KiritoDB {
             for (RangeTask rangeTask : rangeTasks) {
                 rangeTask.getCountDownLatch().countDown();
             }
-            executorService.shutdown();
-
         }).start();
     }
 
