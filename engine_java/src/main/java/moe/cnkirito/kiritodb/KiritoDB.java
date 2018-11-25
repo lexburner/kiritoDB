@@ -66,7 +66,7 @@ public class KiritoDB {
         if (!dirFile.exists()) {
             dirFile.mkdirs();
         }
-        File file = new File(path+"/count.polar");
+        File file = new File(path+"2"+"/try.data");
         if(!file.exists()){
             try {
                 file.createNewFile();
