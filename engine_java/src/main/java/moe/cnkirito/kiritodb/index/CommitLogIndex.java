@@ -26,72 +26,69 @@ import static moe.cnkirito.kiritodb.common.UnsafeUtil.UNSAFE;
 public class CommitLogIndex implements CommitLogAware {
 
     private final static Logger logger = LoggerFactory.getLogger(CommitLogIndex.class);
+    // memory index dataStructure
     private MemoryIndex memoryIndex;
     private FileChannel fileChannel;
     private MappedByteBuffer mappedByteBuffer;
+    // mmap byteBuffer start address
     private long address;
     // 当前索引写入的区域
     private CommitLog commitLog;
+    // determine current index block is loaded into memory
     private volatile boolean loadFlag = false;
     private long wrotePosition;
-
-    //    public static final int expectedNumPerPartition = 64000;
-//    public static final int expectedNumPerPartition = 253000;
-    public static final int expectedNumPerPartition = Constant.expectedNumPerPartition;
+    // use mmap to write index
+    private boolean mmapFlag = false;
 
     public void init(String path, int no) throws IOException {
-        // 先创建文件夹
         File dirFile = new File(path);
         if (!dirFile.exists()) {
             dirFile.mkdirs();
             loadFlag = true;
         }
-        // 创建多个索引文件
         File file = new File(path + Constant.INDEX_PREFIX + no + Constant.INDEX_SUFFIX);
         if (!file.exists()) {
             file.createNewFile();
             loadFlag = true;
         }
-        // 文件position
         this.fileChannel = new RandomAccessFile(file, "rw").getChannel();
-        //todo
-        this.mappedByteBuffer = this.fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, Constant.INDEX_LENGTH * expectedNumPerPartition);
-        this.address = ((DirectBuffer) mappedByteBuffer).address();
+        if (mmapFlag) {
+            this.mappedByteBuffer = this.fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, Constant.INDEX_LENGTH * Constant.expectedNumPerPartition);
+            this.address = ((DirectBuffer) mappedByteBuffer).address();
+        }
         this.wrotePosition = 0;
     }
 
-    public void loadWithMmap() {
-        // 说明索引文件中已经有内容，则读取索引文件内容到内存中
-        int indexSize = commitLog.getFileLength();
-        this.memoryIndex = new ArrayMemoryIndex(indexSize);
-        for (int curIndex = 0; curIndex < indexSize; curIndex++) {
-            this.mappedByteBuffer.position(curIndex * Constant.INDEX_LENGTH);
-            long key = this.mappedByteBuffer.getLong();
-            this.memoryIndex.insertIndexCache(key, curIndex);
+    public void load() {
+        if (!mmapFlag) {
+            int indexSize = commitLog.getFileLength();
+            this.memoryIndex = new ArrayMemoryIndex(indexSize);
+            ByteBuffer buffer = ByteBuffer.allocate(indexSize * Constant.INDEX_LENGTH);
+            try {
+                fileChannel.read(buffer);
+            } catch (IOException e) {
+                logger.error("load index failed", e);
+            }
+            buffer.flip();
+            for (int curIndex = 0; curIndex < indexSize; curIndex++) {
+                buffer.position(curIndex * Constant.INDEX_LENGTH);
+                long key = buffer.getLong();
+                this.memoryIndex.insertIndexCache(key, curIndex);
+            }
+            memoryIndex.init();
+            this.loadFlag = true;
+        } else {
+            int indexSize = commitLog.getFileLength();
+            this.memoryIndex = new ArrayMemoryIndex(indexSize);
+            for (int curIndex = 0; curIndex < indexSize; curIndex++) {
+                this.mappedByteBuffer.position(curIndex * Constant.INDEX_LENGTH);
+                long key = this.mappedByteBuffer.getLong();
+                this.memoryIndex.insertIndexCache(key, curIndex);
+            }
+            memoryIndex.init();
+            this.loadFlag = true;
         }
-        memoryIndex.init();
-        this.loadFlag = true;
     }
-
-    public void loadWithFileChannel() {
-        int indexSize = commitLog.getFileLength();
-        this.memoryIndex = new ArrayMemoryIndex(indexSize);
-        ByteBuffer buffer = ByteBuffer.allocate(indexSize * Constant.INDEX_LENGTH);
-        try {
-            fileChannel.read(buffer);
-        } catch (IOException e) {
-            logger.error("load index failed",e);
-        }
-        buffer.flip();
-        for (int curIndex = 0; curIndex < indexSize; curIndex++) {
-            buffer.position(curIndex * Constant.INDEX_LENGTH);
-            long key = buffer.getLong();
-            this.memoryIndex.insertIndexCache(key, curIndex);
-        }
-        memoryIndex.init();
-        this.loadFlag = true;
-    }
-
 
     public void releaseFile() throws IOException {
         if (this.mappedByteBuffer != null) {
@@ -117,21 +114,20 @@ public class CommitLogIndex implements CommitLogAware {
     }
 
     public void mmapWrite(byte[] key) {
-        int position = this.mappedByteBuffer.position();
-        UNSAFE.copyMemory(key, 16, null, address + position, Constant.INDEX_LENGTH);
-        try {
-            this.mappedByteBuffer.position(position + Constant.INDEX_LENGTH);
-        } catch (Exception e) {
-            logger.error("failed to write index with mmap", e);
-        }
+
     }
 
-    public void directWrite(byte[] key) {
-        try {
-            fileChannel.write(ByteBuffer.wrap(key), wrotePosition);
+    public void write(byte[] key) {
+        if (!mmapFlag) {
+            try {
+                fileChannel.write(ByteBuffer.wrap(key), wrotePosition);
+                wrotePosition += Constant.INDEX_LENGTH;
+            } catch (IOException e) {
+                logger.error("failed to direct write index", e);
+            }
+        } else {
+            UNSAFE.copyMemory(key, 16, null, address + wrotePosition, Constant.INDEX_LENGTH);
             wrotePosition += Constant.INDEX_LENGTH;
-        } catch (IOException e) {
-            logger.error("failed to direct write index", e);
         }
     }
 

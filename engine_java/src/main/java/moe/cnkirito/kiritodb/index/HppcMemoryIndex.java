@@ -9,7 +9,7 @@ public class HppcMemoryIndex implements MemoryIndex {
 
     public HppcMemoryIndex() {
         this.indexSize = 0;
-        this.indexMap = new LongIntHashMap(CommitLogIndex.expectedNumPerPartition, 0.99);
+        this.indexMap = new LongIntHashMap();
     }
 
     @Override

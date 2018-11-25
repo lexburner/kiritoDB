@@ -3,8 +3,6 @@ package com.alibabacloud.polar_race.engine.common;
 import com.alibabacloud.polar_race.engine.common.exceptions.EngineException;
 import moe.cnkirito.kiritodb.range.LocalVisitor;
 
-import java.util.concurrent.ExecutorService;
-
 public class RangeTest {
 
     public static void main(String[] args) throws EngineException {

@@ -3,7 +3,6 @@ package moe.cnkirito.kiritodb.range;
 import moe.cnkirito.kiritodb.KiritoDB;
 import moe.cnkirito.kiritodb.common.Constant;
 import moe.cnkirito.kiritodb.data.CommitLog;
-import moe.cnkirito.kiritodb.index.CommitLogIndex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,15 +17,12 @@ public class FetchDataProducer {
     private volatile ByteBuffer buffer;
 
     public FetchDataProducer(KiritoDB kiritoDB) {
-//        int expectedNumPerPartition = CommitLogIndex.expectedNumPerPartition * Constant.VALUE_LENGTH;
-        int expectedNumPerPartition = CommitLogIndex.expectedNumPerPartition * Constant.VALUE_LENGTH;
-        for (int i = 0; i < Constant.partitionNum; i++) {
+        int expectedNumPerPartition = kiritoDB.commitLogs[0].getFileLength() * Constant.VALUE_LENGTH;
+        for (int i = 1; i < Constant.partitionNum; i++) {
             expectedNumPerPartition = Math.max(kiritoDB.commitLogs[i].getFileLength() * Constant.VALUE_LENGTH, expectedNumPerPartition);
         }
-        if(expectedNumPerPartition > CommitLogIndex.expectedNumPerPartition * Constant.VALUE_LENGTH){
-            logger.info("fetch data cache increase size success");
-        }
         this.buffer = ByteBuffer.allocateDirect(expectedNumPerPartition);
+        logger.info("expectedNumPerPartition={}",expectedNumPerPartition);
     }
 
     public void resetPartition(CommitLog commitLog) {

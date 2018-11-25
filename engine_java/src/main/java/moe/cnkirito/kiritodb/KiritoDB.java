@@ -7,7 +7,6 @@ import moe.cnkirito.kiritodb.common.Constant;
 import moe.cnkirito.kiritodb.common.Util;
 import moe.cnkirito.kiritodb.data.CommitLog;
 import moe.cnkirito.kiritodb.index.CommitLogIndex;
-import moe.cnkirito.kiritodb.partition.FirstBytePartitoner;
 import moe.cnkirito.kiritodb.partition.HighTenPartitioner;
 import moe.cnkirito.kiritodb.partition.Partitionable;
 import moe.cnkirito.kiritodb.range.FetchDataProducer;
@@ -30,21 +29,22 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class KiritoDB {
 
     private static final Logger logger = LoggerFactory.getLogger(KiritoDB.class);
-    private final int partitionNum = Constant.partitionNum; //64
-    // 用于获取 key 的分区
+    // partition num
+    private final int partitionNum = Constant.partitionNum;
+    // key -> partition
     private volatile Partitionable partitionable;
+    // data
     public volatile CommitLog[] commitLogs;
+    // index
     private volatile CommitLogIndex[] commitLogIndices;
-    // 判断是否需要加载索引进入内存
+    // true meas need to load, false no need
     private volatile boolean loadFlag = false;
 
     public KiritoDB() {
-//        partitionable = new FirstBytePartitoner();
         partitionable = new HighTenPartitioner();
     }
 
     public void open(String path) throws EngineException {
-        logger.info("open file");
         if (path.endsWith("/")) {
             path = path.substring(0, path.length() - 1);
         }
@@ -75,19 +75,13 @@ public class KiritoDB {
         CommitLogIndex hitIndex = commitLogIndices[partition];
         synchronized (hitCommitLog) {
             hitCommitLog.write(value);
-            hitIndex.directWrite(key);
+            hitIndex.write(key);
         }
     }
 
     private AtomicBoolean readFirst = new AtomicBoolean(false);
 
     public byte[] read(byte[] key) throws EngineException {
-        if (readFirst.compareAndSet(false, true)) {
-//            logger.info("[partition info] loadFlag={}", loadFlag);
-//            for (int i = 0; i < partitionNum; i++) {
-//                logger.info("[read info] partition[{}],commitLogLength[{}],indexSize[{}]", i, commitLogs[i].getFileLength(), commitLogIndices[i].getMemoryIndex().getSize());
-//            }
-        }
         int partition = partitionable.getPartition(key);
         CommitLog hitCommitLog = commitLogs[partition];
         CommitLogIndex hitIndex = commitLogIndices[partition];
@@ -102,10 +96,8 @@ public class KiritoDB {
         }
     }
 
-    // 开启 fetch 线程的标记
+    // fetch thread flag
     private final AtomicBoolean producerFlag = new AtomicBoolean(false);
-    // 读完当前分区的线程计数器
-    private volatile ByteBuffer buffer;
     private static ThreadLocal<byte[]> visitorCallbackValue = ThreadLocal.withInitial(() -> new byte[Constant.VALUE_LENGTH]);
     private final static int THREAD_NUM = 64;
     private LinkedBlockingQueue<RangeTask> rangeTaskLinkedBlockingQueue = new LinkedBlockingQueue<>();
@@ -126,9 +118,6 @@ public class KiritoDB {
 
     private volatile FetchDataProducer fetchDataProducer;
 
-    /**
-     * 初始化preFetch线程
-     */
     private void initPreFetchThreads() {
         logger.info("[jvm info] now {} ", Util.getFreeMemory());
         new Thread(() -> {
@@ -142,7 +131,6 @@ public class KiritoDB {
                 }
             }
 //            logger.info("[fetch thread] wait for all range thread reach cost {} ms", System.currentTimeMillis() - waitForTaskStartTime);
-
             if (fetchDataProducer == null) {
                 fetchDataProducer = new FetchDataProducer(this);
             }
@@ -150,7 +138,7 @@ public class KiritoDB {
             for (int i = 0; i < partitionNum; i++) {
 //                long scanPartitionStartTime = System.currentTimeMillis();
                 fetchDataProducer.resetPartition(commitLogs[i]);
-                buffer = fetchDataProducer.produce();
+                ByteBuffer buffer = fetchDataProducer.produce();
                 CommitLogIndex commitLogIndex = this.commitLogIndices[i];
                 int size = commitLogIndex.getMemoryIndex().getSize();
                 int[] offsetInts = commitLogIndex.getMemoryIndex().getOffsetInts();
@@ -187,7 +175,7 @@ public class KiritoDB {
             executorService.execute(new Runnable() {
                 @Override
                 public void run() {
-                    commitLogIndices[index].loadWithFileChannel();
+                    commitLogIndices[index].load();
                     countDownLatch.countDown();
                 }
             });
