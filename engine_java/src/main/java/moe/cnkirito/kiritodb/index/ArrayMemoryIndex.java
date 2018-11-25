@@ -1,7 +1,12 @@
 package moe.cnkirito.kiritodb.index;
 
+import moe.cnkirito.kiritodb.common.Util;
+import moe.cnkirito.kiritodb.partition.FirstBytePartitoner;
+import moe.cnkirito.kiritodb.partition.HighTenPartitioner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Arrays;
 
 public class ArrayMemoryIndex implements MemoryIndex {
 
@@ -60,6 +65,21 @@ public class ArrayMemoryIndex implements MemoryIndex {
         // todo 可能可以去掉
         if (this.indexSize != 0) {
             sort(0, this.indexSize - 1);
+
+            FirstBytePartitoner firstBytePartitoner = new FirstBytePartitoner();
+            HighTenPartitioner highTenPartitioner = new HighTenPartitioner();
+            int count[] = new int[1024];
+            Arrays.fill(count, 0);
+            int partition = firstBytePartitoner.getPartition(Util.long2bytes(keys[0]));
+            for (int i = 0; i < indexSize; i++) {
+                count[highTenPartitioner.getPartition(Util.long2bytes(keys[i]))]++;
+            }
+            for (int i = 0; i < 1024; i++) {
+                if (count[i] != 0) {
+                    logger.info("[partition info] partition [{}] key size = [{}] subpartition [{}] key size = {}", partition,indexSize, i, count[i]);
+//                    System.out.println("[partition info] partition [" + partition + "] key size ="+indexSize +"subpartition [" + i + "] key size = " + count[i]);
+                }
+            }
             compact();
         }
     }
