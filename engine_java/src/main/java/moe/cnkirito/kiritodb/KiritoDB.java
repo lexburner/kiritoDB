@@ -8,6 +8,7 @@ import moe.cnkirito.kiritodb.common.Util;
 import moe.cnkirito.kiritodb.data.CommitLog;
 import moe.cnkirito.kiritodb.index.CommitLogIndex;
 import moe.cnkirito.kiritodb.partition.FirstBytePartitoner;
+import moe.cnkirito.kiritodb.partition.HighTenPartitioner;
 import moe.cnkirito.kiritodb.partition.Partitionable;
 import moe.cnkirito.kiritodb.range.FetchDataProducer;
 import moe.cnkirito.kiritodb.range.RangeTask;
@@ -38,8 +39,8 @@ public class KiritoDB {
     private volatile boolean loadFlag = false;
 
     public KiritoDB() {
-        partitionable = new FirstBytePartitoner();
-//        partitionable = new HighTenPartitioner();
+//        partitionable = new FirstBytePartitoner();
+        partitionable = new HighTenPartitioner();
     }
 
     public void open(String path) throws EngineException {

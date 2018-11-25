@@ -9,8 +9,8 @@ public class Constant {
     public static final int VALUE_LENGTH = 4 * 1024;
     public static final int INDEX_LENGTH = 8;
 
-//    public static int expectedNumPerPartition = 64000;
-    public static int expectedNumPerPartition = 253000;
-    public static int partitionNum = 1 << 8;
+    public static int expectedNumPerPartition = 64000;
+//    public static int expectedNumPerPartition = 253000;
+    public static int partitionNum = 1 << 10;
 
 }

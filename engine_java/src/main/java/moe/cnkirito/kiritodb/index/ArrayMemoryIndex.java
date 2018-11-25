@@ -60,7 +60,6 @@ public class ArrayMemoryIndex implements MemoryIndex {
     }
 
     private void sortAndCompact() {
-        // todo 可能可以去掉
         if (this.indexSize != 0) {
             sort(0, this.indexSize - 1);
             FirstBytePartitoner firstBytePartitoner = new FirstBytePartitoner();
@@ -81,8 +80,8 @@ public class ArrayMemoryIndex implements MemoryIndex {
     }
 
     private void compact() {
-        long[] newKeys = new long[CommitLogIndex.expectedNumPerPartition];
-        int[] newOffsetInts = new int[CommitLogIndex.expectedNumPerPartition];
+        long[] newKeys = new long[indexSize];
+        int[] newOffsetInts = new int[indexSize];
 
         int curIndex = 0;
         newOffsetInts[0] = this.offsetInts[0];
