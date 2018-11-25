@@ -15,8 +15,11 @@ import moe.cnkirito.kiritodb.range.RangeTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -59,6 +62,42 @@ public class KiritoDB {
         if (path.endsWith("/")) {
             path = path.substring(0, path.length() - 1);
         }
+        File dirFile = new File(path);
+        if (!dirFile.exists()) {
+            dirFile.mkdirs();
+        }
+        File file = new File(path+"/count.polar");
+        if(!file.exists()){
+            try {
+                file.createNewFile();
+                RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
+                FileChannel channel = randomAccessFile.getChannel();
+                ByteBuffer buffer = ByteBuffer.allocate(4);
+                buffer.putInt(1);
+                buffer.flip();
+                channel.write(buffer,0);
+                logger.info("[open period] open times={},file do not exist",1);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }else {
+            try {
+                RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
+                FileChannel channel = randomAccessFile.getChannel();
+                ByteBuffer buffer = ByteBuffer.allocate(4);
+                channel.read(buffer);
+                buffer.flip();
+                int count = buffer.getInt();
+                logger.info("[open period] open times={},file exist",count+1);
+                buffer.clear();
+                buffer.putInt(count+1);
+                buffer.flip();
+                channel.write(buffer,0);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
         commitLogs = new CommitLog[partitionNum];
         commitLogIndices = new CommitLogIndex[partitionNum];
         partitionLocks = new Lock[partitionNum];
