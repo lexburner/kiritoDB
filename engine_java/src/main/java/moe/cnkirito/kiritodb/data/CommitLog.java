@@ -28,7 +28,6 @@ public class CommitLog {
     private FileChannel fileChannel;
     private DirectRandomAccessFile directRandomAccessFile;
     private ByteBuffer writeBuffer;
-    private int curBufferSize = 0;
     private boolean dioSupport;
     private long addresses;
 

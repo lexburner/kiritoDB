@@ -11,11 +11,13 @@ public class ArrayMemoryIndex implements MemoryIndex {
     private long keys[];
     private int offsetInts[];
     private int indexSize;
+    private int initSize;
 
-    public ArrayMemoryIndex() {
-        this.keys = new long[CommitLogIndex.expectedNumPerPartition];
-        this.offsetInts = new int[CommitLogIndex.expectedNumPerPartition];
-        this.indexSize = 0;
+    public ArrayMemoryIndex(int initSize) {
+        this.keys = new long[initSize];
+        this.offsetInts = new int[initSize];
+        this.initSize = initSize;
+        this.indexSize = initSize;
     }
 
     @Override
@@ -55,9 +57,9 @@ public class ArrayMemoryIndex implements MemoryIndex {
     }
 
     private void sortAndCompact() {
-        sort(0, this.indexSize - 1);
         // todo 可能可以去掉
         if (this.indexSize != 0) {
+            sort(0, this.indexSize - 1);
             compact();
         }
     }

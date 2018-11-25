@@ -55,21 +55,26 @@ public class CommitLogIndex implements CommitLogAware {
         //todo
         this.mappedByteBuffer = this.fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, Constant.INDEX_LENGTH * expectedNumPerPartition);
         this.address = ((DirectBuffer) mappedByteBuffer).address();
-//        this.memoryIndex = new HppcMemoryIndex();
-        this.memoryIndex = new ArrayMemoryIndex();
     }
 
     public void load() {
         // 说明索引文件中已经有内容，则读取索引文件内容到内存中
-        MappedByteBuffer mappedByteBuffer = this.mappedByteBuffer;
         int indexSize = commitLog.getFileLength();
+        // todo 扩容校验
+        if (indexSize > expectedNumPerPartition) {
+            logger.info("current partition's data size more than expect, true size {}", indexSize);
+            try {
+                this.mappedByteBuffer = this.fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, Constant.INDEX_LENGTH * indexSize);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        this.memoryIndex = new ArrayMemoryIndex(indexSize);
         for (int curIndex = 0; curIndex < indexSize; curIndex++) {
-            mappedByteBuffer.position(curIndex * Constant.INDEX_LENGTH);
-            long key = mappedByteBuffer.getLong();
-            // 插入内存
+            this.mappedByteBuffer.position(curIndex * Constant.INDEX_LENGTH);
+            long key = this.mappedByteBuffer.getLong();
             this.memoryIndex.insertIndexCache(key, curIndex);
         }
-        memoryIndex.setSize(indexSize);
         memoryIndex.init();
         this.loadFlag = true;
     }
@@ -98,19 +103,21 @@ public class CommitLogIndex implements CommitLogAware {
         return ((long) offsetInt) * Constant.VALUE_LENGTH;
     }
 
-    private int overflowTimes = 0;
-
     public void write(byte[] key) {
         int position = this.mappedByteBuffer.position();
         UNSAFE.copyMemory(key, 16, null, address + position, Constant.INDEX_LENGTH);
         try {
-            this.mappedByteBuffer.position(position + Constant.INDEX_LENGTH);
-        } catch (Exception e) {
-            if (overflowTimes++ < 5) {
-                logger.error("write index file exception, limit {},current write {},key={}", expectedNumPerPartition, position / Constant.INDEX_LENGTH, Util.bytes2Long(key), e);
+            if (position + Constant.INDEX_LENGTH <= Constant.INDEX_LENGTH * expectedNumPerPartition) {
+                this.mappedByteBuffer.position(position + Constant.INDEX_LENGTH);
+            } else {
+                logger.info("trigger increase size");
+                // TODO 扩容校验
+                this.mappedByteBuffer = this.fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, Constant.INDEX_LENGTH * expectedNumPerPartition * 4);
+                this.mappedByteBuffer.position(position + Constant.INDEX_LENGTH);
             }
+        } catch (Exception e) {
+            logger.error("failed to write index with mmap", e);
         }
-
     }
 
     public boolean isLoadFlag() {

@@ -9,6 +9,7 @@ import moe.cnkirito.kiritodb.data.CommitLog;
 import moe.cnkirito.kiritodb.data.CommitLogAware;
 import moe.cnkirito.kiritodb.index.CommitLogIndex;
 import moe.cnkirito.kiritodb.partition.FirstBytePartitoner;
+import moe.cnkirito.kiritodb.partition.HighTenPartitioner;
 import moe.cnkirito.kiritodb.partition.Partitionable;
 import moe.cnkirito.kiritodb.range.FetchDataProducer;
 import moe.cnkirito.kiritodb.range.RangeTask;
@@ -40,7 +41,7 @@ public class KiritoDB {
     private final int partitionNum = Constant.partitionNum; //64
     // 用于获取 key 的分区
     private volatile Partitionable partitionable;
-    private volatile CommitLog[] commitLogs;
+    public volatile CommitLog[] commitLogs;
     private volatile CommitLogIndex[] commitLogIndices;
     private Lock[] partitionLocks;
     private Condition[] readDiskConditions;
@@ -49,55 +50,15 @@ public class KiritoDB {
     private volatile boolean loadFlag = false;
 
     public KiritoDB() {
-        partitionable = new FirstBytePartitoner();
+//        partitionable = new FirstBytePartitoner();
+        partitionable = new HighTenPartitioner();
     }
 
-    private int openTimes = 0;
-
     public void open(String path) throws EngineException {
-        logger.info("open file,openTimes={},loadFlag={},randomCheck={},totalOpenTime={}", ++openTimes, loadFlag,Constant.randomCheck,++Constant.openTime);
-        if(openTimes==2){
-            Constant.randomCheck = false;
-        }
+        logger.info("open file");
         if (path.endsWith("/")) {
             path = path.substring(0, path.length() - 1);
         }
-        File dirFile = new File(path);
-        if (!dirFile.exists()) {
-            dirFile.mkdirs();
-        }
-        File file = new File(path+"2"+"/try.data");
-        if(!file.exists()){
-            try {
-                file.createNewFile();
-                RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
-                FileChannel channel = randomAccessFile.getChannel();
-                ByteBuffer buffer = ByteBuffer.allocate(4);
-                buffer.putInt(1);
-                buffer.flip();
-                channel.write(buffer,0);
-                logger.info("[open period] open times={},file do not exist",1);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }else {
-            try {
-                RandomAccessFile randomAccessFile = new RandomAccessFile(file, "rw");
-                FileChannel channel = randomAccessFile.getChannel();
-                ByteBuffer buffer = ByteBuffer.allocate(4);
-                channel.read(buffer);
-                buffer.flip();
-                int count = buffer.getInt();
-                logger.info("[open period] open times={},file exist",count+1);
-                buffer.clear();
-                buffer.putInt(count+1);
-                buffer.flip();
-                channel.write(buffer,0);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
         commitLogs = new CommitLog[partitionNum];
         commitLogIndices = new CommitLogIndex[partitionNum];
         partitionLocks = new Lock[partitionNum];
@@ -207,7 +168,7 @@ public class KiritoDB {
 //            logger.info("[fetch thread] wait for all range thread reach cost {} ms", System.currentTimeMillis() - waitForTaskStartTime);
 
             if (fetchDataProducer == null) {
-                fetchDataProducer = new FetchDataProducer();
+                fetchDataProducer = new FetchDataProducer(this);
             }
             // scan all partition
             for (int i = 0; i < partitionNum; i++) {
