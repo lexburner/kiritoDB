@@ -50,8 +50,8 @@ public class KiritoDB {
     private volatile boolean loadFlag = false;
 
     public KiritoDB() {
-        partitionable = new FirstBytePartitoner();
-//        partitionable = new HighTenPartitioner();
+//        partitionable = new FirstBytePartitoner();
+        partitionable = new HighTenPartitioner();
     }
 
     public void open(String path) throws EngineException {

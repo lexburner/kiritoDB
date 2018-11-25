@@ -107,7 +107,7 @@ public class CommitLogIndex implements CommitLogAware {
         int position = this.mappedByteBuffer.position();
         UNSAFE.copyMemory(key, 16, null, address + position, Constant.INDEX_LENGTH);
         try {
-            if (position + Constant.INDEX_LENGTH <= Constant.INDEX_LENGTH * expectedNumPerPartition) {
+            if (position + Constant.INDEX_LENGTH <= mappedByteBuffer.limit()) {
                 this.mappedByteBuffer.position(position + Constant.INDEX_LENGTH);
             } else {
                 logger.info("trigger increase size");
