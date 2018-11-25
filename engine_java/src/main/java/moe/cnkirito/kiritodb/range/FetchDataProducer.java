@@ -18,7 +18,7 @@ public class FetchDataProducer {
     private volatile ByteBuffer buffer;
 
     public FetchDataProducer(KiritoDB kiritoDB) {
-        int expectedNumPerPartition = CommitLogIndex.expectedNumPerPartition * Constant.VALUE_LENGTH * 4;
+        int expectedNumPerPartition = CommitLogIndex.expectedNumPerPartition * Constant.VALUE_LENGTH;
 //        for (int i = 0; i < Constant.partitionNum; i++) {
 //            expectedNumPerPartition = Math.max(kiritoDB.commitLogs[i].getFileLength() * Constant.VALUE_LENGTH, expectedNumPerPartition);
 //        }
@@ -37,7 +37,7 @@ public class FetchDataProducer {
             curCommitLog.loadAll(this.buffer);
             return this.buffer;
         } catch (IOException e) {
-            logger.error("load buffer error", e);
+            logger.error("loadWithMmap buffer error", e);
             return null;
         }
     }

@@ -6,30 +6,21 @@ import com.alibabacloud.polar_race.engine.common.exceptions.RetCodeEnum;
 import moe.cnkirito.kiritodb.common.Constant;
 import moe.cnkirito.kiritodb.common.Util;
 import moe.cnkirito.kiritodb.data.CommitLog;
-import moe.cnkirito.kiritodb.data.CommitLogAware;
 import moe.cnkirito.kiritodb.index.CommitLogIndex;
 import moe.cnkirito.kiritodb.partition.FirstBytePartitoner;
-import moe.cnkirito.kiritodb.partition.HighTenPartitioner;
 import moe.cnkirito.kiritodb.partition.Partitionable;
 import moe.cnkirito.kiritodb.range.FetchDataProducer;
 import moe.cnkirito.kiritodb.range.RangeTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * @author kirito.moe@foxmail.com
@@ -47,8 +38,8 @@ public class KiritoDB {
     private volatile boolean loadFlag = false;
 
     public KiritoDB() {
-//        partitionable = new FirstBytePartitoner();
-        partitionable = new HighTenPartitioner();
+        partitionable = new FirstBytePartitoner();
+//        partitionable = new HighTenPartitioner();
     }
 
     public void open(String path) throws EngineException {
@@ -66,9 +57,7 @@ public class KiritoDB {
             for (int i = 0; i < partitionNum; i++) {
                 commitLogIndices[i] = new CommitLogIndex();
                 commitLogIndices[i].init(path, i);
-                if (commitLogIndices[i] instanceof CommitLogAware) {
-                    ((CommitLogAware) commitLogIndices[i]).setCommitLog(commitLogs[i]);
-                }
+                commitLogIndices[i].setCommitLog(commitLogs[i]);
                 this.loadFlag = commitLogIndices[i].isLoadFlag();
             }
             if (!loadFlag) {
@@ -85,7 +74,7 @@ public class KiritoDB {
         CommitLogIndex hitIndex = commitLogIndices[partition];
         synchronized (hitCommitLog) {
             hitCommitLog.write(value);
-            hitIndex.write(key);
+            hitIndex.directWrite(key);
         }
     }
 
@@ -197,7 +186,7 @@ public class KiritoDB {
             executorService.execute(new Runnable() {
                 @Override
                 public void run() {
-                    commitLogIndices[index].load();
+                    commitLogIndices[index].loadWithFileChannel();
                     countDownLatch.countDown();
                 }
             });
@@ -205,7 +194,7 @@ public class KiritoDB {
         try {
             countDownLatch.await();
         } catch (InterruptedException e) {
-            logger.error("load index interrupted", e);
+            logger.error("loadWithMmap index interrupted", e);
         }
         executorService.shutdown();
         this.loadFlag = true;

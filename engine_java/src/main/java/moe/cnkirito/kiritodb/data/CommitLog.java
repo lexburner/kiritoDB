@@ -81,7 +81,7 @@ public class CommitLog {
         try {
             this.fileChannel.write(this.writeBuffer);
         } catch (IOException e) {
-            throw new EngineException(RetCodeEnum.IO_ERROR, "write data io error");
+            throw new EngineException(RetCodeEnum.IO_ERROR, "mmapWrite data io error");
         }
     }
 

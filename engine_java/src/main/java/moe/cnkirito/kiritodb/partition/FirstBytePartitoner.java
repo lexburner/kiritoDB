@@ -7,9 +7,6 @@ package moe.cnkirito.kiritodb.partition;
 public class FirstBytePartitoner implements Partitionable {
     @Override
     public int getPartition(byte[] key) {
-//        return (int) ((Util.bytes2Long(key) >> (64 - 10)) + (1024/2));
-//        return ((key[0] & 0xff) << 2) | ((key[1] & 0xff) >> 6);
         return key[0] & 0xff;
-//        int modulus = (int) ((keyL >> (64-log2(分组数)) + (分组数/2));
     }
 }

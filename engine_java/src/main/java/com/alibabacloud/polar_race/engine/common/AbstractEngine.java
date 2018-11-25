@@ -23,7 +23,7 @@ public abstract class AbstractEngine {
     public abstract void close();
 
     /**
-     * write a key-value pair into engine
+     * mmapWrite a key-value pair into engine
      *
      * @param key
      * @param value

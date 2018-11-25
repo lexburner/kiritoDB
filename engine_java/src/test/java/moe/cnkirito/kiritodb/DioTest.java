@@ -13,7 +13,7 @@ public class DioTest {
 //        int bufferSize = 20 * 1024 * 1024;
 //        DirectRandomAccessFile directFile = new DirectRandomAccessFile(file, "rw", bufferSize);
 //        for(int i= 0;i< bufferSize / 4096;i++){
-//            directFile.write(Util._4kb(i));
+//            directFile.mmapWrite(Util._4kb(i));
 //        }
 //        directFile.close();
 //    }

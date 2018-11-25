@@ -12,10 +12,9 @@ import sun.nio.ch.DirectBuffer;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.Arrays;
-import java.util.List;
 
 import static moe.cnkirito.kiritodb.common.UnsafeUtil.UNSAFE;
 
@@ -34,7 +33,7 @@ public class CommitLogIndex implements CommitLogAware {
     // 当前索引写入的区域
     private CommitLog commitLog;
     private volatile boolean loadFlag = false;
-    public static List<Integer> specialNum = Arrays.asList(216, 208, 212, 200, 196, 204, 192);
+    private long wrotePosition;
 
     //    public static final int expectedNumPerPartition = 64000;
 //    public static final int expectedNumPerPartition = 253000;
@@ -56,21 +55,37 @@ public class CommitLogIndex implements CommitLogAware {
         // 文件position
         this.fileChannel = new RandomAccessFile(file, "rw").getChannel();
         //todo
-        if (specialNum.contains(no)) {
-            this.mappedByteBuffer = this.fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, Constant.INDEX_LENGTH * expectedNumPerPartition * 4);
-        } else {
-            this.mappedByteBuffer = this.fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, Constant.INDEX_LENGTH * expectedNumPerPartition);
-        }
+        this.mappedByteBuffer = this.fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, Constant.INDEX_LENGTH * expectedNumPerPartition);
         this.address = ((DirectBuffer) mappedByteBuffer).address();
+        this.wrotePosition = 0;
     }
 
-    public void load() {
+    public void loadWithMmap() {
         // 说明索引文件中已经有内容，则读取索引文件内容到内存中
         int indexSize = commitLog.getFileLength();
         this.memoryIndex = new ArrayMemoryIndex(indexSize);
         for (int curIndex = 0; curIndex < indexSize; curIndex++) {
             this.mappedByteBuffer.position(curIndex * Constant.INDEX_LENGTH);
             long key = this.mappedByteBuffer.getLong();
+            this.memoryIndex.insertIndexCache(key, curIndex);
+        }
+        memoryIndex.init();
+        this.loadFlag = true;
+    }
+
+    public void loadWithFileChannel() {
+        int indexSize = commitLog.getFileLength();
+        this.memoryIndex = new ArrayMemoryIndex(indexSize);
+        ByteBuffer buffer = ByteBuffer.allocate(indexSize * Constant.INDEX_LENGTH);
+        try {
+            fileChannel.read(buffer);
+        } catch (IOException e) {
+            logger.error("load index failed",e);
+        }
+        buffer.flip();
+        for (int curIndex = 0; curIndex < indexSize; curIndex++) {
+            buffer.position(curIndex * Constant.INDEX_LENGTH);
+            long key = buffer.getLong();
             this.memoryIndex.insertIndexCache(key, curIndex);
         }
         memoryIndex.init();
@@ -101,16 +116,22 @@ public class CommitLogIndex implements CommitLogAware {
         return ((long) offsetInt) * Constant.VALUE_LENGTH;
     }
 
-    public void write(byte[] key) {
+    public void mmapWrite(byte[] key) {
         int position = this.mappedByteBuffer.position();
         UNSAFE.copyMemory(key, 16, null, address + position, Constant.INDEX_LENGTH);
         try {
             this.mappedByteBuffer.position(position + Constant.INDEX_LENGTH);
-//                // TODO 扩容校验
-//                this.mappedByteBuffer = this.fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, Constant.INDEX_LENGTH * expectedNumPerPartition * 4);
-//                this.mappedByteBuffer.position(position + Constant.INDEX_LENGTH);
         } catch (Exception e) {
             logger.error("failed to write index with mmap", e);
+        }
+    }
+
+    public void directWrite(byte[] key) {
+        try {
+            fileChannel.write(ByteBuffer.wrap(key), wrotePosition);
+            wrotePosition += Constant.INDEX_LENGTH;
+        } catch (IOException e) {
+            logger.error("failed to direct write index", e);
         }
     }
 
