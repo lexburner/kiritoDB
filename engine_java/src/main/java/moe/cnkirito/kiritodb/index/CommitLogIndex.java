@@ -33,7 +33,7 @@ public class CommitLogIndex implements CommitLogAware {
     private CommitLog commitLog;
     private volatile boolean loadFlag = false;
 
-//    public static final int expectedNumPerPartition = 64000;
+    //    public static final int expectedNumPerPartition = 64000;
 //    public static final int expectedNumPerPartition = 253000;
     public static final int expectedNumPerPartition = Constant.expectedNumPerPartition;
 
@@ -98,14 +98,17 @@ public class CommitLogIndex implements CommitLogAware {
         return ((long) offsetInt) * Constant.VALUE_LENGTH;
     }
 
+    private int overflowTimes = 0;
+
     public void write(byte[] key) {
         int position = this.mappedByteBuffer.position();
         UNSAFE.copyMemory(key, 16, null, address + position, Constant.INDEX_LENGTH);
         try {
             this.mappedByteBuffer.position(position + Constant.INDEX_LENGTH);
         } catch (Exception e) {
-            logger.error("write index file exception, limit {},current write {},key={}", expectedNumPerPartition, position / Constant.INDEX_LENGTH,Util.bytes2Long(key), e);
-            System.exit(-1);
+            if (overflowTimes++ < 5) {
+                logger.error("write index file exception, limit {},current write {},key={}", expectedNumPerPartition, position / Constant.INDEX_LENGTH, Util.bytes2Long(key), e);
+            }
         }
 
     }

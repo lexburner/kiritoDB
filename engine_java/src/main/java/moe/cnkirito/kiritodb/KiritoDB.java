@@ -9,7 +9,6 @@ import moe.cnkirito.kiritodb.data.CommitLog;
 import moe.cnkirito.kiritodb.data.CommitLogAware;
 import moe.cnkirito.kiritodb.index.CommitLogIndex;
 import moe.cnkirito.kiritodb.partition.FirstBytePartitoner;
-import moe.cnkirito.kiritodb.partition.HighTenPartitioner;
 import moe.cnkirito.kiritodb.partition.Partitionable;
 import moe.cnkirito.kiritodb.range.FetchDataProducer;
 import moe.cnkirito.kiritodb.range.RangeTask;
@@ -18,7 +17,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -48,10 +46,16 @@ public class KiritoDB {
     private volatile boolean loadFlag = false;
 
     public KiritoDB() {
-        partitionable = new HighTenPartitioner();
+        partitionable = new FirstBytePartitoner();
     }
 
+    private int openTimes = 0;
+
     public void open(String path) throws EngineException {
+        logger.info("open file,openTimes={},loadFlag={},randomCheck={},totalOpenTime={}", ++openTimes, loadFlag,Constant.randomCheck,++Constant.openTime);
+        if(openTimes==2){
+            Constant.randomCheck = false;
+        }
         if (path.endsWith("/")) {
             path = path.substring(0, path.length() - 1);
         }
@@ -102,23 +106,9 @@ public class KiritoDB {
     public byte[] read(byte[] key) throws EngineException {
         if (readFirst.compareAndSet(false, true)) {
             logger.info("[partition info] loadFlag={}", loadFlag);
-//            HighTenPartitioner highTenPartitioner = new HighTenPartitioner();
-//            for (int i = 0; i < partitionNum; i++) {
-////                logger.info("[read info] partition[{}],commitLogLength[{}],indexSize[{}]", i, commitLogs[i].getFileLength(), commitLogIndices[i].getMemoryIndex().getSize());
-//                long[] keys = commitLogIndices[i].getMemoryIndex().getKeys();
-//                int size = commitLogIndices[i].getMemoryIndex().getSize();
-//                int count[] = new int[1023];
-//                Arrays.fill(count, 0);
-//                for (int j = 0; j < size; j++) {
-//                    int partition = highTenPartitioner.getPartition(Util.long2bytes(keys[i]));
-//                    count[partition]++;
-//                }
-//                for (int j = 0; j < 1023; j++) {
-//                    if (count[j] > 0) {
-////                        logger.info("[read info] partition[{}],subPartiton[{}] nums[{}]", i, j, count[j]);
-//                    }
-//                }
-//            }
+            for (int i = 0; i < partitionNum; i++) {
+                logger.info("[read info] partition[{}],commitLogLength[{}],indexSize[{}]", i, commitLogs[i].getFileLength(), commitLogIndices[i].getMemoryIndex().getSize());
+            }
         }
         int partition = partitionable.getPartition(key);
         CommitLog hitCommitLog = commitLogs[partition];
@@ -192,7 +182,7 @@ public class KiritoDB {
 //                long scanPartitionMermoryStartTime = System.currentTimeMillis();
                 // scan one partition 4kb by 4kb according to index
                 for (int j = 0; j < size; j++) {
-                    if (j < 2 || j > size -3 || j == size/2) {
+                    if (j < 2 || j > size - 3 || j == size / 2) {
                         logger.info("partition[{}]-key[{}]={}", i, j, keys[j]);
                     }
                     byte[] bytes = visitorCallbackValue.get();
