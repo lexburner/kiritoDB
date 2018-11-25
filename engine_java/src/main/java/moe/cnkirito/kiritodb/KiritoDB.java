@@ -43,9 +43,6 @@ public class KiritoDB {
     private volatile Partitionable partitionable;
     public volatile CommitLog[] commitLogs;
     private volatile CommitLogIndex[] commitLogIndices;
-    private Lock[] partitionLocks;
-    private Condition[] readDiskConditions;
-    private Condition[] readCacheConditions;
     // 判断是否需要加载索引进入内存
     private volatile boolean loadFlag = false;
 
@@ -61,9 +58,6 @@ public class KiritoDB {
         }
         commitLogs = new CommitLog[partitionNum];
         commitLogIndices = new CommitLogIndex[partitionNum];
-        partitionLocks = new Lock[partitionNum];
-        readDiskConditions = new Condition[partitionNum];
-        readCacheConditions = new Condition[partitionNum];
         try {
             for (int i = 0; i < partitionNum; i++) {
                 commitLogs[i] = new CommitLog();
@@ -79,12 +73,6 @@ public class KiritoDB {
             }
             if (!loadFlag) {
                 loadAllIndex();
-            }
-            // for range
-            for (int i = 0; i < partitionNum; i++) {
-                partitionLocks[i] = new ReentrantLock();
-                readDiskConditions[i] = partitionLocks[i].newCondition();
-                readCacheConditions[i] = partitionLocks[i].newCondition();
             }
         } catch (IOException e) {
             throw new EngineException(RetCodeEnum.IO_ERROR, "open exception");
@@ -105,10 +93,10 @@ public class KiritoDB {
 
     public byte[] read(byte[] key) throws EngineException {
         if (readFirst.compareAndSet(false, true)) {
-            logger.info("[partition info] loadFlag={}", loadFlag);
-            for (int i = 0; i < partitionNum; i++) {
-                logger.info("[read info] partition[{}],commitLogLength[{}],indexSize[{}]", i, commitLogs[i].getFileLength(), commitLogIndices[i].getMemoryIndex().getSize());
-            }
+//            logger.info("[partition info] loadFlag={}", loadFlag);
+//            for (int i = 0; i < partitionNum; i++) {
+//                logger.info("[read info] partition[{}],commitLogLength[{}],indexSize[{}]", i, commitLogs[i].getFileLength(), commitLogIndices[i].getMemoryIndex().getSize());
+//            }
         }
         int partition = partitionable.getPartition(key);
         CommitLog hitCommitLog = commitLogs[partition];
@@ -131,8 +119,6 @@ public class KiritoDB {
     private static ThreadLocal<byte[]> visitorCallbackValue = ThreadLocal.withInitial(() -> new byte[Constant.VALUE_LENGTH]);
     private final static int THREAD_NUM = 64;
     private LinkedBlockingQueue<RangeTask> rangeTaskLinkedBlockingQueue = new LinkedBlockingQueue<>();
-
-    AtomicInteger atomicInteger = new AtomicInteger(0);
 
     public void range(byte[] lower, byte[] upper, AbstractVisitor visitor) throws EngineException {
         // 第一次 range 的时候开启 fetch 线程
@@ -182,9 +168,9 @@ public class KiritoDB {
 //                long scanPartitionMermoryStartTime = System.currentTimeMillis();
                 // scan one partition 4kb by 4kb according to index
                 for (int j = 0; j < size; j++) {
-                    if (j < 2 || j > size - 3 || j == size / 2) {
-                        logger.info("partition[{}]-key[{}]={}", i, j, keys[j]);
-                    }
+//                    if (j < 2 || j > size - 3 || j == size / 2) {
+//                        logger.info("partition[{}]-key[{}]={}", i, j, keys[j]);
+//                    }
                     byte[] bytes = visitorCallbackValue.get();
                     ByteBuffer slice = buffer.slice();
                     slice.position(offsetInts[j] * Constant.VALUE_LENGTH);

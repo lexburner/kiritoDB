@@ -18,13 +18,13 @@ public class FetchDataProducer {
     private volatile ByteBuffer buffer;
 
     public FetchDataProducer(KiritoDB kiritoDB) {
-        int expectedNumPerPartition = CommitLogIndex.expectedNumPerPartition * Constant.VALUE_LENGTH;
-        for (int i = 0; i < Constant.partitionNum; i++) {
-            expectedNumPerPartition = Math.max(kiritoDB.commitLogs[i].getFileLength() * Constant.VALUE_LENGTH, expectedNumPerPartition);
-        }
-        if(expectedNumPerPartition > CommitLogIndex.expectedNumPerPartition * Constant.VALUE_LENGTH){
-            logger.info("fetch data cache increase size success");
-        }
+        int expectedNumPerPartition = CommitLogIndex.expectedNumPerPartition * Constant.VALUE_LENGTH * 4;
+//        for (int i = 0; i < Constant.partitionNum; i++) {
+//            expectedNumPerPartition = Math.max(kiritoDB.commitLogs[i].getFileLength() * Constant.VALUE_LENGTH, expectedNumPerPartition);
+//        }
+//        if(expectedNumPerPartition > CommitLogIndex.expectedNumPerPartition * Constant.VALUE_LENGTH){
+//            logger.info("fetch data cache increase size success");
+//        }
         this.buffer = ByteBuffer.allocateDirect(expectedNumPerPartition);
     }
 
