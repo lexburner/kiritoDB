@@ -134,11 +134,11 @@ public class KiritoDB {
             if (fetchDataProducer == null) {
                 fetchDataProducer = new FetchDataProducer(this);
             }
+            fetchDataProducer.startFetch();
             // scan all partition
             for (int i = 0; i < partitionNum; i++) {
 //                long scanPartitionStartTime = System.currentTimeMillis();
-                fetchDataProducer.resetPartition(commitLogs[i]);
-                ByteBuffer buffer = fetchDataProducer.produce();
+                ByteBuffer buffer = fetchDataProducer.getBuffer(i);
                 CommitLogIndex commitLogIndex = this.commitLogIndices[i];
                 int size = commitLogIndex.getMemoryIndex().getSize();
                 int[] offsetInts = commitLogIndex.getMemoryIndex().getOffsetInts();
@@ -157,6 +157,7 @@ public class KiritoDB {
                         rangeTask.getAbstractVisitor().visit(Util.long2bytes(keys[j]), bytes);
                     }
                 }
+                fetchDataProducer.release(i);
 //                logger.info("[range info] read partition {} success. [memory] cost {} s ", i, (System.currentTimeMillis() - scanPartitionMermoryStartTime) / 1000);
 //                logger.info("[range info] read partition {} success. [disk + memory] cost {} s ", i, (System.currentTimeMillis() - scanPartitionStartTime) / 1000);
             }
