@@ -113,10 +113,6 @@ public class CommitLogIndex implements CommitLogAware {
         return ((long) offsetInt) * Constant.VALUE_LENGTH;
     }
 
-    public void mmapWrite(byte[] key) {
-
-    }
-
     public void write(byte[] key) {
         if (!mmapFlag) {
             try {

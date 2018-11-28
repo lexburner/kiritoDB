@@ -14,7 +14,6 @@ public class FetchDataProducer {
 
     public final static Logger logger = LoggerFactory.getLogger(FetchDataProducer.class);
 
-    private volatile CommitLog curCommitLog;
     private int windowsNum;
     private ByteBuffer[] buffers;
     private Semaphore[] readSemaphores;

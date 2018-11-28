@@ -70,6 +70,9 @@ public class ArrayMemoryIndex implements MemoryIndex {
 //                    logger.info("[partition info] partition [{}] key size = [{}] subpartition [{}] key size = {}", partition,indexSize, i, count[i]);
 //                }
 //            }
+            if(this.indexSize>60000 && this.indexSize<64000){
+                return;
+            }
             compact();
         }
     }
