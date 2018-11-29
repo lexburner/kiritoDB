@@ -12,6 +12,7 @@ import sun.nio.ch.DirectBuffer;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
@@ -63,7 +64,7 @@ public class CommitLogIndex implements CommitLogAware {
         if (!mmapFlag) {
             int indexSize = commitLog.getFileLength();
             this.memoryIndex = new ArrayMemoryIndex(indexSize);
-            ByteBuffer buffer = ByteBuffer.allocate(indexSize * Constant.INDEX_LENGTH);
+            ByteBuffer buffer = ByteBuffer.allocateDirect(indexSize * Constant.INDEX_LENGTH);
             try {
                 fileChannel.read(buffer);
             } catch (IOException e) {
@@ -75,6 +76,7 @@ public class CommitLogIndex implements CommitLogAware {
                 long key = buffer.getLong();
                 this.memoryIndex.insertIndexCache(key, curIndex);
             }
+            ((DirectBuffer) buffer).cleaner().clean();
             memoryIndex.init();
             this.loadFlag = true;
         } else {

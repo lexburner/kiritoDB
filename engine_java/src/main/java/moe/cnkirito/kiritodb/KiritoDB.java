@@ -69,7 +69,12 @@ public class KiritoDB {
         }
     }
 
+    private AtomicBoolean writeFirst = new AtomicBoolean(false);
+
     public void write(byte[] key, byte[] value) throws EngineException {
+        if(writeFirst.compareAndSet(false,true )){
+            logger.info("[jvm info] write first, now {} ", Util.getFreeMemory());
+        }
         int partition = partitionable.getPartition(key);
         CommitLog hitCommitLog = commitLogs[partition];
         CommitLogIndex hitIndex = commitLogIndices[partition];
@@ -82,6 +87,9 @@ public class KiritoDB {
     private AtomicBoolean readFirst = new AtomicBoolean(false);
 
     public byte[] read(byte[] key) throws EngineException {
+        if(readFirst.compareAndSet(false,true )){
+            logger.info("[jvm info] read first now {} ", Util.getFreeMemory());
+        }
         int partition = partitionable.getPartition(key);
         CommitLog hitCommitLog = commitLogs[partition];
         CommitLogIndex hitIndex = commitLogIndices[partition];
@@ -97,14 +105,15 @@ public class KiritoDB {
     }
 
     // fetch thread flag
-    private final AtomicBoolean producerFlag = new AtomicBoolean(false);
+    private final AtomicBoolean rangFirst = new AtomicBoolean(false);
     private static ThreadLocal<byte[]> visitorCallbackValue = ThreadLocal.withInitial(() -> new byte[Constant.VALUE_LENGTH]);
     private final static int THREAD_NUM = 64;
     private LinkedBlockingQueue<RangeTask> rangeTaskLinkedBlockingQueue = new LinkedBlockingQueue<>();
 
     public void range(byte[] lower, byte[] upper, AbstractVisitor visitor) throws EngineException {
         // 第一次 range 的时候开启 fetch 线程
-        if (producerFlag.compareAndSet(false, true)) {
+        if (rangFirst.compareAndSet(false, true)) {
+            logger.info("[jvm info] range first now {} ", Util.getFreeMemory());
             initPreFetchThreads();
         }
         RangeTask rangeTask = new RangeTask(visitor, new CountDownLatch(1));
@@ -120,7 +129,6 @@ public class KiritoDB {
 //    private ExecutorService[] executorServices;
 
     private void initPreFetchThreads() {
-        logger.info("[jvm info] now {} ", Util.getFreeMemory());
         new Thread(() -> {
             RangeTask[] rangeTasks = new RangeTask[THREAD_NUM];
 //            long waitForTaskStartTime = System.currentTimeMillis();
@@ -150,7 +158,7 @@ public class KiritoDB {
                 long[] keys = commitLogIndex.getMemoryIndex().getKeys();
 //                long scanPartitionMermoryStartTime = System.currentTimeMillis();
                 // scan one partition 4kb by 4kb according to index
-                ByteBuffer slice = buffer;
+                ByteBuffer slice = buffer.slice();
                 for (int j = 0; j < size; j++) {
                     byte[] bytes = visitorCallbackValue.get();
                     slice.position(offsetInts[j] * Constant.VALUE_LENGTH);
@@ -163,7 +171,7 @@ public class KiritoDB {
 //                logger.info("[range info] read partition {} success. [memory] cost {} s ", i, (System.currentTimeMillis() - scanPartitionMermoryStartTime) / 1000);
 //                logger.info("[range info] read partition {} success. [disk + memory] cost {} s ", i, (System.currentTimeMillis() - scanPartitionStartTime) / 1000);
             }
-            producerFlag.set(false);
+            rangFirst.set(false);
             for (RangeTask rangeTask : rangeTasks) {
                 rangeTask.getCountDownLatch().countDown();
             }

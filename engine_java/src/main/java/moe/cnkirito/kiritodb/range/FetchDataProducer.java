@@ -19,6 +19,7 @@ public class FetchDataProducer {
     private Semaphore[] readSemaphores;
     private Semaphore[] writeSemaphores;
     private CommitLog[] commitLogs;
+    private boolean directFlag;
 
     public FetchDataProducer(KiritoDB kiritoDB) {
         int expectedNumPerPartition = kiritoDB.commitLogs[0].getFileLength();
@@ -27,8 +28,10 @@ public class FetchDataProducer {
         }
         if (expectedNumPerPartition < 64000) {
             windowsNum = 4;
+            directFlag = false;
         } else {
             windowsNum = 1;
+            directFlag = true;
         }
         buffers = new ByteBuffer[windowsNum];
         readSemaphores = new Semaphore[windowsNum];
@@ -36,6 +39,9 @@ public class FetchDataProducer {
         for (int i = 0; i < windowsNum; i++) {
             writeSemaphores[i] = new Semaphore(1);
             readSemaphores[i] = new Semaphore(0);
+            if(directFlag){
+
+            }
             buffers[i] = ByteBuffer.allocateDirect(expectedNumPerPartition * Constant.VALUE_LENGTH);
         }
         this.commitLogs = kiritoDB.commitLogs;
