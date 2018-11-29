@@ -154,9 +154,9 @@ public class KiritoDB {
                 for (int m = 0; m < THREAD_NUM; m++) {
                     final int threadNo = m;
                     executorServices[m].execute(() -> {
+                        ByteBuffer slice = buffer.slice();
                         for (int j = 0; j < size; j++) {
                             byte[] bytes = visitorCallbackValue.get();
-                            ByteBuffer slice = buffer.slice();
                             slice.position(offsetInts[j] * Constant.VALUE_LENGTH);
                             slice.get(bytes);
                             rangeTasks[threadNo].getAbstractVisitor().visit(Util.long2bytes(keys[j]), bytes);
