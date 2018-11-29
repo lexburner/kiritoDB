@@ -117,7 +117,7 @@ public class KiritoDB {
     }
 
     private volatile FetchDataProducer fetchDataProducer;
-    private ExecutorService[] executorServices;
+//    private ExecutorService[] executorServices;
 
     private void initPreFetchThreads() {
         logger.info("[jvm info] now {} ", Util.getFreeMemory());
@@ -134,10 +134,10 @@ public class KiritoDB {
 //            logger.info("[fetch thread] wait for all range thread reach cost {} ms", System.currentTimeMillis() - waitForTaskStartTime);
             if (fetchDataProducer == null) {
                 fetchDataProducer = new FetchDataProducer(this);
-                executorServices = new ExecutorService[THREAD_NUM];
-                for (int i = 0; i < THREAD_NUM; i++) {
-                    executorServices[i] = Executors.newSingleThreadExecutor();
-                }
+//                executorServices = new ExecutorService[THREAD_NUM];
+//                for (int i = 0; i < THREAD_NUM; i++) {
+//                    executorServices[i] = Executors.newSingleThreadExecutor();
+//                }
             }
             fetchDataProducer.startFetch();
             // scan all partition
@@ -150,24 +150,14 @@ public class KiritoDB {
                 long[] keys = commitLogIndex.getMemoryIndex().getKeys();
 //                long scanPartitionMermoryStartTime = System.currentTimeMillis();
                 // scan one partition 4kb by 4kb according to index
-                CountDownLatch countDownLatch = new CountDownLatch(THREAD_NUM);
-                for (int m = 0; m < THREAD_NUM; m++) {
-                    final int threadNo = m;
-                    executorServices[m].execute(() -> {
-                        ByteBuffer slice = buffer.slice();
-                        for (int j = 0; j < size; j++) {
-                            byte[] bytes = visitorCallbackValue.get();
-                            slice.position(offsetInts[j] * Constant.VALUE_LENGTH);
-                            slice.get(bytes);
-                            rangeTasks[threadNo].getAbstractVisitor().visit(Util.long2bytes(keys[j]), bytes);
-                        }
-                        countDownLatch.countDown();
-                    });
-                }
-                try {
-                    countDownLatch.await();
-                } catch (InterruptedException e) {
-                    logger.error("range count down interrupted", e);
+                ByteBuffer slice = buffer;
+                for (int j = 0; j < size; j++) {
+                    byte[] bytes = visitorCallbackValue.get();
+                    slice.position(offsetInts[j] * Constant.VALUE_LENGTH);
+                    slice.get(bytes);
+                    for (int m = 0; m < THREAD_NUM; m++) {
+                        rangeTasks[m].getAbstractVisitor().visit(Util.long2bytes(keys[j]), bytes);
+                    }
                 }
                 fetchDataProducer.release(i);
 //                logger.info("[range info] read partition {} success. [memory] cost {} s ", i, (System.currentTimeMillis() - scanPartitionMermoryStartTime) / 1000);
