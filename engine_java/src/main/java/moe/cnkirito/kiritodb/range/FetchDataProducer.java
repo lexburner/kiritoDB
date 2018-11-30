@@ -26,7 +26,7 @@ public class FetchDataProducer {
             expectedNumPerPartition = Math.max(kiritoDB.commitLogs[i].getFileLength(), expectedNumPerPartition);
         }
         if (expectedNumPerPartition < 64000) {
-            windowsNum = 4;
+            windowsNum = 2;
         } else {
             windowsNum = 1;
         }
@@ -37,7 +37,12 @@ public class FetchDataProducer {
         for (int i = 0; i < windowsNum; i++) {
             writeSemaphores[i] = new Semaphore(1);
             readSemaphores[i] = new Semaphore(0);
-            buffers[i] = ByteBuffer.allocateDirect(expectedNumPerPartition * Constant.VALUE_LENGTH);
+            if(windowsNum==1){
+                buffers[i] = ByteBuffer.allocateDirect(expectedNumPerPartition * Constant.VALUE_LENGTH);
+            }else {
+                buffers[i] = ByteBuffer.allocate(expectedNumPerPartition * Constant.VALUE_LENGTH);
+            }
+
         }
         this.commitLogs = kiritoDB.commitLogs;
         logger.info("allocate finish,free memory:{}M", Runtime.getRuntime().freeMemory() / 1024 / 1024);
