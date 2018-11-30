@@ -16,6 +16,7 @@ import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 
+import static moe.cnkirito.kiritodb.common.Constant._4kb;
 import static moe.cnkirito.kiritodb.common.UnsafeUtil.UNSAFE;
 
 /**
@@ -39,6 +40,7 @@ public class CommitLogIndex implements CommitLogAware {
     private long wrotePosition;
     // use mmap to write index
     private boolean mmapFlag = false;
+    private ByteBuffer writeBuffer;
 
     public void init(String path, int no) throws IOException {
         File dirFile = new File(path);
@@ -57,6 +59,7 @@ public class CommitLogIndex implements CommitLogAware {
             this.address = ((DirectBuffer) mappedByteBuffer).address();
         }
         this.wrotePosition = 0;
+        this.writeBuffer = ByteBuffer.allocateDirect(_4kb);
     }
 
     public void load() {
@@ -103,6 +106,13 @@ public class CommitLogIndex implements CommitLogAware {
     public void destroy() throws IOException {
         commitLog = null;
         loadFlag = false;
+        if (writeBuffer != null) {
+            writeBuffer.position(0);
+            fileChannel.write(writeBuffer);
+            if (writeBuffer instanceof DirectBuffer) {
+                ((DirectBuffer) writeBuffer).cleaner().clean();
+            }
+        }
         releaseFile();
     }
 
@@ -117,7 +127,14 @@ public class CommitLogIndex implements CommitLogAware {
     public void write(byte[] key) {
         if (!mmapFlag) {
             try {
-                fileChannel.write(ByteBuffer.wrap(key), wrotePosition);
+                if (writeBuffer.remaining() > key.length) {
+                    writeBuffer.put(key);
+                } else {
+                    writeBuffer.flip();
+                    fileChannel.write(writeBuffer);
+                    writeBuffer.clear();
+                    writeBuffer.put(key);
+                }
                 wrotePosition += Constant.INDEX_LENGTH;
             } catch (IOException e) {
                 logger.error("failed to direct write index", e);
