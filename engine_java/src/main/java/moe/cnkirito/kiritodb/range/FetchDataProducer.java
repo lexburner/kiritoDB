@@ -5,6 +5,7 @@ import moe.cnkirito.kiritodb.common.Constant;
 import moe.cnkirito.kiritodb.data.CommitLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.nio.ch.DirectBuffer;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -26,7 +27,7 @@ public class FetchDataProducer {
             expectedNumPerPartition = Math.max(kiritoDB.commitLogs[i].getFileLength(), expectedNumPerPartition);
         }
         if (expectedNumPerPartition < 64000) {
-            windowsNum = 2;
+            windowsNum = 4;
         } else {
             windowsNum = 1;
         }
@@ -37,12 +38,7 @@ public class FetchDataProducer {
         for (int i = 0; i < windowsNum; i++) {
             writeSemaphores[i] = new Semaphore(1);
             readSemaphores[i] = new Semaphore(0);
-            if(windowsNum==1){
-                buffers[i] = ByteBuffer.allocateDirect(expectedNumPerPartition * Constant.VALUE_LENGTH);
-            }else {
-                buffers[i] = ByteBuffer.allocate(expectedNumPerPartition * Constant.VALUE_LENGTH);
-            }
-
+            buffers[i] = ByteBuffer.allocateDirect(expectedNumPerPartition * Constant.VALUE_LENGTH);
         }
         this.commitLogs = kiritoDB.commitLogs;
         logger.info("allocate finish,free memory:{}M", Runtime.getRuntime().freeMemory() / 1024 / 1024);
@@ -78,6 +74,16 @@ public class FetchDataProducer {
 
     public void release(int partition) {
         writeSemaphores[partition % windowsNum].release();
+    }
+
+    public void destroy(){
+        if(buffers!=null){
+            for (ByteBuffer buffer : buffers) {
+                if(buffer instanceof DirectBuffer){
+                    ((DirectBuffer) buffer).cleaner().clean();
+                }
+            }
+        }
     }
 
 }

@@ -72,7 +72,7 @@ public class KiritoDB {
     private AtomicBoolean writeFirst = new AtomicBoolean(false);
 
     public void write(byte[] key, byte[] value) throws EngineException {
-        if(writeFirst.compareAndSet(false,true )){
+        if (writeFirst.compareAndSet(false, true)) {
             logger.info("[jvm info] write first, now {} ", Util.getFreeMemory());
         }
         int partition = partitionable.getPartition(key);
@@ -87,7 +87,7 @@ public class KiritoDB {
     private AtomicBoolean readFirst = new AtomicBoolean(false);
 
     public byte[] read(byte[] key) throws EngineException {
-        if(readFirst.compareAndSet(false,true )){
+        if (readFirst.compareAndSet(false, true)) {
             logger.info("[jvm info] read first now {} ", Util.getFreeMemory());
         }
         int partition = partitionable.getPartition(key);
@@ -213,6 +213,9 @@ public class KiritoDB {
                     logger.error("data destory error", e);
                 }
             }
+        }
+        if (this.fetchDataProducer != null) {
+            fetchDataProducer.destroy();
         }
         this.partitionable = null;
         this.commitLogs = null;
