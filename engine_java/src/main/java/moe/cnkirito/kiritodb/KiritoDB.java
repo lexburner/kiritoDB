@@ -4,7 +4,6 @@ import com.alibabacloud.polar_race.engine.common.AbstractVisitor;
 import com.alibabacloud.polar_race.engine.common.exceptions.EngineException;
 import com.alibabacloud.polar_race.engine.common.exceptions.RetCodeEnum;
 import moe.cnkirito.kiritodb.common.Constant;
-import moe.cnkirito.kiritodb.common.ResettableCountDownLatch;
 import moe.cnkirito.kiritodb.common.Util;
 import moe.cnkirito.kiritodb.data.CommitLog;
 import moe.cnkirito.kiritodb.index.CommitLogIndex;
@@ -14,7 +13,6 @@ import moe.cnkirito.kiritodb.range.FetchDataProducer;
 import moe.cnkirito.kiritodb.range.RangeTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.jvm.hotspot.tools.JInfo;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

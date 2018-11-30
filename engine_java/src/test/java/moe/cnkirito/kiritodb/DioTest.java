@@ -1,10 +1,5 @@
 package moe.cnkirito.kiritodb;
 
-import moe.cnkirito.kiritodb.common.Util;
-import net.smacke.jaydio.DirectRandomAccessFile;
-
-import java.io.File;
-
 public class DioTest {
 
 

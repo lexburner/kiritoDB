@@ -27,7 +27,7 @@ public class FetchDataProducer {
             expectedNumPerPartition = Math.max(kiritoDB.commitLogs[i].getFileLength(), expectedNumPerPartition);
         }
         if (expectedNumPerPartition < 64000) {
-            windowsNum = 3;
+            windowsNum = 4;
         } else {
             windowsNum = 1;
         }
@@ -50,7 +50,7 @@ public class FetchDataProducer {
             final int threadPartition = threadNo;
             new Thread(() -> {
                 try {
-                    for (int i = 0; i < 1024 / windowsNum; i++) {
+                    for (int i = 0; i < Constant.partitionNum / windowsNum; i++) {
                         writeSemaphores[threadPartition].acquire();
                         commitLogs[i * windowsNum + threadPartition].loadAll(buffers[threadPartition]);
                         readSemaphores[threadPartition].release();
