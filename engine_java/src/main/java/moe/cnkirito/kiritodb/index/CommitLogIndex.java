@@ -101,7 +101,6 @@ public class CommitLogIndex implements CommitLogAware {
     }
 
     public void destroy() throws IOException {
-        logger.info("destroy index");
         commitLog = null;
         loadFlag = false;
         releaseFile();

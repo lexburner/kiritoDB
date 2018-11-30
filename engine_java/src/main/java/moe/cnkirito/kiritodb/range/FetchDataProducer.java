@@ -41,9 +41,8 @@ public class FetchDataProducer {
             if(windowsNum==1){
                 buffers[i] = ByteBuffer.allocateDirect(expectedNumPerPartition * Constant.VALUE_LENGTH);
             }else {
-                buffers[i] = ByteBuffer.allocate(expectedNumPerPartition * Constant.VALUE_LENGTH);
+                buffers[i] = ByteBuffer.allocateDirect(expectedNumPerPartition * Constant.VALUE_LENGTH);
             }
-
         }
         this.commitLogs = kiritoDB.commitLogs;
         logger.info("allocate finish,free memory:{}M", Runtime.getRuntime().freeMemory() / 1024 / 1024);
