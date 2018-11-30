@@ -126,7 +126,6 @@ public class KiritoDB {
     }
 
     private volatile FetchDataProducer fetchDataProducer;
-//    private ExecutorService[] executorServices;
 
     private void initPreFetchThreads() {
         new Thread(() -> {
@@ -142,10 +141,6 @@ public class KiritoDB {
 //            logger.info("[fetch thread] wait for all range thread reach cost {} ms", System.currentTimeMillis() - waitForTaskStartTime);
             if (fetchDataProducer == null) {
                 fetchDataProducer = new FetchDataProducer(this);
-//                executorServices = new ExecutorService[THREAD_NUM];
-//                for (int i = 0; i < THREAD_NUM; i++) {
-//                    executorServices[i] = Executors.newSingleThreadExecutor();
-//                }
             }
             fetchDataProducer.startFetch();
             // scan all partition

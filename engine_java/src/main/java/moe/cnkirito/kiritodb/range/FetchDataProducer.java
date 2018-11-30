@@ -2,13 +2,13 @@ package moe.cnkirito.kiritodb.range;
 
 import moe.cnkirito.kiritodb.KiritoDB;
 import moe.cnkirito.kiritodb.common.Constant;
+import moe.cnkirito.kiritodb.common.LoopQuerySemaphore;
 import moe.cnkirito.kiritodb.data.CommitLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.concurrent.Semaphore;
 
 public class FetchDataProducer {
 
@@ -16,10 +16,9 @@ public class FetchDataProducer {
 
     private int windowsNum;
     private ByteBuffer[] buffers;
-    private Semaphore[] readSemaphores;
-    private Semaphore[] writeSemaphores;
+    private LoopQuerySemaphore[] readSemaphores;
+    private LoopQuerySemaphore[] writeSemaphores;
     private CommitLog[] commitLogs;
-    private boolean directFlag;
 
     public FetchDataProducer(KiritoDB kiritoDB) {
         int expectedNumPerPartition = kiritoDB.commitLogs[0].getFileLength();
@@ -28,20 +27,15 @@ public class FetchDataProducer {
         }
         if (expectedNumPerPartition < 64000) {
             windowsNum = 4;
-            directFlag = false;
         } else {
             windowsNum = 1;
-            directFlag = true;
         }
         buffers = new ByteBuffer[windowsNum];
-        readSemaphores = new Semaphore[windowsNum];
-        writeSemaphores = new Semaphore[windowsNum];
+        readSemaphores = new LoopQuerySemaphore[windowsNum];
+        writeSemaphores = new LoopQuerySemaphore[windowsNum];
         for (int i = 0; i < windowsNum; i++) {
-            writeSemaphores[i] = new Semaphore(1);
-            readSemaphores[i] = new Semaphore(0);
-            if(directFlag){
-
-            }
+            writeSemaphores[i] = new LoopQuerySemaphore(1);
+            readSemaphores[i] = new LoopQuerySemaphore(0);
             buffers[i] = ByteBuffer.allocateDirect(expectedNumPerPartition * Constant.VALUE_LENGTH);
         }
         this.commitLogs = kiritoDB.commitLogs;
@@ -49,6 +43,10 @@ public class FetchDataProducer {
     }
 
     public void startFetch() {
+        for (int i = 0; i < windowsNum; i++) {
+            writeSemaphores[i] = new LoopQuerySemaphore(1);
+            readSemaphores[i] = new LoopQuerySemaphore(0);
+        }
         for (int threadNo = 0; threadNo < windowsNum; threadNo++) {
             final int threadPartition = threadNo;
             new Thread(() -> {
@@ -61,7 +59,6 @@ public class FetchDataProducer {
                 } catch (InterruptedException | IOException e) {
                     logger.error("threadNo{} load failed", threadPartition, e);
                 }
-
             }).start();
         }
     }
