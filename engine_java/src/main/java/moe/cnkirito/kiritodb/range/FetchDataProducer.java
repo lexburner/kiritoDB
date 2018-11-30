@@ -2,13 +2,13 @@ package moe.cnkirito.kiritodb.range;
 
 import moe.cnkirito.kiritodb.KiritoDB;
 import moe.cnkirito.kiritodb.common.Constant;
-import moe.cnkirito.kiritodb.common.LoopQuerySemaphore;
 import moe.cnkirito.kiritodb.data.CommitLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.concurrent.Semaphore;
 
 public class FetchDataProducer {
 
@@ -16,8 +16,8 @@ public class FetchDataProducer {
 
     private int windowsNum;
     private ByteBuffer[] buffers;
-    private LoopQuerySemaphore[] readSemaphores;
-    private LoopQuerySemaphore[] writeSemaphores;
+    private Semaphore[] readSemaphores;
+    private Semaphore[] writeSemaphores;
     private CommitLog[] commitLogs;
 
     public FetchDataProducer(KiritoDB kiritoDB) {
@@ -31,11 +31,11 @@ public class FetchDataProducer {
             windowsNum = 1;
         }
         buffers = new ByteBuffer[windowsNum];
-        readSemaphores = new LoopQuerySemaphore[windowsNum];
-        writeSemaphores = new LoopQuerySemaphore[windowsNum];
+        readSemaphores = new Semaphore[windowsNum];
+        writeSemaphores = new Semaphore[windowsNum];
         for (int i = 0; i < windowsNum; i++) {
-            writeSemaphores[i] = new LoopQuerySemaphore(1);
-            readSemaphores[i] = new LoopQuerySemaphore(0);
+            writeSemaphores[i] = new Semaphore(1);
+            readSemaphores[i] = new Semaphore(0);
             buffers[i] = ByteBuffer.allocateDirect(expectedNumPerPartition * Constant.VALUE_LENGTH);
         }
         this.commitLogs = kiritoDB.commitLogs;
@@ -44,8 +44,8 @@ public class FetchDataProducer {
 
     public void startFetch() {
         for (int i = 0; i < windowsNum; i++) {
-            writeSemaphores[i] = new LoopQuerySemaphore(1);
-            readSemaphores[i] = new LoopQuerySemaphore(0);
+            writeSemaphores[i] = new Semaphore(1);
+            readSemaphores[i] = new Semaphore(0);
         }
         for (int threadNo = 0; threadNo < windowsNum; threadNo++) {
             final int threadPartition = threadNo;

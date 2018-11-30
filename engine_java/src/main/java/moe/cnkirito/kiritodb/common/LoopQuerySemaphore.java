@@ -9,21 +9,21 @@ public class LoopQuerySemaphore {
     private volatile boolean permits;
 
     public LoopQuerySemaphore(int permits) {
-        if(permits>0){
+        if (permits > 0) {
             this.permits = true;
-        }else {
+        } else {
             this.permits = false;
         }
     }
 
     public void acquire() throws InterruptedException {
-        while (!permits){
+        while (!permits) {
             Thread.sleep(1);
         }
         permits = false;
     }
 
-    public void release(){
+    public void release() {
         permits = true;
     }
 
