@@ -27,7 +27,7 @@ public class FetchDataProducer {
             expectedNumPerPartition = Math.max(kiritoDB.commitLogs[i].getFileLength(), expectedNumPerPartition);
         }
         if (expectedNumPerPartition < 64000) {
-            windowsNum = 4;
+            windowsNum = 8;
         } else {
             windowsNum = 1;
         }
