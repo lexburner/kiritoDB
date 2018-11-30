@@ -4,6 +4,7 @@ import com.alibabacloud.polar_race.engine.common.AbstractVisitor;
 import com.alibabacloud.polar_race.engine.common.exceptions.EngineException;
 import com.alibabacloud.polar_race.engine.common.exceptions.RetCodeEnum;
 import moe.cnkirito.kiritodb.common.Constant;
+import moe.cnkirito.kiritodb.common.ResettableCountDownLatch;
 import moe.cnkirito.kiritodb.common.Util;
 import moe.cnkirito.kiritodb.data.CommitLog;
 import moe.cnkirito.kiritodb.index.CommitLogIndex;
@@ -13,6 +14,7 @@ import moe.cnkirito.kiritodb.range.FetchDataProducer;
 import moe.cnkirito.kiritodb.range.RangeTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.jvm.hotspot.tools.JInfo;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -155,11 +157,12 @@ public class KiritoDB {
                 // scan one partition 4kb by 4kb according to index
                 ByteBuffer slice = buffer.slice();
                 for (int j = 0; j < size; j++) {
+                    final byte[] key = Util.long2bytes(keys[j]);
                     byte[] bytes = visitorCallbackValue.get();
                     slice.position(offsetInts[j] * Constant.VALUE_LENGTH);
                     slice.get(bytes);
                     for (int m = 0; m < THREAD_NUM; m++) {
-                        rangeTasks[m].getAbstractVisitor().visit(Util.long2bytes(keys[j]), bytes);
+                        rangeTasks[m].getAbstractVisitor().visit(key, bytes);
                     }
                 }
                 fetchDataProducer.release(i);
@@ -189,7 +192,7 @@ public class KiritoDB {
         try {
             countDownLatch.await();
         } catch (InterruptedException e) {
-            logger.error("loadWithMmap index interrupted", e);
+            logger.error("load index interrupted", e);
         }
         executorService.shutdown();
         this.loadFlag = true;
@@ -201,7 +204,7 @@ public class KiritoDB {
                 try {
                     commitLog.destroy();
                 } catch (IOException e) {
-                    logger.error("data destory error", e);
+                    logger.error("data destroy error", e);
                 }
             }
         }
@@ -210,7 +213,7 @@ public class KiritoDB {
                 try {
                     commitLogIndex.destroy();
                 } catch (IOException e) {
-                    logger.error("data destory error", e);
+                    logger.error("data destroy error", e);
                 }
             }
         }
