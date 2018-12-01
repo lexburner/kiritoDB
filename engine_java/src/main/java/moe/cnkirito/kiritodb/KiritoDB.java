@@ -130,7 +130,6 @@ public class KiritoDB {
     private void initPreFetchThreads() {
         new Thread(() -> {
             RangeTask[] rangeTasks = new RangeTask[THREAD_NUM];
-//            long waitForTaskStartTime = System.currentTimeMillis();
             for (int i = 0; i < THREAD_NUM; i++) {
                 try {
                     rangeTasks[i] = rangeTaskLinkedBlockingQueue.take();
@@ -138,20 +137,19 @@ public class KiritoDB {
                     e.printStackTrace();
                 }
             }
-//            logger.info("[fetch thread] wait for all range thread reach cost {} ms", System.currentTimeMillis() - waitForTaskStartTime);
             if (fetchDataProducer == null) {
                 fetchDataProducer = new FetchDataProducer(this);
             }
             fetchDataProducer.startFetch();
+            long visitTotalTime = 0;
+            long rangeStartTime = System.currentTimeMillis();
             // scan all partition
             for (int i = 0; i < partitionNum; i++) {
-//                long scanPartitionStartTime = System.currentTimeMillis();
                 ByteBuffer buffer = fetchDataProducer.getBuffer(i);
                 CommitLogIndex commitLogIndex = this.commitLogIndices[i];
                 int size = commitLogIndex.getMemoryIndex().getSize();
                 int[] offsetInts = commitLogIndex.getMemoryIndex().getOffsetInts();
                 long[] keys = commitLogIndex.getMemoryIndex().getKeys();
-//                long scanPartitionMermoryStartTime = System.currentTimeMillis();
                 // scan one partition 4kb by 4kb according to index
                 ByteBuffer slice = buffer.slice();
                 for (int j = 0; j < size; j++) {
@@ -159,15 +157,17 @@ public class KiritoDB {
                     byte[] bytes = visitorCallbackValue.get();
                     slice.position(offsetInts[j] * Constant.VALUE_LENGTH);
                     slice.get(bytes);
+                    long visitStart = System.currentTimeMillis();
                     for (int m = 0; m < THREAD_NUM; m++) {
                         rangeTasks[m].getAbstractVisitor().visit(key, bytes);
                     }
+                    visitTotalTime += System.currentTimeMillis() - visitStart;
                 }
                 fetchDataProducer.release(i);
-//                logger.info("[range info] read partition {} success. [memory] cost {} s ", i, (System.currentTimeMillis() - scanPartitionMermoryStartTime) / 1000);
-//                logger.info("[range info] read partition {} success. [disk + memory] cost {} s ", i, (System.currentTimeMillis() - scanPartitionStartTime) / 1000);
             }
             rangFirst.set(false);
+            logger.info("visit total cost {} ms", visitTotalTime);
+            logger.info("range total cost {} ms", System.currentTimeMillis() - rangeStartTime);
             for (RangeTask rangeTask : rangeTasks) {
                 rangeTask.getCountDownLatch().countDown();
             }
