@@ -38,7 +38,7 @@ public class CommitLogIndex implements CommitLogAware {
     private volatile boolean loadFlag = false;
     private long wrotePosition;
     // use mmap to write index
-    private boolean mmapFlag = false;
+    private boolean mmapFlag = true;
 
     public void init(String path, int no) throws IOException {
         File dirFile = new File(path);
@@ -52,43 +52,26 @@ public class CommitLogIndex implements CommitLogAware {
             loadFlag = true;
         }
         this.fileChannel = new RandomAccessFile(file, "rw").getChannel();
-        if (mmapFlag) {
-            this.mappedByteBuffer = this.fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, Constant.INDEX_LENGTH * Constant.expectedNumPerPartition);
-            this.address = ((DirectBuffer) mappedByteBuffer).address();
-        }
-        this.wrotePosition = 0;
     }
 
     public void load() {
-        if (!mmapFlag) {
-            int indexSize = commitLog.getFileLength();
-            this.memoryIndex = new ArrayMemoryIndex(indexSize);
-            ByteBuffer buffer = ByteBuffer.allocateDirect(indexSize * Constant.INDEX_LENGTH);
-            try {
-                fileChannel.read(buffer);
-            } catch (IOException e) {
-                logger.error("load index failed", e);
-            }
-            buffer.flip();
-            for (int curIndex = 0; curIndex < indexSize; curIndex++) {
-                buffer.position(curIndex * Constant.INDEX_LENGTH);
-                long key = buffer.getLong();
-                this.memoryIndex.insertIndexCache(key, curIndex);
-            }
-            ((DirectBuffer) buffer).cleaner().clean();
-            memoryIndex.init();
-            this.loadFlag = true;
-        } else {
-            int indexSize = commitLog.getFileLength();
-            this.memoryIndex = new ArrayMemoryIndex(indexSize);
-            for (int curIndex = 0; curIndex < indexSize; curIndex++) {
-                this.mappedByteBuffer.position(curIndex * Constant.INDEX_LENGTH);
-                long key = this.mappedByteBuffer.getLong();
-                this.memoryIndex.insertIndexCache(key, curIndex);
-            }
-            memoryIndex.init();
-            this.loadFlag = true;
+        int indexSize = commitLog.getFileLength();
+        this.memoryIndex = new ArrayMemoryIndex(indexSize);
+        ByteBuffer buffer = ByteBuffer.allocateDirect(indexSize * Constant.INDEX_LENGTH);
+        try {
+            fileChannel.read(buffer);
+        } catch (IOException e) {
+            logger.error("load index failed", e);
         }
+        buffer.flip();
+        for (int curIndex = 0; curIndex < indexSize; curIndex++) {
+            buffer.position(curIndex * Constant.INDEX_LENGTH);
+            long key = buffer.getLong();
+            this.memoryIndex.insertIndexCache(key, curIndex);
+        }
+        ((DirectBuffer) buffer).cleaner().clean();
+        memoryIndex.init();
+        this.loadFlag = true;
     }
 
     public void releaseFile() throws IOException {
@@ -122,6 +105,23 @@ public class CommitLogIndex implements CommitLogAware {
                 logger.error("failed to direct write index", e);
             }
         } else {
+            if (this.mappedByteBuffer == null) {
+                try {
+                    this.mappedByteBuffer = this.fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, Constant.INDEX_LENGTH * Constant.expectedNumPerPartition);
+                } catch (IOException e) {
+                    logger.error("mmap failed", e);
+                }
+                this.address = ((DirectBuffer) mappedByteBuffer).address();
+                this.wrotePosition = 0;
+            }
+            if (this.wrotePosition >= this.mappedByteBuffer.limit() - Constant.INDEX_LENGTH){
+                try {
+                    this.mappedByteBuffer = this.fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, Constant.INDEX_LENGTH * 203000);
+                } catch (IOException e) {
+                    logger.error("mmap failed", e);
+                }
+                this.address = ((DirectBuffer) mappedByteBuffer).address();
+            }
             UNSAFE.copyMemory(key, 16, null, address + wrotePosition, Constant.INDEX_LENGTH);
             wrotePosition += Constant.INDEX_LENGTH;
         }
