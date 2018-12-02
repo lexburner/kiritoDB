@@ -34,7 +34,6 @@ public class FetchDataProducer {
         buffers = new ByteBuffer[windowsNum];
         readSemaphores = new Semaphore[windowsNum];
         writeSemaphores = new Semaphore[windowsNum];
-        logger.info("allocate bengin,free memory:{}M", Runtime.getRuntime().freeMemory() / 1024 / 1024);
         for (int i = 0; i < windowsNum; i++) {
             writeSemaphores[i] = new Semaphore(1);
             readSemaphores[i] = new Semaphore(0);
@@ -45,7 +44,6 @@ public class FetchDataProducer {
             }
         }
         this.commitLogs = kiritoDB.commitLogs;
-        logger.info("allocate finish,free memory:{}M", Runtime.getRuntime().freeMemory() / 1024 / 1024);
         logger.info("expectedNumPerPartition={}", expectedNumPerPartition);
     }
 

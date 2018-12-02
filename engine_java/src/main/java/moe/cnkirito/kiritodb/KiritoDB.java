@@ -16,11 +16,11 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static java.lang.Thread.MAX_PRIORITY;
 
 /**
  * @author kirito.moe@foxmail.com
@@ -127,6 +127,11 @@ public class KiritoDB {
 
     private volatile FetchDataProducer fetchDataProducer;
 
+    private volatile int csize;
+    private volatile int[] coffsetInts;
+    private volatile long[] ckeys;
+    private volatile ByteBuffer cbuffer;
+
     private void initPreFetchThreads() {
         new Thread(() -> {
             RangeTask[] rangeTasks = new RangeTask[THREAD_NUM];
@@ -143,25 +148,47 @@ public class KiritoDB {
             fetchDataProducer.startFetch();
             long visitTotalTime = 0;
             long rangeStartTime = System.currentTimeMillis();
+            Semaphore visitSemaphore = new Semaphore(0);
+            Semaphore visitDownSemaphore = new Semaphore(0);
+
+            for(int i=0;i<THREAD_NUM;i++){
+                final int rangeIndex = i;
+                Thread thread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        while (true) {
+                            try {
+                                visitSemaphore.acquire(1);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            byte[] bytes = visitorCallbackValue.get();
+                            ByteBuffer slice = cbuffer.slice();
+                            for (int j = 0; j < csize; j++) {
+                                slice.position(coffsetInts[j] * Constant.VALUE_LENGTH);
+                                slice.get(bytes);
+                                rangeTasks[rangeIndex].getAbstractVisitor().visit(Util.long2bytes(ckeys[j]), bytes);
+                            }
+                            visitDownSemaphore.release(1);
+                        }
+                    }
+                });
+                thread.setDaemon(true);
+                thread.start();
+            }
             // scan all partition
             for (int i = 0; i < partitionNum; i++) {
-                ByteBuffer buffer = fetchDataProducer.getBuffer(i);
+                cbuffer = fetchDataProducer.getBuffer(i);
                 CommitLogIndex commitLogIndex = this.commitLogIndices[i];
-                int size = commitLogIndex.getMemoryIndex().getSize();
-                int[] offsetInts = commitLogIndex.getMemoryIndex().getOffsetInts();
-                long[] keys = commitLogIndex.getMemoryIndex().getKeys();
+                csize = commitLogIndex.getMemoryIndex().getSize();
+                coffsetInts = commitLogIndex.getMemoryIndex().getOffsetInts();
+                ckeys = commitLogIndex.getMemoryIndex().getKeys();
                 // scan one partition 4kb by 4kb according to index
-                ByteBuffer slice = buffer.slice();
-                for (int j = 0; j < size; j++) {
-                    final byte[] key = Util.long2bytes(keys[j]);
-                    byte[] bytes = visitorCallbackValue.get();
-                    slice.position(offsetInts[j] * Constant.VALUE_LENGTH);
-                    slice.get(bytes);
-                    long visitStart = System.currentTimeMillis();
-                    for (int m = 0; m < THREAD_NUM; m++) {
-                        rangeTasks[m].getAbstractVisitor().visit(key, bytes);
-                    }
-                    visitTotalTime += System.currentTimeMillis() - visitStart;
+                visitSemaphore.release(THREAD_NUM);
+                try {
+                    visitDownSemaphore.acquire(THREAD_NUM);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
                 fetchDataProducer.release(i);
             }

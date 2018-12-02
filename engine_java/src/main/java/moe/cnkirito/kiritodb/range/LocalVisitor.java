@@ -6,5 +6,6 @@ public class LocalVisitor extends AbstractVisitor {
 
     @Override
     public void visit(byte[] key, byte[] value) {
+
     }
 }
