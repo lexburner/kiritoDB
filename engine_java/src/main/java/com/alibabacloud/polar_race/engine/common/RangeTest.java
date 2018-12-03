@@ -5,12 +5,12 @@ import moe.cnkirito.kiritodb.range.LocalVisitor;
 
 public class RangeTest {
 
-    public static void main(String[] args) throws EngineException {
+    public void test() throws EngineException {
         long start = System.currentTimeMillis();
         final EngineRace engine = new EngineRace();
         engine.open("/tmp/kiritoDB");
 
-        for(int k=0;k<2;k++){
+        for (int k = 0; k < 2; k++) {
             Thread[] threads = new Thread[64];
             for (int i = 0; i < 64; i++) {
                 threads[i] = new Thread(() -> {
@@ -31,12 +31,12 @@ public class RangeTest {
                     e.printStackTrace();
                 }
             }
-            System.out.println("==== loop "+k+" end ===");
+            System.out.println("==== loop " + k + " end ===");
         }
 
         engine.close();
         long end = System.currentTimeMillis();
-        System.out.println("耗时：" + (end - start) + "ms");
+        System.out.println("range cost " + (end - start) + "ms");
     }
 
 }
