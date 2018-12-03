@@ -2,6 +2,7 @@ package moe.cnkirito.kiritodb.data;
 
 import com.alibabacloud.polar_race.engine.common.exceptions.EngineException;
 import com.alibabacloud.polar_race.engine.common.exceptions.RetCodeEnum;
+import moe.cnkirito.directio.DirectIOLib;
 import moe.cnkirito.kiritodb.common.Constant;
 import net.smacke.jaydio.DirectRandomAccessFile;
 import sun.misc.Contended;
@@ -25,8 +26,10 @@ public class CommitLog {
     // buffer
     public static ThreadLocal<ByteBuffer> bufferThreadLocal = ThreadLocal.withInitial(() -> ByteBuffer.allocate(Constant.VALUE_LENGTH));
     public static ThreadLocal<byte[]> byteArrayThreadLocal = ThreadLocal.withInitial(() -> new byte[Constant.VALUE_LENGTH]);
+    private File file;
     private FileChannel fileChannel;
     private DirectRandomAccessFile directRandomAccessFile;
+    private moe.cnkirito.directio.DirectRandomAccessFile myDirectRandomAccessFile;
     private ByteBuffer writeBuffer;
     private boolean dioSupport;
     private long addresses;
@@ -36,7 +39,7 @@ public class CommitLog {
         if (!dirFile.exists()) {
             dirFile.mkdirs();
         }
-        File file = new File(path + Constant.DATA_PREFIX + no + Constant.DATA_SUFFIX);
+        this.file = new File(path + Constant.DATA_PREFIX + no + Constant.DATA_SUFFIX);
         if (!file.exists()) {
             file.createNewFile();
         }
@@ -46,6 +49,9 @@ public class CommitLog {
             this.dioSupport = true;
         } catch (Exception e) {
             this.dioSupport = false;
+        }
+        if(DirectIOLib.binit){
+            myDirectRandomAccessFile = new moe.cnkirito.directio.DirectRandomAccessFile(dirFile,"rw");
         }
         this.writeBuffer = ByteBuffer.allocateDirect(Constant.VALUE_LENGTH);
         this.addresses = ((DirectBuffer) this.writeBuffer).address();
@@ -95,11 +101,7 @@ public class CommitLog {
     }
 
     public int getFileLength() {
-        try {
-            return (int) (this.fileChannel.size() / Constant.VALUE_LENGTH);
-        } catch (IOException e) {
-            return 0;
-        }
+        return (int) (this.file.length() / Constant.VALUE_LENGTH);
     }
 
 }
