@@ -173,4 +173,12 @@ public class Util {
             return viewed(viewedBuffer);
     }
 
+//    public static String intoHexString(byte[] bytes){
+//        char[] hexChars = new char[bytes.length * 2];
+//        for(int j=0;j<bytes.length;j++){
+//            int v = bytes[j] & 0xFF;
+//            hexChars[j * 2] = HEX_ARRAY[v >>> 4];
+//        }
+//    }
+
 }

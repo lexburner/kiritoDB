@@ -2,8 +2,6 @@ package moe.cnkirito.kiritodb.data;
 
 import com.alibabacloud.polar_race.engine.common.exceptions.EngineException;
 import com.alibabacloud.polar_race.engine.common.exceptions.RetCodeEnum;
-import moe.cnkirito.directio.DirectIOLib;
-import moe.cnkirito.directio.DirectIOUtils;
 import moe.cnkirito.kiritodb.common.Constant;
 import net.smacke.jaydio.DirectRandomAccessFile;
 import sun.misc.Contended;
@@ -27,12 +25,12 @@ public class CommitLog {
     // buffer
     public static ThreadLocal<ByteBuffer> bufferThreadLocal = ThreadLocal.withInitial(() -> ByteBuffer.allocate(Constant.VALUE_LENGTH));
     public static ThreadLocal<byte[]> byteArrayThreadLocal = ThreadLocal.withInitial(() -> new byte[Constant.VALUE_LENGTH]);
-    public static ThreadLocal<ByteBuffer> myByteArrayThreadLocal = ThreadLocal.withInitial(() -> DirectIOUtils.allocateForDirectIO(DirectIOLib.getLibForPath("test_directory"), Constant.VALUE_LENGTH));
+//    public static ThreadLocal<ByteBuffer> myByteArrayThreadLocal = ThreadLocal.withInitial(() -> DirectIOUtils.allocateForDirectIO(DirectIOLib.getLibForPath("test_directory"), Constant.VALUE_LENGTH));
 
     private File file;
     private FileChannel fileChannel;
     private DirectRandomAccessFile directRandomAccessFile;
-    private moe.cnkirito.directio.DirectRandomAccessFile myDirectRandomAccessFile;
+    //    private moe.cnkirito.directio.DirectRandomAccessFile myDirectRandomAccessFile;
     private ByteBuffer writeBuffer;
     private boolean dioSupport;
     private long addresses;
@@ -53,9 +51,9 @@ public class CommitLog {
         } catch (Exception e) {
             this.dioSupport = false;
         }
-        if(DirectIOLib.binit){
-            myDirectRandomAccessFile = new moe.cnkirito.directio.DirectRandomAccessFile(file,"rw");
-        }
+//        if(DirectIOLib.binit){
+//            myDirectRandomAccessFile = new moe.cnkirito.directio.DirectRandomAccessFile(file,"rw");
+//        }
         this.writeBuffer = ByteBuffer.allocateDirect(Constant.VALUE_LENGTH);
         this.addresses = ((DirectBuffer) this.writeBuffer).address();
     }
@@ -72,15 +70,15 @@ public class CommitLog {
 
     public synchronized byte[] read(long offset) throws IOException {
         if (this.dioSupport) {
-//            byte[] bytes = byteArrayThreadLocal.get();
-//            directRandomAccessFile.seek(offset);
-//            directRandomAccessFile.read(bytes);
-//            return bytes;
-            ByteBuffer byteBuffer = myByteArrayThreadLocal.get();
-            myDirectRandomAccessFile.read(byteBuffer, offset);
             byte[] bytes = byteArrayThreadLocal.get();
-            byteBuffer.get(bytes);
+            directRandomAccessFile.seek(offset);
+            directRandomAccessFile.read(bytes);
             return bytes;
+//            ByteBuffer byteBuffer = myByteArrayThreadLocal.get();
+//            myDirectRandomAccessFile.read(byteBuffer, offset);
+//            byte[] bytes = byteArrayThreadLocal.get();
+//            byteBuffer.get(bytes);
+//            return bytes;
         } else {
             ByteBuffer buffer = bufferThreadLocal.get();
             buffer.clear();
@@ -103,15 +101,41 @@ public class CommitLog {
      * 加载整个data文件进入内存
      */
     public void loadAll(ByteBuffer buffer) throws IOException {
-//        if(DirectIOLib.binit){
-//            buffer.clear();
-//            this.myDirectRandomAccessFile.read(buffer,0 );
-//        }else {
+        if (dioSupport) {
             buffer.clear();
-            this.fileChannel.read(buffer,0);
+            directRandomAccessFile.seek(0);
+            directRandomAccessFile.read(buffer.array());
+            buffer.position(0);
+            buffer.limit(buffer.capacity());
+        } else {
+            buffer.clear();
+            this.fileChannel.read(buffer, 0);
             buffer.flip();
-//        }
+        }
+    }
 
+    public void loadAll(ByteBuffer[] buffer) throws IOException {
+        if (dioSupport) {
+            long position = 0;
+            for (int i = 0; i < buffer.length; i++) {
+                buffer[i].clear();
+                directRandomAccessFile.seek(position);
+                directRandomAccessFile.read(buffer[i].array());
+                buffer[i].position(0);
+                buffer[i].limit(buffer[i].capacity());
+                position += buffer[i].capacity();
+                if(position>directRandomAccessFile.length()){
+                    return;
+                }
+            }
+        } else {
+            this.fileChannel.position(0);
+            for (int i = 0; i < buffer.length; i++) {
+                buffer[i].clear();
+                this.fileChannel.read(buffer[i]);
+                buffer[i].flip();
+            }
+        }
     }
 
     public int getFileLength() {

@@ -16,7 +16,11 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.concurrent.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -127,7 +131,7 @@ public class KiritoDB {
     private volatile int csize;
     private volatile int[] coffsetInts;
     private volatile long[] ckeys;
-    private volatile ByteBuffer cbuffer;
+    private volatile ByteBuffer cbuffer[];
 
     private void initPreFetchThreads() {
         new Thread(() -> {
@@ -148,7 +152,7 @@ public class KiritoDB {
             Semaphore visitSemaphore = new Semaphore(0);
             Semaphore visitDownSemaphore = new Semaphore(0);
 
-            for(int i=0;i<THREAD_NUM;i++){
+            for (int i = 0; i < THREAD_NUM; i++) {
                 final int rangeIndex = i;
                 Thread thread = new Thread(new Runnable() {
                     @Override
@@ -160,10 +164,20 @@ public class KiritoDB {
                                 e.printStackTrace();
                             }
                             byte[] bytes = visitorCallbackValue.get();
-                            ByteBuffer slice = cbuffer.slice();
+                            ByteBuffer[] slice = new ByteBuffer[cbuffer.length];
+                            for (int j = 0; j < cbuffer.length; j++) {
+                                slice[j] = cbuffer[j].slice();
+                            }
+                            int capacity = cbuffer[0].capacity() / Constant.VALUE_LENGTH;
                             for (int j = 0; j < csize; j++) {
-                                slice.position(coffsetInts[j] * Constant.VALUE_LENGTH);
-                                slice.get(bytes);
+                                int slicePartition = coffsetInts[j] / capacity;
+                                int partitionInnerOffset = coffsetInts[j] % capacity;
+                                try{
+                                    slice[slicePartition].position(partitionInnerOffset * Constant.VALUE_LENGTH);
+                                    slice[slicePartition].get(bytes);
+                                }catch (Exception e){
+                                    e.printStackTrace();
+                                }
                                 rangeTasks[rangeIndex].getAbstractVisitor().visit(Util.long2bytes(ckeys[j]), bytes);
                             }
                             visitDownSemaphore.release(1);

@@ -5,6 +5,10 @@ import moe.cnkirito.kiritodb.range.LocalVisitor;
 
 public class RangeTest {
 
+    public static void main(String[] args) throws EngineException {
+        new RangeTest().test();
+    }
+
     public void test() throws EngineException {
         long start = System.currentTimeMillis();
         final EngineRace engine = new EngineRace();
