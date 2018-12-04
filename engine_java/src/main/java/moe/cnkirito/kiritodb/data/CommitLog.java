@@ -101,7 +101,11 @@ public class CommitLog {
     }
 
     public int getFileLength() {
-        return (int) (this.file.length() / Constant.VALUE_LENGTH);
+        try {
+            return (int) (this.fileChannel.size() / Constant.VALUE_LENGTH);
+        } catch (IOException e) {
+            return 0;
+        }
     }
 
 }
