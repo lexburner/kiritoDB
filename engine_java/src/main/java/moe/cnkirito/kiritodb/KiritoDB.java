@@ -16,11 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -149,8 +145,12 @@ public class KiritoDB {
             fetchDataProducer.startFetch();
             long visitTotalTime = 0;
             long rangeStartTime = System.currentTimeMillis();
-            Semaphore visitSemaphore = new Semaphore(0);
-            Semaphore visitDownSemaphore = new Semaphore(0);
+            Semaphore[] visitSemaphore = new Semaphore[THREAD_NUM];
+            Semaphore[] visitDownSemaphore = new Semaphore[THREAD_NUM];
+            for (int i = 0; i < THREAD_NUM; i++) {
+                visitSemaphore[i] = new Semaphore(0);
+                visitDownSemaphore[i] = new Semaphore(0);
+            }
 
             for (int i = 0; i < THREAD_NUM; i++) {
                 final int rangeIndex = i;
@@ -159,7 +159,7 @@ public class KiritoDB {
                     public void run() {
                         while (true) {
                             try {
-                                visitSemaphore.acquire(1);
+                                visitSemaphore[rangeIndex].acquire(1);
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
@@ -172,15 +172,15 @@ public class KiritoDB {
                             for (int j = 0; j < csize; j++) {
                                 int slicePartition = coffsetInts[j] / capacity;
                                 int partitionInnerOffset = coffsetInts[j] % capacity;
-                                try{
+                                try {
                                     slice[slicePartition].position(partitionInnerOffset * Constant.VALUE_LENGTH);
                                     slice[slicePartition].get(bytes);
-                                }catch (Exception e){
+                                } catch (Exception e) {
                                     e.printStackTrace();
                                 }
                                 rangeTasks[rangeIndex].getAbstractVisitor().visit(Util.long2bytes(ckeys[j]), bytes);
                             }
-                            visitDownSemaphore.release(1);
+                            visitDownSemaphore[rangeIndex].release(1);
                         }
                     }
                 });
@@ -195,9 +195,13 @@ public class KiritoDB {
                 coffsetInts = commitLogIndex.getMemoryIndex().getOffsetInts();
                 ckeys = commitLogIndex.getMemoryIndex().getKeys();
                 // scan one partition 4kb by 4kb according to index
-                visitSemaphore.release(THREAD_NUM);
+                for (int j = 0; j < THREAD_NUM; j++) {
+                    visitSemaphore[j].release(1);
+                }
                 try {
-                    visitDownSemaphore.acquire(THREAD_NUM);
+                    for (int j = 0; j < THREAD_NUM; j++) {
+                        visitDownSemaphore[j].acquire(1);
+                    }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }

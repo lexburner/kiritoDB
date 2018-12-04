@@ -57,9 +57,9 @@ public class ArrayMemoryIndex implements MemoryIndex {
     private void sortAndCompact() {
         if (this.indexSize != 0) {
             sort(0, this.indexSize - 1);
-//            if(this.indexSize>60000 && this.indexSize<64000){
-//                return;
-//            }
+            if(this.indexSize>60000 && this.indexSize<64000){
+                return;
+            }
             compact();
         }
     }
