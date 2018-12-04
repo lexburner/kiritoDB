@@ -37,11 +37,7 @@ public class FetchDataProducer {
         for (int i = 0; i < windowsNum; i++) {
             writeSemaphores[i] = new Semaphore(1);
             readSemaphores[i] = new Semaphore(0);
-            if(windowsNum==1){
-                buffers[i] = ByteBuffer.allocateDirect(expectedNumPerPartition * Constant.VALUE_LENGTH);
-            }else {
-                buffers[i] = ByteBuffer.allocateDirect(expectedNumPerPartition * Constant.VALUE_LENGTH);
-            }
+            buffers[i] = ByteBuffer.allocateDirect(expectedNumPerPartition * Constant.VALUE_LENGTH);
         }
         this.commitLogs = kiritoDB.commitLogs;
         logger.info("expectedNumPerPartition={}", expectedNumPerPartition);

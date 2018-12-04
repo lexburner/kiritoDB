@@ -29,7 +29,6 @@ public class CommitLog {
     private File file;
     private FileChannel fileChannel;
     private DirectRandomAccessFile directRandomAccessFile;
-    private moe.cnkirito.directio.DirectRandomAccessFile myDirectRandomAccessFile;
     private ByteBuffer writeBuffer;
     private boolean dioSupport;
     private long addresses;
@@ -49,9 +48,6 @@ public class CommitLog {
             this.dioSupport = true;
         } catch (Exception e) {
             this.dioSupport = false;
-        }
-        if(DirectIOLib.binit){
-            myDirectRandomAccessFile = new moe.cnkirito.directio.DirectRandomAccessFile(dirFile,"rw");
         }
         this.writeBuffer = ByteBuffer.allocateDirect(Constant.VALUE_LENGTH);
         this.addresses = ((DirectBuffer) this.writeBuffer).address();

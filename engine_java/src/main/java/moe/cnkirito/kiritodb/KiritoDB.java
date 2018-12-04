@@ -18,9 +18,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static java.lang.Thread.MAX_PRIORITY;
 
 /**
  * @author kirito.moe@foxmail.com
