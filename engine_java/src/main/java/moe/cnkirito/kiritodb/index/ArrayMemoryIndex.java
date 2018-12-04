@@ -57,19 +57,6 @@ public class ArrayMemoryIndex implements MemoryIndex {
     private void sortAndCompact() {
         if (this.indexSize != 0) {
             sort(0, this.indexSize - 1);
-//            FirstBytePartitoner firstBytePartitoner = new FirstBytePartitoner();
-//            HighTenPartitioner highTenPartitioner = new HighTenPartitioner();
-//            int count[] = new int[1024];
-//            Arrays.fill(count, 0);
-//            int partition = firstBytePartitoner.getPartition(Util.long2bytes(keys[0]));
-//            for (int i = 0; i < indexSize; i++) {
-//                count[highTenPartitioner.getPartition(Util.long2bytes(keys[i]))]++;
-//            }
-//            for (int i = 0; i < 1024; i++) {
-//                if (count[i] != 0) {
-//                    logger.info("[partition info] partition [{}] key size = [{}] subpartition [{}] key size = {}", partition,indexSize, i, count[i]);
-//                }
-//            }
             if(this.indexSize>60000 && this.indexSize<64000){
                 return;
             }

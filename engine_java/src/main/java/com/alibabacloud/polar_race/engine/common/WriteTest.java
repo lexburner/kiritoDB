@@ -13,7 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * 写测试
  */
 public class WriteTest {
-    public static void main(String[] args) throws EngineException {
+    public void test() throws EngineException {
 
         // 记录启动时间
         long start = System.currentTimeMillis();
@@ -30,26 +30,26 @@ public class WriteTest {
         System.out.println(getFreeMemory());
         engine.close();
         long end = System.currentTimeMillis();
-        System.out.println("耗时：" + (end - start) + "ms");
+        System.out.println("fillrandom cost " + (end - start) + "ms");
     }
 
     private static void write(Executor executor, EngineRace engine, int offset) {
         // 写数据
         final AtomicInteger atomicInteger = new AtomicInteger();
-        int len = 640000;
+        int len = 64000;
         final CountDownLatch downLatch = new CountDownLatch(len);
-        byte[] hashByte = new byte[Byte.MAX_VALUE-Byte.MIN_VALUE+1];
+        byte[] hashByte = new byte[Byte.MAX_VALUE - Byte.MIN_VALUE + 1];
         byte now = Byte.MIN_VALUE;
-        for(int i = 0;i<  (Byte.MAX_VALUE-Byte.MIN_VALUE+1);i++){
+        for (int i = 0; i < (Byte.MAX_VALUE - Byte.MIN_VALUE + 1); i++) {
             hashByte[i] = now++;
         }
-        for (int i=0;i<640000;i++) {
+        for (int i = 0; i < len; i++) {
             final int cur = i;
             executor.execute(new Runnable() {
                 public void run() {
                     try {
                         byte[] bytes = Util.long2bytes(cur);
-                        bytes[0] = hashByte[cur % (Byte.MAX_VALUE-Byte.MIN_VALUE+1)];
+                        bytes[0] = hashByte[cur % (Byte.MAX_VALUE - Byte.MIN_VALUE + 1)];
                         engine.write(bytes, Util._4kb(cur - offset));
                         System.out.println(atomicInteger.incrementAndGet());
                         downLatch.countDown();

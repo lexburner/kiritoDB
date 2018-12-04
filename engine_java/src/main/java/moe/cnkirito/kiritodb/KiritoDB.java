@@ -18,9 +18,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static java.lang.Thread.MAX_PRIORITY;
 
 /**
  * @author kirito.moe@foxmail.com
@@ -146,19 +143,21 @@ public class KiritoDB {
                 fetchDataProducer = new FetchDataProducer(this);
             }
             fetchDataProducer.startFetch();
-            long visitTotalTime = 0;
-            long rangeStartTime = System.currentTimeMillis();
-            Semaphore visitSemaphore = new Semaphore(0);
-            Semaphore visitDownSemaphore = new Semaphore(0);
+            Semaphore[] visitSemaphore = new Semaphore[THREAD_NUM];
+            Semaphore[] visitDownSemaphore = new Semaphore[THREAD_NUM];
+            for (int i = 0; i < THREAD_NUM; i++) {
+                visitSemaphore[i] = new Semaphore(0);
+                visitDownSemaphore[i] = new Semaphore(0);
+            }
 
-            for(int i=0;i<THREAD_NUM;i++){
+            for (int i = 0; i < THREAD_NUM; i++) {
                 final int rangeIndex = i;
                 Thread thread = new Thread(new Runnable() {
                     @Override
                     public void run() {
                         while (true) {
                             try {
-                                visitSemaphore.acquire(1);
+                                visitSemaphore[rangeIndex].acquire(1);
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
@@ -169,7 +168,7 @@ public class KiritoDB {
                                 slice.get(bytes);
                                 rangeTasks[rangeIndex].getAbstractVisitor().visit(Util.long2bytes(ckeys[j]), bytes);
                             }
-                            visitDownSemaphore.release(1);
+                            visitDownSemaphore[rangeIndex].release(1);
                         }
                     }
                 });
@@ -184,17 +183,19 @@ public class KiritoDB {
                 coffsetInts = commitLogIndex.getMemoryIndex().getOffsetInts();
                 ckeys = commitLogIndex.getMemoryIndex().getKeys();
                 // scan one partition 4kb by 4kb according to index
-                visitSemaphore.release(THREAD_NUM);
+                for (int j = 0; j < THREAD_NUM; j++) {
+                    visitSemaphore[j].release(1);
+                }
                 try {
-                    visitDownSemaphore.acquire(THREAD_NUM);
+                    for (int j = 0; j < THREAD_NUM; j++) {
+                        visitDownSemaphore[j].acquire(1);
+                    }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
                 fetchDataProducer.release(i);
             }
             rangFirst.set(false);
-            logger.info("visit total cost {} ms", visitTotalTime);
-            logger.info("range total cost {} ms", System.currentTimeMillis() - rangeStartTime);
             for (RangeTask rangeTask : rangeTasks) {
                 rangeTask.getCountDownLatch().countDown();
             }
