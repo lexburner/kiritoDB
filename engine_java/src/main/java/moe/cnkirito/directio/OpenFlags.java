@@ -1,8 +1,5 @@
 package moe.cnkirito.directio;
 
-/**
- * Constants for {@link DirectIOLib#oDirectOpen(String, boolean)}. </p>
- */
 public final class OpenFlags {
     public static final int O_RDONLY = 00;
     public static final int O_WRONLY = 01;
