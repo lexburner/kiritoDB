@@ -1,5 +1,7 @@
 package moe.cnkirito.kiritodb.range;
 
+import moe.cnkirito.directio.DirectIOLib;
+import moe.cnkirito.directio.DirectIOUtils;
 import moe.cnkirito.kiritodb.KiritoDB;
 import moe.cnkirito.kiritodb.common.Constant;
 import moe.cnkirito.kiritodb.data.CommitLog;
@@ -37,7 +39,12 @@ public class FetchDataProducer {
         for (int i = 0; i < windowsNum; i++) {
             writeSemaphores[i] = new Semaphore(1);
             readSemaphores[i] = new Semaphore(0);
-            buffers[i] = ByteBuffer.allocateDirect(expectedNumPerPartition * Constant.VALUE_LENGTH);
+            if(DirectIOLib.binit){
+                buffers[i] = DirectIOUtils.allocateForDirectIO(DirectIOLib.getLibForPath("test_directory"),expectedNumPerPartition * Constant.VALUE_LENGTH);
+            }else{
+                buffers[i] = ByteBuffer.allocateDirect(expectedNumPerPartition * Constant.VALUE_LENGTH);
+            }
+
         }
         this.commitLogs = kiritoDB.commitLogs;
         logger.info("expectedNumPerPartition={}", expectedNumPerPartition);

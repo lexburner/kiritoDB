@@ -2,6 +2,7 @@ package moe.cnkirito.kiritodb.data;
 
 import com.alibabacloud.polar_race.engine.common.exceptions.EngineException;
 import com.alibabacloud.polar_race.engine.common.exceptions.RetCodeEnum;
+import moe.cnkirito.directio.DirectIOLib;
 import moe.cnkirito.kiritodb.common.Constant;
 import net.smacke.jaydio.DirectRandomAccessFile;
 import sun.misc.Contended;
@@ -28,6 +29,7 @@ public class CommitLog {
     private File file;
     private FileChannel fileChannel;
     private DirectRandomAccessFile directRandomAccessFile;
+    private moe.cnkirito.directio.DirectRandomAccessFile myDirectRandomAccessFile;
     private ByteBuffer writeBuffer;
     private boolean dioSupport;
     private long addresses;
@@ -47,6 +49,9 @@ public class CommitLog {
             this.dioSupport = true;
         } catch (Exception e) {
             this.dioSupport = false;
+        }
+        if(DirectIOLib.binit){
+            myDirectRandomAccessFile = new moe.cnkirito.directio.DirectRandomAccessFile(file,"rw");
         }
         this.writeBuffer = ByteBuffer.allocateDirect(Constant.VALUE_LENGTH);
         this.addresses = ((DirectBuffer) this.writeBuffer).address();
@@ -82,7 +87,7 @@ public class CommitLog {
         try {
             this.fileChannel.write(this.writeBuffer);
         } catch (IOException e) {
-            throw new EngineException(RetCodeEnum.IO_ERROR, "mmapWrite data io error");
+            throw new EngineException(RetCodeEnum.IO_ERROR, "write data io error");
         }
     }
 
@@ -90,9 +95,15 @@ public class CommitLog {
      * 加载整个data文件进入内存
      */
     public void loadAll(ByteBuffer buffer) throws IOException {
-        buffer.clear();
-        this.fileChannel.read(buffer,0);
-        buffer.flip();
+        if(DirectIOLib.binit){
+            buffer.clear();
+            this.myDirectRandomAccessFile.read(buffer,0 );
+        }else {
+            buffer.clear();
+            this.fileChannel.read(buffer,0);
+            buffer.flip();
+        }
+
     }
 
     public int getFileLength() {

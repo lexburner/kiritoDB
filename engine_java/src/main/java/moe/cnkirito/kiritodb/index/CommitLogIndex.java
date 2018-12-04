@@ -37,8 +37,9 @@ public class CommitLogIndex implements CommitLogAware {
     // determine current index block is loaded into memory
     private volatile boolean loadFlag = false;
     private long wrotePosition;
+    // TODO mmap 写索引会出现丢失的问题
     // use mmap to write index
-    private boolean mmapFlag = true;
+    private boolean mmapFlag = false;
 
     public void init(String path, int no) throws IOException {
         File dirFile = new File(path);
@@ -76,6 +77,7 @@ public class CommitLogIndex implements CommitLogAware {
 
     public void releaseFile() throws IOException {
         if (this.mappedByteBuffer != null) {
+            mappedByteBuffer.force();
             fileChannel.close();
             Util.clean(this.mappedByteBuffer);
             this.fileChannel = null;

@@ -1,5 +1,9 @@
 package moe.cnkirito.kiritodb;
 
+import moe.cnkirito.kiritodb.common.Util;
+import moe.cnkirito.kiritodb.partition.HighTenPartitioner;
+import moe.cnkirito.kiritodb.partition.Partitionable;
+
 public class DioTest {
 
 
@@ -31,5 +35,11 @@ public class DioTest {
 //        }
 //        directFile.close();
 //    }
+
+    public static void main(String[] args) {
+        Partitionable highTenPartitioner = new HighTenPartitioner();
+        System.out.println(highTenPartitioner.getPartition(Util.long2bytes(3139393939392020L)));
+        System.out.println(highTenPartitioner.getPartition(Util.long2bytes(3130302020202020L)));
+    }
 
 }
