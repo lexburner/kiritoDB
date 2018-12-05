@@ -3,7 +3,9 @@ package moe.cnkirito.kiritodb.data;
 import com.alibabacloud.polar_race.engine.common.exceptions.EngineException;
 import com.alibabacloud.polar_race.engine.common.exceptions.RetCodeEnum;
 import moe.cnkirito.directio.DirectIOLib;
+import moe.cnkirito.directio.DirectIOUtils;
 import moe.cnkirito.kiritodb.common.Constant;
+import moe.cnkirito.kiritodb.range.FetchDataProducer;
 import net.smacke.jaydio.DirectRandomAccessFile;
 import sun.misc.Contended;
 import sun.nio.ch.DirectBuffer;
@@ -32,6 +34,7 @@ public class CommitLog {
     private ByteBuffer writeBuffer;
     private boolean dioSupport;
     private long addresses;
+    private long wrotePosition;
 
     public void init(String path, int no) throws IOException {
         File dirFile = new File(path);
@@ -51,9 +54,13 @@ public class CommitLog {
         }
         if (DirectIOLib.binit) {
             directFileForRange = new moe.cnkirito.directio.DirectRandomAccessFile(file, "rw");
+            this.writeBuffer = DirectIOUtils.allocateForDirectIO(Constant.directIOLib, Constant.VALUE_LENGTH);
+        }else{
+            this.writeBuffer = ByteBuffer.allocateDirect(Constant.VALUE_LENGTH);
         }
-        this.writeBuffer = ByteBuffer.allocateDirect(Constant.VALUE_LENGTH);
+
         this.addresses = ((DirectBuffer) this.writeBuffer).address();
+        this.wrotePosition = 0;
     }
 
     public void destroy() throws IOException {
@@ -83,11 +90,21 @@ public class CommitLog {
     public synchronized void write(byte[] data) throws EngineException {
         UNSAFE.copyMemory(data, 16, null, addresses, Constant.VALUE_LENGTH);
         this.writeBuffer.position(0);
-        try {
-            this.fileChannel.write(this.writeBuffer);
-        } catch (IOException e) {
-            throw new EngineException(RetCodeEnum.IO_ERROR, "write data io error");
+        if(DirectIOLib.binit){
+            try {
+                this.directFileForRange.write(writeBuffer, this.wrotePosition);
+                this.wrotePosition += Constant.VALUE_LENGTH;
+            } catch (IOException e) {
+                throw new EngineException(RetCodeEnum.IO_ERROR, "direct write data io error");
+            }
+        }else {
+            try {
+                this.fileChannel.write(this.writeBuffer);
+            } catch (IOException e) {
+                throw new EngineException(RetCodeEnum.IO_ERROR, "fileChannel write data io error");
+            }
         }
+
     }
 
     /**

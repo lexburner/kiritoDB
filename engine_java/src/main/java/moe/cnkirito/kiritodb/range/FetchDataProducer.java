@@ -17,7 +17,7 @@ import java.nio.ByteBuffer;
 public class FetchDataProducer {
 
     public final static Logger logger = LoggerFactory.getLogger(FetchDataProducer.class);
-    public static DirectIOLib directIOLib = DirectIOLib.getLibForPath("test_directory");
+
 
     private int windowsNum;
     private ByteBuffer[] buffers;
@@ -42,7 +42,7 @@ public class FetchDataProducer {
             writeSemaphores[i] = new LoopQuerySemaphore(1);
             readSemaphores[i] = new LoopQuerySemaphore(0);
             if (DirectIOLib.binit) {
-                buffers[i] = DirectIOUtils.allocateForDirectIO(directIOLib, expectedNumPerPartition * Constant.VALUE_LENGTH);
+                buffers[i] = DirectIOUtils.allocateForDirectIO(Constant.directIOLib, expectedNumPerPartition * Constant.VALUE_LENGTH);
             } else {
                 buffers[i] = ByteBuffer.allocateDirect(expectedNumPerPartition * Constant.VALUE_LENGTH);
             }

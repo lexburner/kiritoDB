@@ -1,5 +1,7 @@
 package moe.cnkirito.kiritodb.common;
 
+import moe.cnkirito.directio.DirectIOLib;
+
 public class Constant {
 
     public static final String DATA_PREFIX = "/data";
@@ -12,5 +14,7 @@ public class Constant {
 
     public static int expectedNumPerPartition = 64000;
     public static int partitionNum = 1 << 10;
+
+    public static DirectIOLib directIOLib = DirectIOLib.getLibForPath("test_directory");
 
 }
