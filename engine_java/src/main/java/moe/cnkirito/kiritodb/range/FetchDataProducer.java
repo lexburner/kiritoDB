@@ -2,6 +2,7 @@ package moe.cnkirito.kiritodb.range;
 
 import moe.cnkirito.kiritodb.KiritoDB;
 import moe.cnkirito.kiritodb.common.Constant;
+import moe.cnkirito.kiritodb.common.LoopQuerySemaphore;
 import moe.cnkirito.kiritodb.data.CommitLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,7 +10,6 @@ import sun.nio.ch.DirectBuffer;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.concurrent.Semaphore;
 
 public class FetchDataProducer {
 
@@ -17,8 +17,8 @@ public class FetchDataProducer {
 
     private int windowsNum;
     private ByteBuffer[] buffers;
-    private Semaphore[] readSemaphores;
-    private Semaphore[] writeSemaphores;
+    private LoopQuerySemaphore[] readSemaphores;
+    private LoopQuerySemaphore[] writeSemaphores;
     private CommitLog[] commitLogs;
 
     public FetchDataProducer(KiritoDB kiritoDB) {
@@ -32,11 +32,11 @@ public class FetchDataProducer {
             windowsNum = 1;
         }
         buffers = new ByteBuffer[windowsNum];
-        readSemaphores = new Semaphore[windowsNum];
-        writeSemaphores = new Semaphore[windowsNum];
+        readSemaphores = new LoopQuerySemaphore[windowsNum];
+        writeSemaphores = new LoopQuerySemaphore[windowsNum];
         for (int i = 0; i < windowsNum; i++) {
-            writeSemaphores[i] = new Semaphore(1);
-            readSemaphores[i] = new Semaphore(0);
+            writeSemaphores[i] = new LoopQuerySemaphore(1);
+            readSemaphores[i] = new LoopQuerySemaphore(0);
             if(windowsNum==1){
                 buffers[i] = ByteBuffer.allocateDirect(expectedNumPerPartition * Constant.VALUE_LENGTH);
             }else {
@@ -53,7 +53,7 @@ public class FetchDataProducer {
             new Thread(() -> {
                 try {
                     for (int i = 0; i < Constant.partitionNum / windowsNum; i++) {
-                        writeSemaphores[threadPartition].acquire();
+                        writeSemaphores[threadPartition].acquireNoSleep();
                         commitLogs[i * windowsNum + threadPartition].loadAll(buffers[threadPartition]);
                         readSemaphores[threadPartition].release();
                     }
@@ -67,7 +67,7 @@ public class FetchDataProducer {
 
     public ByteBuffer getBuffer(int partition) {
         try {
-            readSemaphores[partition % windowsNum].acquire();
+            readSemaphores[partition % windowsNum].acquireNoSleep();
         } catch (InterruptedException e) {
             logger.error("threadNo{} getBuffer failed", partition, e);
         }

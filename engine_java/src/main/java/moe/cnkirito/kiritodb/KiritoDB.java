@@ -4,6 +4,7 @@ import com.alibabacloud.polar_race.engine.common.AbstractVisitor;
 import com.alibabacloud.polar_race.engine.common.exceptions.EngineException;
 import com.alibabacloud.polar_race.engine.common.exceptions.RetCodeEnum;
 import moe.cnkirito.kiritodb.common.Constant;
+import moe.cnkirito.kiritodb.common.LoopQuerySemaphore;
 import moe.cnkirito.kiritodb.common.Util;
 import moe.cnkirito.kiritodb.data.CommitLog;
 import moe.cnkirito.kiritodb.index.CommitLogIndex;
@@ -143,11 +144,11 @@ public class KiritoDB {
                 fetchDataProducer = new FetchDataProducer(this);
             }
             fetchDataProducer.startFetch();
-            Semaphore[] visitSemaphore = new Semaphore[THREAD_NUM];
-            Semaphore[] visitDownSemaphore = new Semaphore[THREAD_NUM];
+            LoopQuerySemaphore[] visitSemaphore = new LoopQuerySemaphore[THREAD_NUM];
+            LoopQuerySemaphore[] visitDownSemaphore = new LoopQuerySemaphore[THREAD_NUM];
             for (int i = 0; i < THREAD_NUM; i++) {
-                visitSemaphore[i] = new Semaphore(0);
-                visitDownSemaphore[i] = new Semaphore(0);
+                visitSemaphore[i] = new LoopQuerySemaphore(0);
+                visitDownSemaphore[i] = new LoopQuerySemaphore(0);
             }
 
             for (int i = 0; i < THREAD_NUM; i++) {
@@ -157,7 +158,7 @@ public class KiritoDB {
                     public void run() {
                         while (true) {
                             try {
-                                visitSemaphore[rangeIndex].acquire(1);
+                                visitSemaphore[rangeIndex].acquire();
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
@@ -168,7 +169,7 @@ public class KiritoDB {
                                 slice.get(bytes);
                                 rangeTasks[rangeIndex].getAbstractVisitor().visit(Util.long2bytes(ckeys[j]), bytes);
                             }
-                            visitDownSemaphore[rangeIndex].release(1);
+                            visitDownSemaphore[rangeIndex].release();
                         }
                     }
                 });
@@ -184,11 +185,11 @@ public class KiritoDB {
                 ckeys = commitLogIndex.getMemoryIndex().getKeys();
                 // scan one partition 4kb by 4kb according to index
                 for (int j = 0; j < THREAD_NUM; j++) {
-                    visitSemaphore[j].release(1);
+                    visitSemaphore[j].release();
                 }
                 try {
                     for (int j = 0; j < THREAD_NUM; j++) {
-                        visitDownSemaphore[j].acquire(1);
+                        visitDownSemaphore[j].acquire();
                     }
                 } catch (InterruptedException e) {
                     e.printStackTrace();

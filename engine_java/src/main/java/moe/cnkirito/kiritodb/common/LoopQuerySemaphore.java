@@ -23,6 +23,12 @@ public class LoopQuerySemaphore {
         permits = false;
     }
 
+    public void acquireNoSleep() throws InterruptedException {
+        while (!permits) {
+        }
+        permits = false;
+    }
+
     public void release() {
         permits = true;
     }
