@@ -5,7 +5,6 @@ import com.alibabacloud.polar_race.engine.common.exceptions.RetCodeEnum;
 import moe.cnkirito.directio.DirectIOLib;
 import moe.cnkirito.directio.DirectIOUtils;
 import moe.cnkirito.kiritodb.common.Constant;
-import moe.cnkirito.kiritodb.range.FetchDataProducer;
 import net.smacke.jaydio.DirectRandomAccessFile;
 import sun.misc.Contended;
 import sun.nio.ch.DirectBuffer;
@@ -35,6 +34,7 @@ public class CommitLog {
     private boolean dioSupport;
     private long addresses;
     private long wrotePosition;
+    private int bufferPosition;
 
     public void init(String path, int no) throws IOException {
         File dirFile = new File(path);
@@ -54,23 +54,15 @@ public class CommitLog {
         }
         if (DirectIOLib.binit) {
             directFileForRange = new moe.cnkirito.directio.DirectRandomAccessFile(file, "rw");
-            this.writeBuffer = DirectIOUtils.allocateForDirectIO(Constant.directIOLib, Constant.VALUE_LENGTH);
-        }else{
-            this.writeBuffer = ByteBuffer.allocateDirect(Constant.VALUE_LENGTH);
+            this.writeBuffer = DirectIOUtils.allocateForDirectIO(Constant.directIOLib, Constant.VALUE_LENGTH * 4);
+        } else {
+            this.writeBuffer = ByteBuffer.allocateDirect(Constant.VALUE_LENGTH * 4);
         }
 
         this.addresses = ((DirectBuffer) this.writeBuffer).address();
         this.wrotePosition = 0;
-    }
+        this.bufferPosition = 0;
 
-    public void destroy() throws IOException {
-        this.writeBuffer = null;
-        if (this.fileChannel != null) {
-            this.fileChannel.close();
-        }
-        if (this.directRandomAccessFile != null) {
-            this.directRandomAccessFile.close();
-        }
     }
 
     public synchronized byte[] read(long offset) throws IOException {
@@ -88,23 +80,27 @@ public class CommitLog {
     }
 
     public synchronized void write(byte[] data) throws EngineException {
-        UNSAFE.copyMemory(data, 16, null, addresses, Constant.VALUE_LENGTH);
-        this.writeBuffer.position(0);
-        if(DirectIOLib.binit){
-            try {
-                this.directFileForRange.write(writeBuffer, this.wrotePosition);
-                this.wrotePosition += Constant.VALUE_LENGTH;
-            } catch (IOException e) {
-                throw new EngineException(RetCodeEnum.IO_ERROR, "direct write data io error");
+        UNSAFE.copyMemory(data, 16, null, addresses + bufferPosition * Constant.VALUE_LENGTH, Constant.VALUE_LENGTH);
+        bufferPosition++;
+        if (bufferPosition >= 4) {
+            this.writeBuffer.position(0);
+            this.writeBuffer.limit(bufferPosition * Constant.VALUE_LENGTH);
+            if (DirectIOLib.binit) {
+                try {
+                    this.directFileForRange.write(writeBuffer, this.wrotePosition);
+                } catch (IOException e) {
+                    throw new EngineException(RetCodeEnum.IO_ERROR, "direct write data io error");
+                }
+            } else {
+                try {
+                    this.fileChannel.write(this.writeBuffer);
+                } catch (IOException e) {
+                    throw new EngineException(RetCodeEnum.IO_ERROR, "fileChannel write data io error");
+                }
             }
-        }else {
-            try {
-                this.fileChannel.write(this.writeBuffer);
-            } catch (IOException e) {
-                throw new EngineException(RetCodeEnum.IO_ERROR, "fileChannel write data io error");
-            }
+            this.wrotePosition += Constant.VALUE_LENGTH * bufferPosition;
+            bufferPosition = 0;
         }
-
     }
 
     /**
@@ -128,6 +124,27 @@ public class CommitLog {
             return (int) (this.fileChannel.size() / Constant.VALUE_LENGTH);
         } catch (IOException e) {
             return 0;
+        }
+    }
+
+    public void destroy() throws IOException {
+        if (bufferPosition > 0) {
+            this.writeBuffer.position(0);
+            this.writeBuffer.limit(bufferPosition * Constant.VALUE_LENGTH);
+            if (DirectIOLib.binit) {
+                this.directFileForRange.write(writeBuffer, this.wrotePosition);
+            } else {
+                this.fileChannel.write(this.writeBuffer);
+            }
+            this.wrotePosition += Constant.VALUE_LENGTH * bufferPosition;
+            bufferPosition = 0;
+        }
+        this.writeBuffer = null;
+        if (this.fileChannel != null) {
+            this.fileChannel.close();
+        }
+        if (this.directRandomAccessFile != null) {
+            this.directRandomAccessFile.close();
         }
     }
 
