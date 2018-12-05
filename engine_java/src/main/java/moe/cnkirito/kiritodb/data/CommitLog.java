@@ -2,6 +2,7 @@ package moe.cnkirito.kiritodb.data;
 
 import com.alibabacloud.polar_race.engine.common.exceptions.EngineException;
 import com.alibabacloud.polar_race.engine.common.exceptions.RetCodeEnum;
+import moe.cnkirito.directio.DirectIOLib;
 import moe.cnkirito.kiritodb.common.Constant;
 import net.smacke.jaydio.DirectRandomAccessFile;
 import sun.misc.Contended;
@@ -27,6 +28,7 @@ public class CommitLog {
     public static ThreadLocal<byte[]> byteArrayThreadLocal = ThreadLocal.withInitial(() -> new byte[Constant.VALUE_LENGTH]);
     private FileChannel fileChannel;
     private DirectRandomAccessFile directRandomAccessFile;
+    private moe.cnkirito.directio.DirectRandomAccessFile directFileForRange;
     private ByteBuffer writeBuffer;
     private boolean dioSupport;
     private long addresses;
@@ -46,6 +48,9 @@ public class CommitLog {
             this.dioSupport = true;
         } catch (Exception e) {
             this.dioSupport = false;
+        }
+        if (DirectIOLib.binit) {
+            directFileForRange = new moe.cnkirito.directio.DirectRandomAccessFile(file, "rw");
         }
         this.writeBuffer = ByteBuffer.allocateDirect(Constant.VALUE_LENGTH);
         this.addresses = ((DirectBuffer) this.writeBuffer).address();
@@ -81,7 +86,7 @@ public class CommitLog {
         try {
             this.fileChannel.write(this.writeBuffer);
         } catch (IOException e) {
-            throw new EngineException(RetCodeEnum.IO_ERROR, "mmapWrite data io error");
+            throw new EngineException(RetCodeEnum.IO_ERROR, "write data io error");
         }
     }
 
@@ -90,8 +95,15 @@ public class CommitLog {
      */
     public void loadAll(ByteBuffer buffer) throws IOException {
         buffer.clear();
-        this.fileChannel.read(buffer,0);
-        buffer.flip();
+        if (DirectIOLib.binit) {
+            if (directRandomAccessFile.length() > 0) {
+                directFileForRange.read(buffer, 0);
+            }
+            // no need flip
+        } else {
+            this.fileChannel.read(buffer, 0);
+            buffer.flip();
+        }
     }
 
     public int getFileLength() {

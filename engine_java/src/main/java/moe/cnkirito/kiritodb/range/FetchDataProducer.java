@@ -1,5 +1,7 @@
 package moe.cnkirito.kiritodb.range;
 
+import moe.cnkirito.directio.DirectIOLib;
+import moe.cnkirito.directio.DirectIOUtils;
 import moe.cnkirito.kiritodb.KiritoDB;
 import moe.cnkirito.kiritodb.common.Constant;
 import moe.cnkirito.kiritodb.common.LoopQuerySemaphore;
@@ -14,6 +16,7 @@ import java.nio.ByteBuffer;
 public class FetchDataProducer {
 
     public final static Logger logger = LoggerFactory.getLogger(FetchDataProducer.class);
+    public static DirectIOLib directIOLib = DirectIOLib.getLibForPath("test_directory");
 
     private int windowsNum;
     private ByteBuffer[] buffers;
@@ -37,9 +40,9 @@ public class FetchDataProducer {
         for (int i = 0; i < windowsNum; i++) {
             writeSemaphores[i] = new LoopQuerySemaphore(1);
             readSemaphores[i] = new LoopQuerySemaphore(0);
-            if(windowsNum==1){
-                buffers[i] = ByteBuffer.allocateDirect(expectedNumPerPartition * Constant.VALUE_LENGTH);
-            }else {
+            if (DirectIOLib.binit) {
+                buffers[i] = DirectIOUtils.allocateForDirectIO(directIOLib, expectedNumPerPartition * Constant.VALUE_LENGTH);
+            } else {
                 buffers[i] = ByteBuffer.allocateDirect(expectedNumPerPartition * Constant.VALUE_LENGTH);
             }
         }
@@ -78,14 +81,7 @@ public class FetchDataProducer {
         writeSemaphores[partition % windowsNum].release();
     }
 
-    public void destroy(){
-        if(buffers!=null){
-            for (ByteBuffer buffer : buffers) {
-                if(buffer instanceof DirectBuffer){
-                    ((DirectBuffer) buffer).cleaner().clean();
-                }
-            }
-        }
+    public void destroy() {
     }
 
 }
