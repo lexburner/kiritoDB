@@ -25,7 +25,6 @@ public class LoopQuerySemaphore {
 
     public void acquireNoSleep() throws InterruptedException {
         while (!permits) {
-            Thread.sleep(1);
         }
         permits = false;
     }
