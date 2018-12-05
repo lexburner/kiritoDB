@@ -48,7 +48,6 @@ public class FetchDataProducer {
             }
         }
         this.commitLogs = kiritoDB.commitLogs;
-        logger.info("expectedNumPerPartition={}", expectedNumPerPartition);
     }
 
     public void startFetch() {
@@ -58,8 +57,7 @@ public class FetchDataProducer {
                 Thread t = new Thread(new Runnable() {
                     @Override
                     public void run() {
-//                        try (AffinityLock al2 = al.acquireLock(AffinityStrategies.SAME_SOCKET,
-//                                AffinityStrategies.ANY)) {
+//                        try (AffinityLock al2 = al.acquireLock(AffinityStrategies.SAME_SOCKET,AffinityStrategies.ANY)) {
                             try {
                                 for (int i = 0; i < Constant.partitionNum / windowsNum; i++) {
                                     writeSemaphores[threadPartition].acquireNoSleep();

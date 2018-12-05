@@ -66,16 +66,17 @@ public class KiritoDB {
                 loadAllIndex();
             }
         } catch (IOException e) {
-            throw new EngineException(RetCodeEnum.IO_ERROR, "open exception");
+//            throw new EngineException(RetCodeEnum.IO_ERROR, "open exception");
+            throw new EngineException(RetCodeEnum.IO_ERROR, "");
         }
     }
 
-    private AtomicBoolean writeFirst = new AtomicBoolean(false);
+//    private AtomicBoolean writeFirst = new AtomicBoolean(false);
 
     public void write(byte[] key, byte[] value) throws EngineException {
-        if (writeFirst.compareAndSet(false, true)) {
-            logger.info("[jvm info] write first, now {} ", Util.getFreeMemory());
-        }
+//        if (writeFirst.compareAndSet(false, true)) {
+//            logger.info("[jvm info] write first, now {} ", Util.getFreeMemory());
+//        }
         int partition = partitionable.getPartition(key);
         CommitLog hitCommitLog = commitLogs[partition];
         CommitLogIndex hitIndex = commitLogIndices[partition];
@@ -85,23 +86,25 @@ public class KiritoDB {
         }
     }
 
-    private AtomicBoolean readFirst = new AtomicBoolean(false);
+//    private AtomicBoolean readFirst = new AtomicBoolean(false);
 
     public byte[] read(byte[] key) throws EngineException {
-        if (readFirst.compareAndSet(false, true)) {
-            logger.info("[jvm info] read first now {} ", Util.getFreeMemory());
-        }
+//        if (readFirst.compareAndSet(false, true)) {
+//            logger.info("[jvm info] read first now {} ", Util.getFreeMemory());
+//        }
         int partition = partitionable.getPartition(key);
         CommitLog hitCommitLog = commitLogs[partition];
         CommitLogIndex hitIndex = commitLogIndices[partition];
         Long offset = hitIndex.read(key);
         if (offset == null) {
-            throw new EngineException(RetCodeEnum.NOT_FOUND, Util.bytes2Long(key) + " not found");
+//            throw new EngineException(RetCodeEnum.NOT_FOUND, Util.bytes2Long(key) + " not found");
+            throw new EngineException(RetCodeEnum.NOT_FOUND, "");
         }
         try {
             return hitCommitLog.read(offset);
         } catch (IOException e) {
-            throw new EngineException(RetCodeEnum.IO_ERROR, "commit log read exception");
+//            throw new EngineException(RetCodeEnum.IO_ERROR, "commit log read exception");
+            throw new EngineException(RetCodeEnum.IO_ERROR, "");
         }
     }
 
@@ -114,7 +117,7 @@ public class KiritoDB {
     public void range(byte[] lower, byte[] upper, AbstractVisitor visitor) throws EngineException {
         // 第一次 range 的时候开启 fetch 线程
         if (rangFirst.compareAndSet(false, true)) {
-            logger.info("[jvm info] range first now {} ", Util.getFreeMemory());
+//            logger.info("[jvm info] range first now {} ", Util.getFreeMemory());
             initPreFetchThreads();
         }
         RangeTask rangeTask = new RangeTask(visitor, new CountDownLatch(1));
