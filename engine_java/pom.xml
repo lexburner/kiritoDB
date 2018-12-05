@@ -99,5 +99,11 @@
             <artifactId>jaydio</artifactId>
             <version>0.1</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/net.openhft/affinity -->
+        <dependency>
+            <groupId>net.openhft</groupId>
+            <artifactId>affinity</artifactId>
+            <version>3.1.11</version>
+        </dependency>
     </dependencies>
 </project>
