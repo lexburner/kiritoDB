@@ -18,7 +18,7 @@ public class LoopQuerySemaphore {
 
     public void acquire() throws InterruptedException {
         while (!permits) {
-            Thread.sleep(1);
+            Thread.sleep(0,1);
         }
         permits = false;
     }
