@@ -18,13 +18,14 @@ public class LoopQuerySemaphore {
 
     public void acquire() throws InterruptedException {
         while (!permits) {
-//            Thread.sleep(1);
+            Thread.sleep(1);
         }
         permits = false;
     }
 
     public void acquireNoSleep() throws InterruptedException {
         while (!permits) {
+            Thread.sleep(1);
         }
         permits = false;
     }
