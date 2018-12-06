@@ -7,7 +7,6 @@ import moe.cnkirito.kiritodb.common.Constant;
 import moe.cnkirito.kiritodb.common.LoopQuerySemaphore;
 import moe.cnkirito.kiritodb.data.CommitLog;
 import net.openhft.affinity.AffinityLock;
-import net.openhft.affinity.AffinityStrategies;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,26 +52,21 @@ public class FetchDataProducer {
     public void startFetch() {
         for (int threadNo = 0; threadNo < windowsNum; threadNo++) {
             final int threadPartition = threadNo;
-            try (final AffinityLock al = AffinityLock.acquireLock()) {
-                Thread t = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        AffinityLock al2 = al.acquireLock(AffinityStrategies.SAME_SOCKET,AffinityStrategies.ANY);
-                        al2.bind();
-                        try {
-                            for (int i = 0; i < Constant.partitionNum / windowsNum; i++) {
-                                writeSemaphores[threadPartition].acquireNoSleep();
-                                commitLogs[i * windowsNum + threadPartition].loadAll(buffers[threadPartition]);
-                                readSemaphores[threadPartition].release();
-                            }
-                        } catch (InterruptedException | IOException e) {
-                            logger.error("threadNo{} load failed", threadPartition, e);
+            Thread t = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try (final AffinityLock al2 = AffinityLock.acquireLock()) {
+                        for (int i = 0; i < Constant.partitionNum / windowsNum; i++) {
+                            writeSemaphores[threadPartition].acquireNoSleep();
+                            commitLogs[i * windowsNum + threadPartition].loadAll(buffers[threadPartition]);
+                            readSemaphores[threadPartition].release();
                         }
-                        al2.release();
+                    } catch (InterruptedException | IOException e) {
+                        logger.error("threadNo{} load failed", threadPartition, e);
                     }
-                });
-                t.start();
-            }
+                }
+            });
+            t.start();
         }
     }
 

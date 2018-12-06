@@ -38,7 +38,7 @@ public class KiritoDB {
     public volatile CommitLog[] commitLogs;
     // index
     private volatile CommitLogIndex[] commitLogIndices;
-    // true meas need to load, false no need
+    // true means need to load index into memory, false means no need
     private volatile boolean loadFlag = false;
 
     public KiritoDB() {
@@ -66,8 +66,7 @@ public class KiritoDB {
                 loadAllIndex();
             }
         } catch (IOException e) {
-//            throw new EngineException(RetCodeEnum.IO_ERROR, "open exception");
-            throw new EngineException(RetCodeEnum.IO_ERROR, "");
+            throw new EngineException(RetCodeEnum.IO_ERROR, "open exception");
         }
     }
 
