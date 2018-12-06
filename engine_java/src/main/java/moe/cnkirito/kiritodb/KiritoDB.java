@@ -207,7 +207,7 @@ public class KiritoDB {
     }
 
     private void loadAllIndex() {
-        int loadThreadNum = THREAD_NUM * 2;
+        int loadThreadNum = THREAD_NUM / 2;
         CountDownLatch countDownLatch = new CountDownLatch(loadThreadNum);
         for (int i = 0; i < loadThreadNum; i++) {
             final int index = i;
