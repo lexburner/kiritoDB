@@ -18,8 +18,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -209,24 +207,26 @@ public class KiritoDB {
     }
 
     private void loadAllIndex() {
-        ExecutorService executorService = Executors.newFixedThreadPool(64);
-        CountDownLatch countDownLatch = new CountDownLatch(partitionNum);
-        for (int i = 0; i < partitionNum; i++) {
+        CountDownLatch countDownLatch = new CountDownLatch(THREAD_NUM);
+        for (int i = 0; i < THREAD_NUM; i++) {
             final int index = i;
-            executorService.execute(new Runnable() {
+            new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    commitLogIndices[index].load();
+                    for (int partition = 0; partition < partitionNum; partition++) {
+                        if (partition % THREAD_NUM == index) {
+                            commitLogIndices[partition].load();
+                        }
+                    }
                     countDownLatch.countDown();
                 }
-            });
+            }).start();
         }
         try {
             countDownLatch.await();
         } catch (InterruptedException e) {
             logger.error("load index interrupted", e);
         }
-        executorService.shutdown();
         this.loadFlag = true;
     }
 
