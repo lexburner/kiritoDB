@@ -207,14 +207,15 @@ public class KiritoDB {
     }
 
     private void loadAllIndex() {
-        CountDownLatch countDownLatch = new CountDownLatch(THREAD_NUM);
-        for (int i = 0; i < THREAD_NUM; i++) {
+        int loadThreadNum = THREAD_NUM * 2;
+        CountDownLatch countDownLatch = new CountDownLatch(loadThreadNum);
+        for (int i = 0; i < loadThreadNum; i++) {
             final int index = i;
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     for (int partition = 0; partition < partitionNum; partition++) {
-                        if (partition % THREAD_NUM == index) {
+                        if (partition % loadThreadNum == index) {
                             commitLogIndices[partition].load();
                         }
                     }
