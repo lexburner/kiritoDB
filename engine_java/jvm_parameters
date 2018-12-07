@@ -1,1 +1,1 @@
--server -XX:-UseBiasedLocking -Xms2100m -Xmx2100m -XX:NewSize=1500m -XX:MaxMetaspaceSize=32m -XX:MaxDirectMemorySize=1G -XX:+UseG1GC -XX:-RestrictContended
+-server -Xms2560m -Xmx2560m -XX:MaxDirectMemorySize=1024m -XX:NewRatio=4 -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:-UseBiasedLocking -XX:-RestrictContended
