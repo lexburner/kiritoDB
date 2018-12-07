@@ -48,8 +48,6 @@ public class FetchDataProducer {
         this.commitLogs = kiritoDB.commitLogs;
     }
 
-    private AtomicInteger readCount = new AtomicInteger(0);
-
     public void startFetch() {
         for (int threadNo = 0; threadNo < windowsNum; threadNo++) {
             final int threadPartition = threadNo;
@@ -82,14 +80,6 @@ public class FetchDataProducer {
             });
             t.setDaemon(true);
             t.start();
-        }
-    }
-
-    private void sleep1us() {
-        try {
-            Thread.sleep(1);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
     }
 

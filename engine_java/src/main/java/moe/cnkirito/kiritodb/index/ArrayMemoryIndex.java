@@ -56,9 +56,7 @@ public class ArrayMemoryIndex implements MemoryIndex {
 
     private void sortAndCompact() {
         if (this.indexSize != 0) {
-//            long l = System.currentTimeMillis();
             sort(0, this.indexSize - 1);
-//            logger.info("[sort info] cost {} ms", System.currentTimeMillis() - l);
             if (this.indexSize > 60000 && this.indexSize < 64000) {
                 return;
             }
