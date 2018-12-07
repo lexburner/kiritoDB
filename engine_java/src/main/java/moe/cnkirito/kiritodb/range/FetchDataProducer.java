@@ -5,6 +5,7 @@ import moe.cnkirito.directio.DirectIOUtils;
 import moe.cnkirito.kiritodb.KiritoDB;
 import moe.cnkirito.kiritodb.common.Constant;
 import moe.cnkirito.kiritodb.data.CommitLog;
+import net.openhft.affinity.AffinityLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,8 +56,7 @@ public class FetchDataProducer {
             Thread t = new Thread(new Runnable() {
                 @Override
                 public void run() {
-//                    try (final AffinityLock al2 = AffinityLock.acquireLock()) {
-                    try {
+                    try (final AffinityLock al2 = AffinityLock.acquireLock()) {
                         for (int i = 0; i < Constant.partitionNum / windowsNum; i++) {
                             int dbIndex = i * windowsNum + threadPartition;
                             CacheItem cacheItem;
