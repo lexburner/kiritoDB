@@ -14,28 +14,28 @@ public class RangeTest {
         final EngineRace engine = new EngineRace();
         engine.open("/tmp/kiritoDB");
 
-        for (int k = 0; k < 2; k++) {
-            Thread[] threads = new Thread[64];
-            for (int i = 0; i < 64; i++) {
-                threads[i] = new Thread(() -> {
-                    try {
-                        engine.range(null, null, new LocalVisitor());
-                    } catch (EngineException e) {
-                        e.printStackTrace();
-                    }
-                }, "thread" + i);
-            }
-            for (int i = 0; i < 64; i++) {
-                threads[i].start();
-            }
-            for (int i = 0; i < 64; i++) {
+
+        Thread[] threads = new Thread[64];
+        for (int i = 0; i < 64; i++) {
+            threads[i] = new Thread(() -> {
                 try {
-                    threads[i].join();
-                } catch (InterruptedException e) {
+                    for (int k = 0; k < 2; k++) {
+                        engine.range(null, null, new LocalVisitor());
+                    }
+                } catch (EngineException e) {
                     e.printStackTrace();
                 }
+            }, "thread" + i);
+        }
+        for (int i = 0; i < 64; i++) {
+            threads[i].start();
+        }
+        for (int i = 0; i < 64; i++) {
+            try {
+                threads[i].join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
-            System.out.println("==== loop " + k + " end ===");
         }
 
         engine.close();

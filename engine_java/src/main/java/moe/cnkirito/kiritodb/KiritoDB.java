@@ -4,12 +4,12 @@ import com.alibabacloud.polar_race.engine.common.AbstractVisitor;
 import com.alibabacloud.polar_race.engine.common.exceptions.EngineException;
 import com.alibabacloud.polar_race.engine.common.exceptions.RetCodeEnum;
 import moe.cnkirito.kiritodb.common.Constant;
-import moe.cnkirito.kiritodb.common.LoopQuerySemaphore;
 import moe.cnkirito.kiritodb.common.Util;
 import moe.cnkirito.kiritodb.data.CommitLog;
 import moe.cnkirito.kiritodb.index.CommitLogIndex;
 import moe.cnkirito.kiritodb.partition.HighTenPartitioner;
 import moe.cnkirito.kiritodb.partition.Partitionable;
+import moe.cnkirito.kiritodb.range.CacheItem;
 import moe.cnkirito.kiritodb.range.FetchDataProducer;
 import moe.cnkirito.kiritodb.range.RangeTask;
 import org.slf4j.Logger;
@@ -129,84 +129,73 @@ public class KiritoDB {
 
     private volatile FetchDataProducer fetchDataProducer;
 
-    private volatile int csize;
-    private volatile int[] coffsetInts;
-    private volatile long[] ckeys;
-    private volatile ByteBuffer cbuffer;
-
     private void initPreFetchThreads() {
-        new Thread(() -> {
-            RangeTask[] rangeTasks = new RangeTask[THREAD_NUM];
-            for (int i = 0; i < THREAD_NUM; i++) {
-                try {
-                    rangeTasks[i] = rangeTaskLinkedBlockingQueue.take();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+        Thread fetchThread = new Thread(() -> {
+            fetchDataProducer = new FetchDataProducer(this);
+            for (int f = 0; f < 2; f++) {
+                RangeTask[] rangeTasks = new RangeTask[THREAD_NUM];
+                for (int i = 0; i < THREAD_NUM; i++) {
+                    try {
+                        rangeTasks[i] = rangeTaskLinkedBlockingQueue.take();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
-            }
-            if (fetchDataProducer == null) {
-                fetchDataProducer = new FetchDataProducer(this);
-            }
-            fetchDataProducer.startFetch();
-            LoopQuerySemaphore[] visitSemaphore = new LoopQuerySemaphore[THREAD_NUM];
-            LoopQuerySemaphore[] visitDownSemaphore = new LoopQuerySemaphore[THREAD_NUM];
-            for (int i = 0; i < THREAD_NUM; i++) {
-                visitSemaphore[i] = new LoopQuerySemaphore(0);
-                visitDownSemaphore[i] = new LoopQuerySemaphore(0);
-            }
-
-            for (int i = 0; i < THREAD_NUM; i++) {
-                final int rangeIndex = i;
-                Thread thread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        for (int k = 0; k < partitionNum; k++) {
-                            try {
-                                visitSemaphore[rangeIndex].acquire();
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
+                fetchDataProducer.init();
+                fetchDataProducer.startFetch();
+                for (int i = 0; i < THREAD_NUM; i++) {
+                    final int rangeIndex = i;
+                    Thread thread = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            RangeTask myTask = rangeTasks[rangeIndex];
+                            for (int dbIndex = 0; dbIndex < partitionNum; dbIndex++) {
+                                CacheItem cacheItem;
+                                while (true){
+                                    cacheItem = fetchDataProducer.getCacheItem(dbIndex);
+                                    if(cacheItem !=null){
+                                        break;
+                                    }
+                                    sleep1us();
+                                }
+                                while (true){
+                                    if(cacheItem.ready && cacheItem.allReach){
+                                        break;
+                                    }
+                                    sleep1us();
+                                }
+                                byte[] value = visitorCallbackValue.get();
+                                byte[] key = visitorCallbackKey.get();
+                                ByteBuffer slice = cacheItem.buffer.slice();
+                                int keySize = commitLogIndices[dbIndex].getMemoryIndex().getSize();
+                                int[] coffsetInts = commitLogIndices[dbIndex].getMemoryIndex().getOffsetInts();
+                                long[] keys = commitLogIndices[dbIndex].getMemoryIndex().getKeys();
+                                for (int j = 0; j < keySize; j++) {
+                                    slice.position(coffsetInts[j] * Constant.VALUE_LENGTH);
+                                    slice.get(value);
+                                    Util.long2bytes(key, keys[j]);
+                                    rangeTasks[rangeIndex].getAbstractVisitor().visit(key, value);
+                                }
+                                fetchDataProducer.release(dbIndex);
                             }
-                            byte[] value = visitorCallbackValue.get();
-                            byte[] key = visitorCallbackKey.get();
-                            ByteBuffer slice = cbuffer.slice();
-                            for (int j = 0; j < csize; j++) {
-                                slice.position(coffsetInts[j] * Constant.VALUE_LENGTH);
-                                slice.get(value);
-                                Util.long2bytes(key, ckeys[j]);
-                                rangeTasks[rangeIndex].getAbstractVisitor().visit(key, value);
-                            }
-                            visitDownSemaphore[rangeIndex].release();
+                            myTask.getCountDownLatch().countDown();
                         }
-                    }
-                });
-                thread.setDaemon(true);
-                thread.start();
-            }
-            // scan all partition
-            for (int i = 0; i < partitionNum; i++) {
-                cbuffer = fetchDataProducer.getBuffer(i);
-                CommitLogIndex commitLogIndex = this.commitLogIndices[i];
-                csize = commitLogIndex.getMemoryIndex().getSize();
-                coffsetInts = commitLogIndex.getMemoryIndex().getOffsetInts();
-                ckeys = commitLogIndex.getMemoryIndex().getKeys();
-                // scan one partition 4kb by 4kb according to index
-                for (int j = 0; j < THREAD_NUM; j++) {
-                    visitSemaphore[j].release();
+                    });
+                    thread.setDaemon(true);
+                    thread.start();
                 }
-                try {
-                    for (int j = 0; j < THREAD_NUM; j++) {
-                        visitDownSemaphore[j].acquire();
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                fetchDataProducer.release(i);
             }
-            rangFirst.set(false);
-            for (RangeTask rangeTask : rangeTasks) {
-                rangeTask.getCountDownLatch().countDown();
-            }
-        }).start();
+        });
+        fetchThread.setDaemon(true);
+        fetchThread.start();
+    }
+
+    private void sleep1us() {
+        try {
+            Thread.sleep(0,1);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     private void loadAllIndex() {

@@ -94,20 +94,37 @@ CMS GC 控制
 ((DirectBuffer) buffer).cleaner().clean();
 ```
 
+-server -XX:-UseBiasedLocking -Xms2100m -Xmx2100m -XX:NewSize=1500m -XX:MaxMetaspaceSize=32m -XX:MaxDirectMemorySize=1G -XX:+UseG1GC
+
 #### range缓存算法
 
 1024 个分区 每个分区 256M
 可用内存 1024M
 缓存粒度（预读粒度）：一个分区
 共计 4 个缓存块
-range[partition] 读之前判断   cache[partition%4] 的可读标记，canRead=true 则读，canRead=false 则说明 cache 线程正在读盘，阻塞等待
-range[partition] 读之后      设置 cache[partition%4] canWrite=true,canRead=false，表明可写
+
+cacheItem 4
+
+class CacheItem{
+    int dbIndex;
+    int readRef;
+    boolean canRead;
+    ByteBuffer buffer;
+}
+
+64 个 visit 线程
 
 
-cache[0]~cache[3] canWrite=true 则写，canWrite=false 则阻塞等待
-cache[0]~cache[3] 写完, canRead=true,canWrite=false
+4 个 fetch 线程
 
-range[0]~range[1023] 是单线程顺序访问，因为需要保证 range 的有序性
-cache[0]~cache[3] 是并发读取
+for(int i=0;i<partitionNum;i++){
+    while(true){
+        if(cacheItem[window].readRef == 0) {
+          break;
+        }
+    }
+    load(cacheItem[window].buffer);
+}
+
 
 
