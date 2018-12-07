@@ -159,7 +159,7 @@ public class KiritoDB {
                                     sleep1us();
                                 }
                                 while (true){
-                                    if(cacheItem.ready && cacheItem.allReach){
+                                    if(cacheItem.ready){
                                         break;
                                     }
                                     sleep1us();
@@ -175,6 +175,12 @@ public class KiritoDB {
                                     slice.get(value);
                                     Util.long2bytes(key, keys[j]);
                                     rangeTasks[rangeIndex].getAbstractVisitor().visit(key, value);
+                                }
+                                while (true){
+                                    if(cacheItem.allReach){
+                                        break;
+                                    }
+                                    sleep1us();
                                 }
                                 fetchDataProducer.release(dbIndex);
                             }
