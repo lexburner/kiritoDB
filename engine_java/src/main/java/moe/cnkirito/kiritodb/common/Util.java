@@ -82,6 +82,13 @@ public class Util {
         return values;
     }
 
+    public static void long2bytes(byte[] buffer, long value) {
+        for (int i = 0; i < 8; ++i) {
+            int offset = 64 - (i + 1) * 8;
+            buffer[i] = (byte) ((value >> offset) & 0xff);
+        }
+    }
+
     /**
      * long转bytes
      *

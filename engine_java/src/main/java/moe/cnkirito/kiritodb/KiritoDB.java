@@ -108,6 +108,7 @@ public class KiritoDB {
     // fetch thread flag
     private final AtomicBoolean rangFirst = new AtomicBoolean(false);
     private static ThreadLocal<byte[]> visitorCallbackValue = ThreadLocal.withInitial(() -> new byte[Constant.VALUE_LENGTH]);
+    private static ThreadLocal<byte[]> visitorCallbackKey = ThreadLocal.withInitial(() -> new byte[Constant.INDEX_LENGTH]);
     private final static int THREAD_NUM = 64;
     private LinkedBlockingQueue<RangeTask> rangeTaskLinkedBlockingQueue = new LinkedBlockingQueue<>();
 
@@ -165,12 +166,14 @@ public class KiritoDB {
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
-                            byte[] bytes = visitorCallbackValue.get();
+                            byte[] value = visitorCallbackValue.get();
+                            byte[] key = visitorCallbackKey.get();
                             ByteBuffer slice = cbuffer.slice();
                             for (int j = 0; j < csize; j++) {
                                 slice.position(coffsetInts[j] * Constant.VALUE_LENGTH);
-                                slice.get(bytes);
-                                rangeTasks[rangeIndex].getAbstractVisitor().visit(Util.long2bytes(ckeys[j]), bytes);
+                                slice.get(value);
+                                Util.long2bytes(key, ckeys[j]);
+                                rangeTasks[rangeIndex].getAbstractVisitor().visit(key, value);
                             }
                             visitDownSemaphore[rangeIndex].release();
                         }
