@@ -1,6 +1,7 @@
 package moe.cnkirito.kiritodb.index;
 
 import moe.cnkirito.directio.DirectIOLib;
+import moe.cnkirito.directio.DirectIOUtils;
 import moe.cnkirito.kiritodb.common.Constant;
 import moe.cnkirito.kiritodb.common.Util;
 import moe.cnkirito.kiritodb.data.CommitLog;
@@ -40,9 +41,12 @@ public class CommitLogIndex implements CommitLogAware {
     private CommitLog commitLog;
     // determine current index block is loaded into memory
     private volatile boolean loadFlag = false;
+
+    // for direct write
+    private moe.cnkirito.directio.DirectRandomAccessFile directFileForWrite;
+    private ByteBuffer writeBuffer;
     private long wrotePosition;
-    // use mmap to write index
-    private boolean mmapFlag = true;
+    private int bufferPosition;
 
     public void init(String path, int no) throws IOException {
         File dirFile = new File(path);
@@ -58,6 +62,11 @@ public class CommitLogIndex implements CommitLogAware {
         this.fileChannel = new RandomAccessFile(file, "rw").getChannel();
         if (DirectIOLib.binit) {
             directRandomAccessFile = new DirectRandomAccessFile(file, "r");
+            directFileForWrite = new moe.cnkirito.directio.DirectRandomAccessFile(file,"rw");
+            writeBuffer = DirectIOUtils.allocateForDirectIO(Constant.directIOLib, Constant.INDEX_LENGTH * 2048);
+            wrotePosition = 0;
+            bufferPosition = 0;
+            address = ((DirectBuffer) writeBuffer).address();
         }
     }
 
@@ -111,6 +120,13 @@ public class CommitLogIndex implements CommitLogAware {
     }
 
     public void destroy() throws IOException {
+        if(DirectIOLib.binit && bufferPosition > 0){
+            this.writeBuffer.position(0);
+            this.writeBuffer.limit(bufferPosition * Constant.INDEX_LENGTH);
+            this.directFileForWrite.write(writeBuffer, this.wrotePosition);
+            this.wrotePosition += Constant.INDEX_LENGTH * bufferPosition;
+            bufferPosition = 0;
+        }
         commitLog = null;
         loadFlag = false;
         releaseFile();
@@ -125,9 +141,17 @@ public class CommitLogIndex implements CommitLogAware {
     }
 
     public void write(byte[] key) {
-        if (!mmapFlag) {
+        if (DirectIOLib.binit) {
             try {
-                fileChannel.write(ByteBuffer.wrap(key));
+                UNSAFE.copyMemory(key, 16, null, address + bufferPosition * Constant.INDEX_LENGTH, Constant.INDEX_LENGTH);
+                bufferPosition++;
+                if (bufferPosition >= 2048) {
+                    this.writeBuffer.position(0);
+                    this.writeBuffer.limit(bufferPosition * Constant.INDEX_LENGTH);
+                    this.directFileForWrite.write(writeBuffer, this.wrotePosition);
+                    this.wrotePosition += Constant.INDEX_LENGTH * bufferPosition;
+                    bufferPosition = 0;
+                }
             } catch (IOException e) {
                 logger.error("failed to direct write index", e);
             }
