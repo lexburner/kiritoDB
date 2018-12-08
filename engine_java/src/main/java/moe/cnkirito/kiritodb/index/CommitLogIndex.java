@@ -54,6 +54,9 @@ public class CommitLogIndex implements CommitLogAware {
             loadFlag = true;
         }
         this.fileChannel = new RandomAccessFile(file, "rw").getChannel();
+        if(DirectIOLib.binit){
+            directRandomAccessFile = new DirectRandomAccessFile(file, "r");
+        }
     }
 
     public void load() {
@@ -119,7 +122,7 @@ public class CommitLogIndex implements CommitLogAware {
         return ((long) offsetInt) * Constant.VALUE_LENGTH;
     }
 
-    private void ensureLoad() {
+    public void ensureLoad() {
         if (!loadFlag) {
             synchronized (this) {
                 if (!loadFlag) {

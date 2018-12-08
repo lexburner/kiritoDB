@@ -110,6 +110,7 @@ public class KiritoDB {
         // 第一次 range 的时候开启 fetch 线程
         if (rangFirst.compareAndSet(false, true)) {
 //            logger.info("[jvm info] range first now {} ", Util.getFreeMemory());
+            initLoadThread();
             initPreFetchThreads();
         }
         RangeTask rangeTask = new RangeTask(visitor, new CountDownLatch(1));
@@ -119,6 +120,14 @@ public class KiritoDB {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    private void initLoadThread() {
+        new Thread(() -> {
+            for (int i = Constant.partitionNum - 1; i >= 0; i--) {
+                commitLogIndices[i].ensureLoad();
+            }
+        }).start();
     }
 
     private volatile FetchDataProducer fetchDataProducer;
