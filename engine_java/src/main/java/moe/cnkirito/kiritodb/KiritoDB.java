@@ -60,9 +60,9 @@ public class KiritoDB {
                 commitLogIndices[i].setCommitLog(commitLogs[i]);
                 this.loadFlag = commitLogIndices[i].isLoadFlag();
             }
-            if (!loadFlag) {
-                loadAllIndex();
-            }
+//            if (!loadFlag) {
+//                loadAllIndex();
+//            }
         } catch (IOException e) {
             throw new EngineException(RetCodeEnum.IO_ERROR, "open exception");
         }
@@ -83,12 +83,7 @@ public class KiritoDB {
         }
     }
 
-//    private AtomicBoolean readFirst = new AtomicBoolean(false);
-
     public byte[] read(byte[] key) throws EngineException {
-//        if (readFirst.compareAndSet(false, true)) {
-//            logger.info("[jvm info] read first now {} ", Util.getFreeMemory());
-//        }
         int partition = partitionable.getPartition(key);
         CommitLog hitCommitLog = commitLogs[partition];
         CommitLogIndex hitIndex = commitLogIndices[partition];
@@ -131,7 +126,6 @@ public class KiritoDB {
     private void initPreFetchThreads() {
         Thread fetchThread = new Thread(() -> {
             fetchDataProducer = new FetchDataProducer(this);
-            long gapTime = System.currentTimeMillis();
             for (int f = 0; f < 2; f++) {
                 RangeTask[] rangeTasks = new RangeTask[THREAD_NUM];
                 for (int i = 0; i < THREAD_NUM; i++) {
@@ -141,7 +135,6 @@ public class KiritoDB {
                         e.printStackTrace();
                     }
                 }
-                logger.info("gap time = {}", System.currentTimeMillis() - gapTime);
                 fetchDataProducer.init();
                 fetchDataProducer.startFetch();
                 for (int i = 0; i < THREAD_NUM; i++) {

@@ -1,7 +1,6 @@
 package moe.cnkirito.kiritodb.index;
 
 import moe.cnkirito.directio.DirectIOLib;
-import moe.cnkirito.directio.DirectIOUtils;
 import moe.cnkirito.kiritodb.common.Constant;
 import moe.cnkirito.kiritodb.common.Util;
 import moe.cnkirito.kiritodb.data.CommitLog;
@@ -41,15 +40,7 @@ public class CommitLogIndex implements CommitLogAware {
     private CommitLog commitLog;
     // determine current index block is loaded into memory
     private volatile boolean loadFlag = false;
-    private boolean mmapFlag;
-    private boolean dioSupport;
-
-    // for direct write
-    private moe.cnkirito.directio.DirectRandomAccessFile directFileForWrite;
-    private ByteBuffer writeBuffer;
     private long wrotePosition;
-    private int bufferPosition;
-    private int bufferFullSize;
 
     public void init(String path, int no) throws IOException {
         File dirFile = new File(path);
@@ -63,24 +54,6 @@ public class CommitLogIndex implements CommitLogAware {
             loadFlag = true;
         }
         this.fileChannel = new RandomAccessFile(file, "rw").getChannel();
-        mmapFlag = false;
-        if(DirectIOLib.binit){
-            directRandomAccessFile = new DirectRandomAccessFile(file, "r");
-            directFileForWrite = new moe.cnkirito.directio.DirectRandomAccessFile(file, "rw");
-        }
-        dioSupport = false;
-        bufferFullSize = 4;
-        if (dioSupport) {
-            writeBuffer = DirectIOUtils.allocateForDirectIO(Constant.directIOLib, Constant.INDEX_LENGTH * bufferFullSize);
-            wrotePosition = 0;
-            bufferPosition = 0;
-            address = ((DirectBuffer) writeBuffer).address();
-        }else {
-            writeBuffer = ByteBuffer.allocateDirect(Constant.INDEX_LENGTH * bufferFullSize);
-            wrotePosition = 0;
-            bufferPosition = 0;
-            address = ((DirectBuffer) writeBuffer).address();
-        }
     }
 
     public void load() {
@@ -90,7 +63,6 @@ public class CommitLogIndex implements CommitLogAware {
             return;
         }
         if (DirectIOLib.binit) {
-            // todo
             ByteBuffer buffer = ByteBuffer.allocate((indexSize * Constant.INDEX_LENGTH / _4kb + 1) * _4kb);
             try {
                 directRandomAccessFile.read(buffer.array());
@@ -119,7 +91,6 @@ public class CommitLogIndex implements CommitLogAware {
             }
             ((DirectBuffer) buffer).cleaner().clean();
         }
-
         memoryIndex.init();
         this.loadFlag = true;
     }
@@ -134,24 +105,13 @@ public class CommitLogIndex implements CommitLogAware {
     }
 
     public void destroy() throws IOException {
-        if (bufferPosition > 0) {
-            if(dioSupport){
-                this.writeBuffer.position(0);
-                this.writeBuffer.limit(bufferFullSize * Constant.INDEX_LENGTH);
-                this.directFileForWrite.write(writeBuffer, this.wrotePosition);
-            }else {
-                this.writeBuffer.position(0);
-                this.writeBuffer.limit(bufferFullSize * Constant.INDEX_LENGTH);
-                this.fileChannel.write(writeBuffer, this.wrotePosition);
-            }
-
-        }
         commitLog = null;
         loadFlag = false;
         releaseFile();
     }
 
     public Long read(byte[] key) {
+        ensureLoad();
         int offsetInt = this.memoryIndex.get(Util.bytes2Long(key));
         if (offsetInt < 0) {
             return null;
@@ -159,58 +119,36 @@ public class CommitLogIndex implements CommitLogAware {
         return ((long) offsetInt) * Constant.VALUE_LENGTH;
     }
 
-    public void write(byte[] key) {
-        if (!mmapFlag) {
-            if(dioSupport){
-                try {
-                    UNSAFE.copyMemory(key, 16, null, address + bufferPosition * Constant.INDEX_LENGTH, Constant.INDEX_LENGTH);
-                    bufferPosition++;
-                    if (bufferPosition >= bufferFullSize) {
-                        this.writeBuffer.position(0);
-                        this.writeBuffer.limit(bufferPosition * Constant.INDEX_LENGTH);
-                        this.directFileForWrite.write(writeBuffer, this.wrotePosition);
-                        this.wrotePosition += Constant.INDEX_LENGTH * bufferPosition;
-                        bufferPosition = 0;
-                    }
-                } catch (IOException e) {
-                    logger.error("failed to direct write index", e);
-                }
-            }else {
-                try {
-                    UNSAFE.copyMemory(key, 16, null, address + bufferPosition * Constant.INDEX_LENGTH, Constant.INDEX_LENGTH);
-                    bufferPosition++;
-                    if (bufferPosition >= bufferFullSize) {
-                        this.writeBuffer.position(0);
-                        this.writeBuffer.limit(bufferPosition * Constant.INDEX_LENGTH);
-                        this.fileChannel.write(writeBuffer, this.wrotePosition);
-                        this.wrotePosition += Constant.INDEX_LENGTH * bufferPosition;
-                        bufferPosition = 0;
-                    }
-                } catch (IOException e) {
-                    logger.error("failed to direct write index", e);
+    private void ensureLoad() {
+        if (!loadFlag) {
+            synchronized (this) {
+                if (!loadFlag) {
+                    this.load();
                 }
             }
-        } else {
-            if (this.mappedByteBuffer == null) {
-                try {
-                    this.mappedByteBuffer = this.fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, Constant.INDEX_LENGTH * Constant.expectedNumPerPartition);
-                } catch (IOException e) {
-                    logger.error("mmap failed", e);
-                }
-                this.address = ((DirectBuffer) mappedByteBuffer).address();
-                this.wrotePosition = 0;
-            }
-            if (this.wrotePosition >= this.mappedByteBuffer.limit() - Constant.INDEX_LENGTH) {
-                try {
-                    this.mappedByteBuffer = this.fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, Constant.INDEX_LENGTH * 203000);
-                } catch (IOException e) {
-                    logger.error("mmap failed", e);
-                }
-                this.address = ((DirectBuffer) mappedByteBuffer).address();
-            }
-            UNSAFE.copyMemory(key, 16, null, address + wrotePosition, Constant.INDEX_LENGTH);
-            wrotePosition += Constant.INDEX_LENGTH;
         }
+    }
+
+    public void write(byte[] key) {
+        if (this.mappedByteBuffer == null) {
+            try {
+                this.mappedByteBuffer = this.fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, Constant.INDEX_LENGTH * Constant.expectedNumPerPartition);
+            } catch (IOException e) {
+                logger.error("mmap failed", e);
+            }
+            this.address = ((DirectBuffer) mappedByteBuffer).address();
+            this.wrotePosition = 0;
+        }
+        if (this.wrotePosition >= this.mappedByteBuffer.limit() - Constant.INDEX_LENGTH) {
+            try {
+                this.mappedByteBuffer = this.fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, Constant.INDEX_LENGTH * 203000);
+            } catch (IOException e) {
+                logger.error("mmap failed", e);
+            }
+            this.address = ((DirectBuffer) mappedByteBuffer).address();
+        }
+        UNSAFE.copyMemory(key, 16, null, address + wrotePosition, Constant.INDEX_LENGTH);
+        wrotePosition += Constant.INDEX_LENGTH;
     }
 
     public boolean isLoadFlag() {
@@ -228,6 +166,7 @@ public class CommitLogIndex implements CommitLogAware {
     }
 
     public MemoryIndex getMemoryIndex() {
+        ensureLoad();
         return memoryIndex;
     }
 }
