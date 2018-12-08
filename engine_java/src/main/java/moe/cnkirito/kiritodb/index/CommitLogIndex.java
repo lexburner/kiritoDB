@@ -41,6 +41,8 @@ public class CommitLogIndex implements CommitLogAware {
     private CommitLog commitLog;
     // determine current index block is loaded into memory
     private volatile boolean loadFlag = false;
+    private boolean mmapFlag;
+    private boolean dioSupport;
 
     // for direct write
     private moe.cnkirito.directio.DirectRandomAccessFile directFileForWrite;
@@ -61,14 +63,23 @@ public class CommitLogIndex implements CommitLogAware {
             loadFlag = true;
         }
         this.fileChannel = new RandomAccessFile(file, "rw").getChannel();
-        if (DirectIOLib.binit) {
+        mmapFlag = false;
+        if(DirectIOLib.binit){
             directRandomAccessFile = new DirectRandomAccessFile(file, "r");
             directFileForWrite = new moe.cnkirito.directio.DirectRandomAccessFile(file, "rw");
-            writeBuffer = DirectIOUtils.allocateForDirectIO(Constant.directIOLib, Constant.INDEX_LENGTH * 2048);
+        }
+        dioSupport = false;
+        bufferFullSize = 1;
+        if (dioSupport) {
+            writeBuffer = DirectIOUtils.allocateForDirectIO(Constant.directIOLib, Constant.INDEX_LENGTH * bufferFullSize);
             wrotePosition = 0;
             bufferPosition = 0;
             address = ((DirectBuffer) writeBuffer).address();
-            bufferFullSize = 2048;
+        }else {
+            writeBuffer = ByteBuffer.allocateDirect(Constant.INDEX_LENGTH * bufferFullSize);
+            wrotePosition = 0;
+            bufferPosition = 0;
+            address = ((DirectBuffer) writeBuffer).address();
         }
     }
 
@@ -79,6 +90,7 @@ public class CommitLogIndex implements CommitLogAware {
             return;
         }
         if (DirectIOLib.binit) {
+            // todo
             ByteBuffer buffer = ByteBuffer.allocate((indexSize * Constant.INDEX_LENGTH / _4kb + 1) * _4kb);
             try {
                 directRandomAccessFile.read(buffer.array());
@@ -122,10 +134,17 @@ public class CommitLogIndex implements CommitLogAware {
     }
 
     public void destroy() throws IOException {
-        if (DirectIOLib.binit && bufferPosition > 0) {
-            this.writeBuffer.position(0);
-            this.writeBuffer.limit(bufferFullSize * Constant.INDEX_LENGTH);
-            this.directFileForWrite.write(writeBuffer, this.wrotePosition);
+        if (bufferPosition > 0) {
+            if(dioSupport){
+                this.writeBuffer.position(0);
+                this.writeBuffer.limit(bufferFullSize * Constant.INDEX_LENGTH);
+                this.directFileForWrite.write(writeBuffer, this.wrotePosition);
+            }else {
+                this.writeBuffer.position(0);
+                this.writeBuffer.limit(bufferFullSize * Constant.INDEX_LENGTH);
+                this.fileChannel.write(writeBuffer, this.wrotePosition);
+            }
+
         }
         commitLog = null;
         loadFlag = false;
@@ -141,19 +160,35 @@ public class CommitLogIndex implements CommitLogAware {
     }
 
     public void write(byte[] key) {
-        if (DirectIOLib.binit) {
-            try {
-                UNSAFE.copyMemory(key, 16, null, address + bufferPosition * Constant.INDEX_LENGTH, Constant.INDEX_LENGTH);
-                bufferPosition++;
-                if (bufferPosition >= bufferFullSize) {
-                    this.writeBuffer.position(0);
-                    this.writeBuffer.limit(bufferPosition * Constant.INDEX_LENGTH);
-                    this.directFileForWrite.write(writeBuffer, this.wrotePosition);
-                    this.wrotePosition += Constant.INDEX_LENGTH * bufferPosition;
-                    bufferPosition = 0;
+        if (!mmapFlag) {
+            if(dioSupport){
+                try {
+                    UNSAFE.copyMemory(key, 16, null, address + bufferPosition * Constant.INDEX_LENGTH, Constant.INDEX_LENGTH);
+                    bufferPosition++;
+                    if (bufferPosition >= bufferFullSize) {
+                        this.writeBuffer.position(0);
+                        this.writeBuffer.limit(bufferPosition * Constant.INDEX_LENGTH);
+                        this.directFileForWrite.write(writeBuffer, this.wrotePosition);
+                        this.wrotePosition += Constant.INDEX_LENGTH * bufferPosition;
+                        bufferPosition = 0;
+                    }
+                } catch (IOException e) {
+                    logger.error("failed to direct write index", e);
                 }
-            } catch (IOException e) {
-                logger.error("failed to direct write index", e);
+            }else {
+                try {
+                    UNSAFE.copyMemory(key, 16, null, address + bufferPosition * Constant.INDEX_LENGTH, Constant.INDEX_LENGTH);
+                    bufferPosition++;
+                    if (bufferPosition >= bufferFullSize) {
+                        this.writeBuffer.position(0);
+                        this.writeBuffer.limit(bufferPosition * Constant.INDEX_LENGTH);
+                        this.fileChannel.write(writeBuffer, this.wrotePosition);
+                        this.wrotePosition += Constant.INDEX_LENGTH * bufferPosition;
+                        bufferPosition = 0;
+                    }
+                } catch (IOException e) {
+                    logger.error("failed to direct write index", e);
+                }
             }
         } else {
             if (this.mappedByteBuffer == null) {
