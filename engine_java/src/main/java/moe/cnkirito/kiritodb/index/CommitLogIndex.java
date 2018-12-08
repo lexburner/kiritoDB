@@ -69,7 +69,7 @@ public class CommitLogIndex implements CommitLogAware {
             directFileForWrite = new moe.cnkirito.directio.DirectRandomAccessFile(file, "rw");
         }
         dioSupport = false;
-        bufferFullSize = 4096 / 8;
+        bufferFullSize = 4;
         if (dioSupport) {
             writeBuffer = DirectIOUtils.allocateForDirectIO(Constant.directIOLib, Constant.INDEX_LENGTH * bufferFullSize);
             wrotePosition = 0;
