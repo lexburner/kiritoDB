@@ -94,8 +94,7 @@ public class KiritoDB {
         CommitLogIndex hitIndex = commitLogIndices[partition];
         Long offset = hitIndex.read(key);
         if (offset == null) {
-//            throw new EngineException(RetCodeEnum.NOT_FOUND, Util.bytes2Long(key) + " not found");
-            throw new EngineException(RetCodeEnum.NOT_FOUND, "");
+            throw new EngineException(RetCodeEnum.NOT_FOUND, Util.bytes2Long(key) + " not found");
         }
         try {
             return hitCommitLog.read(offset);
@@ -134,7 +133,6 @@ public class KiritoDB {
             fetchDataProducer = new FetchDataProducer(this);
             long gapTime = System.currentTimeMillis();
             for (int f = 0; f < 2; f++) {
-                final int turn = f;
                 RangeTask[] rangeTasks = new RangeTask[THREAD_NUM];
                 for (int i = 0; i < THREAD_NUM; i++) {
                     try {

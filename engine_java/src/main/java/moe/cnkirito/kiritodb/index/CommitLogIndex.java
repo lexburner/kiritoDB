@@ -47,6 +47,7 @@ public class CommitLogIndex implements CommitLogAware {
     private ByteBuffer writeBuffer;
     private long wrotePosition;
     private int bufferPosition;
+    private int bufferFullSize;
 
     public void init(String path, int no) throws IOException {
         File dirFile = new File(path);
@@ -62,11 +63,12 @@ public class CommitLogIndex implements CommitLogAware {
         this.fileChannel = new RandomAccessFile(file, "rw").getChannel();
         if (DirectIOLib.binit) {
             directRandomAccessFile = new DirectRandomAccessFile(file, "r");
-            directFileForWrite = new moe.cnkirito.directio.DirectRandomAccessFile(file,"rw");
+            directFileForWrite = new moe.cnkirito.directio.DirectRandomAccessFile(file, "rw");
             writeBuffer = DirectIOUtils.allocateForDirectIO(Constant.directIOLib, Constant.INDEX_LENGTH * 2048);
             wrotePosition = 0;
             bufferPosition = 0;
             address = ((DirectBuffer) writeBuffer).address();
+            bufferFullSize = 2048;
         }
     }
 
@@ -120,12 +122,10 @@ public class CommitLogIndex implements CommitLogAware {
     }
 
     public void destroy() throws IOException {
-        if(DirectIOLib.binit && bufferPosition > 0){
+        if (DirectIOLib.binit && bufferPosition > 0) {
             this.writeBuffer.position(0);
-            this.writeBuffer.limit(bufferPosition * Constant.INDEX_LENGTH);
+            this.writeBuffer.limit(bufferFullSize * Constant.INDEX_LENGTH);
             this.directFileForWrite.write(writeBuffer, this.wrotePosition);
-            this.wrotePosition += Constant.INDEX_LENGTH * bufferPosition;
-            bufferPosition = 0;
         }
         commitLog = null;
         loadFlag = false;
@@ -145,7 +145,7 @@ public class CommitLogIndex implements CommitLogAware {
             try {
                 UNSAFE.copyMemory(key, 16, null, address + bufferPosition * Constant.INDEX_LENGTH, Constant.INDEX_LENGTH);
                 bufferPosition++;
-                if (bufferPosition >= 2048) {
+                if (bufferPosition >= bufferFullSize) {
                     this.writeBuffer.position(0);
                     this.writeBuffer.limit(bufferPosition * Constant.INDEX_LENGTH);
                     this.directFileForWrite.write(writeBuffer, this.wrotePosition);
