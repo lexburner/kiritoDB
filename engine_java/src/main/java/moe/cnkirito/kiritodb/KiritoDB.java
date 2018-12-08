@@ -132,7 +132,9 @@ public class KiritoDB {
     private void initPreFetchThreads() {
         Thread fetchThread = new Thread(() -> {
             fetchDataProducer = new FetchDataProducer(this);
+            long gapTime = System.currentTimeMillis();
             for (int f = 0; f < 2; f++) {
+                final int turn = f;
                 RangeTask[] rangeTasks = new RangeTask[THREAD_NUM];
                 for (int i = 0; i < THREAD_NUM; i++) {
                     try {
@@ -141,6 +143,7 @@ public class KiritoDB {
                         e.printStackTrace();
                     }
                 }
+                logger.info("gap time = {}", System.currentTimeMillis() - gapTime);
                 fetchDataProducer.init();
                 fetchDataProducer.startFetch();
                 for (int i = 0; i < THREAD_NUM; i++) {
@@ -151,15 +154,15 @@ public class KiritoDB {
                             RangeTask myTask = rangeTasks[rangeIndex];
                             for (int dbIndex = 0; dbIndex < partitionNum; dbIndex++) {
                                 CacheItem cacheItem;
-                                while (true){
+                                while (true) {
                                     cacheItem = fetchDataProducer.getCacheItem(dbIndex);
-                                    if(cacheItem !=null){
+                                    if (cacheItem != null) {
                                         break;
                                     }
                                     sleep1us();
                                 }
-                                while (true){
-                                    if(cacheItem.ready){
+                                while (true) {
+                                    if (cacheItem.ready) {
                                         break;
                                     }
                                     sleep1us();
@@ -176,8 +179,8 @@ public class KiritoDB {
                                     Util.long2bytes(key, keys[j]);
                                     rangeTasks[rangeIndex].getAbstractVisitor().visit(key, value);
                                 }
-                                while (true){
-                                    if(cacheItem.allReach){
+                                while (true) {
+                                    if (cacheItem.allReach) {
                                         break;
                                     }
                                     sleep1us();
@@ -198,7 +201,7 @@ public class KiritoDB {
 
     private void sleep1us() {
         try {
-            Thread.sleep(0,1);
+            Thread.sleep(0, 1);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
