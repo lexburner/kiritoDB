@@ -60,20 +60,15 @@ public class KiritoDB {
                 commitLogIndices[i].setCommitLog(commitLogs[i]);
                 this.loadFlag = commitLogIndices[i].isLoadFlag();
             }
-//            if (!loadFlag) {
-//                loadAllIndex();
-//            }
+            if (!loadFlag) {
+                loadAllIndex();
+            }
         } catch (IOException e) {
             throw new EngineException(RetCodeEnum.IO_ERROR, "open exception");
         }
     }
 
-//    private AtomicBoolean writeFirst = new AtomicBoolean(false);
-
     public void write(byte[] key, byte[] value) throws EngineException {
-//        if (writeFirst.compareAndSet(false, true)) {
-//            logger.info("[jvm info] write first, now {} ", Util.getFreeMemory());
-//        }
         int partition = partitionable.getPartition(key);
         CommitLog hitCommitLog = commitLogs[partition];
         CommitLogIndex hitIndex = commitLogIndices[partition];
@@ -94,8 +89,7 @@ public class KiritoDB {
         try {
             return hitCommitLog.read(offset);
         } catch (IOException e) {
-//            throw new EngineException(RetCodeEnum.IO_ERROR, "commit log read exception");
-            throw new EngineException(RetCodeEnum.IO_ERROR, "");
+            throw new EngineException(RetCodeEnum.IO_ERROR, "commit log read exception");
         }
     }
 
@@ -110,7 +104,6 @@ public class KiritoDB {
         // 第一次 range 的时候开启 fetch 线程
         if (rangFirst.compareAndSet(false, true)) {
 //            logger.info("[jvm info] range first now {} ", Util.getFreeMemory());
-            initLoadThread();
             initPreFetchThreads();
         }
         RangeTask rangeTask = new RangeTask(visitor, new CountDownLatch(1));
@@ -120,14 +113,6 @@ public class KiritoDB {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-    }
-
-    private void initLoadThread() {
-        new Thread(() -> {
-            for (int i = Constant.partitionNum - 1; i >= 0; i--) {
-                commitLogIndices[i].ensureLoad();
-            }
-        }).start();
     }
 
     private volatile FetchDataProducer fetchDataProducer;
@@ -144,51 +129,48 @@ public class KiritoDB {
                         e.printStackTrace();
                     }
                 }
-                fetchDataProducer.init();
+                fetchDataProducer.initFetch();
                 fetchDataProducer.startFetch();
                 for (int i = 0; i < THREAD_NUM; i++) {
                     final int rangeIndex = i;
-                    Thread thread = new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            RangeTask myTask = rangeTasks[rangeIndex];
-                            for (int dbIndex = 0; dbIndex < partitionNum; dbIndex++) {
-                                CacheItem cacheItem;
-                                while (true) {
-                                    cacheItem = fetchDataProducer.getCacheItem(dbIndex);
-                                    if (cacheItem != null) {
-                                        break;
-                                    }
-                                    sleep1us();
+                    Thread thread = new Thread(() -> {
+                        RangeTask myTask = rangeTasks[rangeIndex];
+                        for (int dbIndex = 0; dbIndex < partitionNum; dbIndex++) {
+                            CacheItem cacheItem;
+                            while (true) {
+                                cacheItem = fetchDataProducer.getCacheItem(dbIndex);
+                                if (cacheItem != null) {
+                                    break;
                                 }
-                                while (true) {
-                                    if (cacheItem.ready) {
-                                        break;
-                                    }
-                                    sleep1us();
-                                }
-                                byte[] value = visitorCallbackValue.get();
-                                byte[] key = visitorCallbackKey.get();
-                                ByteBuffer slice = cacheItem.buffer.slice();
-                                int keySize = commitLogIndices[dbIndex].getMemoryIndex().getSize();
-                                int[] coffsetInts = commitLogIndices[dbIndex].getMemoryIndex().getOffsetInts();
-                                long[] keys = commitLogIndices[dbIndex].getMemoryIndex().getKeys();
-                                for (int j = 0; j < keySize; j++) {
-                                    slice.position(coffsetInts[j] * Constant.VALUE_LENGTH);
-                                    slice.get(value);
-                                    Util.long2bytes(key, keys[j]);
-                                    rangeTasks[rangeIndex].getAbstractVisitor().visit(key, value);
-                                }
-                                while (true) {
-                                    if (cacheItem.allReach) {
-                                        break;
-                                    }
-                                    sleep1us();
-                                }
-                                fetchDataProducer.release(dbIndex);
+                                sleep1us();
                             }
-                            myTask.getCountDownLatch().countDown();
+                            while (true) {
+                                if (cacheItem.ready) {
+                                    break;
+                                }
+                                sleep1us();
+                            }
+                            byte[] value = visitorCallbackValue.get();
+                            byte[] key = visitorCallbackKey.get();
+                            ByteBuffer valueCache = cacheItem.buffer.slice();
+                            int keySize = commitLogIndices[dbIndex].getMemoryIndex().getSize();
+                            int[] offset = commitLogIndices[dbIndex].getMemoryIndex().getOffset();
+                            long[] keys = commitLogIndices[dbIndex].getMemoryIndex().getKeys();
+                            for (int j = 0; j < keySize; j++) {
+                                valueCache.position(offset[j] * Constant.VALUE_LENGTH);
+                                valueCache.get(value);
+                                Util.long2bytes(key, keys[j]);
+                                rangeTasks[rangeIndex].getAbstractVisitor().visit(key, value);
+                            }
+                            while (true) {
+                                if (cacheItem.allReach) {
+                                    break;
+                                }
+                                sleep1us();
+                            }
+                            fetchDataProducer.release(dbIndex);
                         }
+                        myTask.getCountDownLatch().countDown();
                     });
                     thread.setDaemon(true);
                     thread.start();
@@ -212,16 +194,13 @@ public class KiritoDB {
         CountDownLatch countDownLatch = new CountDownLatch(loadThreadNum);
         for (int i = 0; i < loadThreadNum; i++) {
             final int index = i;
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    for (int partition = 0; partition < partitionNum; partition++) {
-                        if (partition % loadThreadNum == index) {
-                            commitLogIndices[partition].load();
-                        }
+            new Thread(() -> {
+                for (int partition = 0; partition < partitionNum; partition++) {
+                    if (partition % loadThreadNum == index) {
+                        commitLogIndices[partition].load();
                     }
-                    countDownLatch.countDown();
                 }
+                countDownLatch.countDown();
             }).start();
         }
         try {
@@ -251,11 +230,5 @@ public class KiritoDB {
                 }
             }
         }
-        if (this.fetchDataProducer != null) {
-            fetchDataProducer.destroy();
-        }
-        this.partitionable = null;
-        this.commitLogs = null;
-        this.commitLogIndices = null;
     }
 }

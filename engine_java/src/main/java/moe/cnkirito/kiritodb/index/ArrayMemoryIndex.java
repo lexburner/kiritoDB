@@ -1,26 +1,18 @@
 package moe.cnkirito.kiritodb.index;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+/**
+ * the implementation of memory index using java origin array
+ */
 public class ArrayMemoryIndex implements MemoryIndex {
 
-    Logger logger = LoggerFactory.getLogger(ArrayMemoryIndex.class);
-
-    // keys 和文件逻辑偏移的映射
     private long keys[];
-    private int offsetInts[];
+    private int offset[];
     private int indexSize;
 
     public ArrayMemoryIndex(int initSize) {
         this.keys = new long[initSize];
-        this.offsetInts = new int[initSize];
+        this.offset = new int[initSize];
         this.indexSize = initSize;
-    }
-
-    @Override
-    public void setSize(int size) {
-        this.indexSize = size;
     }
 
     @Override
@@ -36,7 +28,7 @@ public class ArrayMemoryIndex implements MemoryIndex {
     @Override
     public void insertIndexCache(long key, int value) {
         this.keys[value] = key;
-        this.offsetInts[value] = value;
+        this.offset[value] = value;
     }
 
     @Override
@@ -50,10 +42,13 @@ public class ArrayMemoryIndex implements MemoryIndex {
     }
 
     @Override
-    public int[] getOffsetInts() {
-        return this.offsetInts;
+    public int[] getOffset() {
+        return this.offset;
     }
 
+    /**
+     * sort the index and compact the same key
+     */
     private void sortAndCompact() {
         if (this.indexSize != 0) {
             sort(0, this.indexSize - 1);
@@ -69,32 +64,32 @@ public class ArrayMemoryIndex implements MemoryIndex {
         int[] newOffsetInts = new int[indexSize];
 
         int curIndex = 0;
-        newOffsetInts[0] = this.offsetInts[0];
+        newOffsetInts[0] = this.offset[0];
         newKeys[0] = this.keys[0];
         for (int i = 1; i < this.indexSize; i++) {
             if (this.keys[i] != this.keys[i - 1]) {
                 curIndex++;
                 newKeys[curIndex] = this.keys[i];
-                newOffsetInts[curIndex] = this.offsetInts[i];
+                newOffsetInts[curIndex] = this.offset[i];
             } else {
-                newOffsetInts[curIndex] = Math.max(newOffsetInts[curIndex], this.offsetInts[i]);
+                newOffsetInts[curIndex] = Math.max(newOffsetInts[curIndex], this.offset[i]);
             }
         }
         this.indexSize = curIndex + 1;
-        this.offsetInts = newOffsetInts;
+        this.offset = newOffsetInts;
         this.keys = newKeys;
     }
 
     private int binarySearchPosition(long key) {
         int index = this.binarySearch(0, indexSize, key);
         if (index >= 0) {
-            return this.offsetInts[index];
+            return this.offset[index];
         } else {
             return -1;
         }
     }
 
-    public void sort(int low, int high) {
+    private void sort(int low, int high) {
         int start = low;
         int end = high;
         long key = this.keys[low];
@@ -135,15 +130,15 @@ public class ArrayMemoryIndex implements MemoryIndex {
         return -(low + 1);  // keys not found.
     }
 
-    public void swap(int i, int j) {
+    private void swap(int i, int j) {
         if (i == j) return;
         keys[i] ^= keys[j];
         keys[j] ^= keys[i];
         keys[i] ^= keys[j];
 
-        offsetInts[i] ^= offsetInts[j];
-        offsetInts[j] ^= offsetInts[i];
-        offsetInts[i] ^= offsetInts[j];
+        offset[i] ^= offset[j];
+        offset[j] ^= offset[i];
+        offset[i] ^= offset[j];
     }
 
 }

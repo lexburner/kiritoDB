@@ -11,14 +11,19 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+/**
+ * producer to fetch data on the disk file into ${@link CacheItem}
+ */
 public class FetchDataProducer {
 
-    public final static Logger logger = LoggerFactory.getLogger(FetchDataProducer.class);
+    private final static Logger logger = LoggerFactory.getLogger(FetchDataProducer.class);
 
+    /**
+     * the windowsNum determine the num of CacheItem
+     */
     private int windowsNum;
     private CacheItem[] cacheItems;
     private CommitLog[] commitLogs;
@@ -83,6 +88,12 @@ public class FetchDataProducer {
         }
     }
 
+    /**
+     * getCacheItem is a very important method that control every visit consumer and fetch producer
+     * whether to achieve the cacheItem
+     * @param dbIndex
+     * @return
+     */
     public CacheItem getCacheItem(int dbIndex) {
         int index = dbIndex % windowsNum;
         lock.lock();
@@ -109,6 +120,10 @@ public class FetchDataProducer {
         return cacheItems[index];
     }
 
+    /**
+     * release a cacheItem
+     * @param dbIndex
+     */
     public void release(int dbIndex) {
         int index = dbIndex % windowsNum;
         lock.lock();
@@ -116,10 +131,7 @@ public class FetchDataProducer {
         lock.unlock();
     }
 
-    public void destroy() {
-    }
-
-    public void init() {
+    public void initFetch() {
         for (int i = 0; i < windowsNum; i++) {
             cacheItems[i].dbIndex = -1;
             cacheItems[i].useRef = -1;

@@ -3,8 +3,7 @@ package moe.cnkirito.kiritodb.range;
 import java.nio.ByteBuffer;
 
 /**
- * @author daofeng.xjf
- * @date 2018/12/7
+ * the cache of one partition
  */
 public class CacheItem {
 

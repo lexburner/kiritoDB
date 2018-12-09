@@ -8,7 +8,6 @@ import com.sun.jna.ptr.PointerByReference;
 import org.apache.log4j.Logger;
 import sun.nio.ch.DirectBuffer;
 
-import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;

@@ -2,19 +2,15 @@ package moe.cnkirito.kiritodb.index;
 
 import com.carrotsearch.hppc.LongIntHashMap;
 
+/**
+ * the implementation of memory index using ${@link com.carrotsearch.hppc.LongIntHashMap}
+ */
 public class HppcMemoryIndex implements MemoryIndex {
 
-    private int indexSize;
     private LongIntHashMap indexMap;
 
     public HppcMemoryIndex() {
-        this.indexSize = 0;
         this.indexMap = new LongIntHashMap();
-    }
-
-    @Override
-    public void setSize(int size) {
-        this.indexSize = size;
     }
 
     @Override
@@ -43,7 +39,7 @@ public class HppcMemoryIndex implements MemoryIndex {
     }
 
     @Override
-    public int[] getOffsetInts() {
-        throw new UnsupportedOperationException("getOffsetInts() unsupported");
+    public int[] getOffset() {
+        throw new UnsupportedOperationException("getOffset() unsupported");
     }
 }

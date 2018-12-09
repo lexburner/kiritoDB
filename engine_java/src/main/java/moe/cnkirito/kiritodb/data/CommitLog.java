@@ -25,15 +25,24 @@ import static moe.cnkirito.kiritodb.common.UnsafeUtil.UNSAFE;
 public class CommitLog {
 
     // buffer
-    public static ThreadLocal<ByteBuffer> bufferThreadLocal = ThreadLocal.withInitial(() -> ByteBuffer.allocate(Constant.VALUE_LENGTH));
-    public static ThreadLocal<byte[]> byteArrayThreadLocal = ThreadLocal.withInitial(() -> new byte[Constant.VALUE_LENGTH]);
+    private static ThreadLocal<ByteBuffer> bufferThreadLocal = ThreadLocal.withInitial(() -> ByteBuffer.allocate(Constant.VALUE_LENGTH));
+    private static ThreadLocal<byte[]> byteArrayThreadLocal = ThreadLocal.withInitial(() -> new byte[Constant.VALUE_LENGTH]);
     private FileChannel fileChannel;
     private DirectRandomAccessFile directRandomAccessFile;
     private moe.cnkirito.directio.DirectRandomAccessFile directFileForRange;
     private ByteBuffer writeBuffer;
+    /**
+     * we want to use {@link sun.misc.Unsafe} to copy memory,
+     */
+    private long writeBufferAddress;
     private boolean dioSupport;
-    private long addresses;
+    /**
+     * file write pointer
+     */
     private long wrotePosition;
+    /**
+     * buffer write pointer
+     */
     private int bufferPosition;
 
     public void init(String path, int no) throws IOException {
@@ -59,7 +68,7 @@ public class CommitLog {
             this.writeBuffer = ByteBuffer.allocateDirect(Constant.VALUE_LENGTH * 4);
         }
 
-        this.addresses = ((DirectBuffer) this.writeBuffer).address();
+        this.writeBufferAddress = ((DirectBuffer) this.writeBuffer).address();
         this.wrotePosition = 0;
         this.bufferPosition = 0;
 
@@ -80,7 +89,7 @@ public class CommitLog {
     }
 
     public synchronized void write(byte[] data) throws EngineException {
-        UNSAFE.copyMemory(data, 16, null, addresses + bufferPosition * Constant.VALUE_LENGTH, Constant.VALUE_LENGTH);
+        UNSAFE.copyMemory(data, 16, null, writeBufferAddress + bufferPosition * Constant.VALUE_LENGTH, Constant.VALUE_LENGTH);
         bufferPosition++;
         if (bufferPosition >= 4) {
             this.writeBuffer.position(0);

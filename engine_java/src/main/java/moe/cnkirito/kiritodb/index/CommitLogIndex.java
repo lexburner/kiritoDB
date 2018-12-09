@@ -114,22 +114,11 @@ public class CommitLogIndex implements CommitLogAware {
     }
 
     public Long read(byte[] key) {
-        ensureLoad();
         int offsetInt = this.memoryIndex.get(Util.bytes2Long(key));
         if (offsetInt < 0) {
             return null;
         }
         return ((long) offsetInt) * Constant.VALUE_LENGTH;
-    }
-
-    public void ensureLoad() {
-        if (!loadFlag) {
-            synchronized (this) {
-                if (!loadFlag) {
-                    this.load();
-                }
-            }
-        }
     }
 
     public void write(byte[] key) {
@@ -159,17 +148,11 @@ public class CommitLogIndex implements CommitLogAware {
     }
 
     @Override
-    public CommitLog getCommitLog() {
-        return this.commitLog;
-    }
-
-    @Override
     public void setCommitLog(CommitLog commitLog) {
         this.commitLog = commitLog;
     }
 
     public MemoryIndex getMemoryIndex() {
-        ensureLoad();
         return memoryIndex;
     }
 }
